@@ -1,5 +1,13 @@
 <Project Sdk="Microsoft.NET.Sdk">
 
+  <ItemGroup>
+    <ProjectReference Include="..\MiniSQL.Library\MiniSQL.Library.csproj" />
+    <ProjectReference Include="..\MiniSQL.Interpreter\MiniSQL.Interpreter.csproj" />
+    <ProjectReference Include="..\MiniSQL.CatalogManager\MiniSQL.CatalogManager.csproj" />
+    <ProjectReference Include="..\MiniSQL.IndexManager\MiniSQL.IndexManager.csproj" />
+    <ProjectReference Include="..\MiniSQL.RecordManager\MiniSQL.RecordManager.csproj" />
+  </ItemGroup>
+
   <PropertyGroup>
     <OutputType>Exe</OutputType>
     <TargetFramework>netcoreapp3.1</TargetFramework>

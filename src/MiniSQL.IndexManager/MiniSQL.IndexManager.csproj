@@ -2,6 +2,7 @@
 
   <ItemGroup>
     <ProjectReference Include="..\MiniSQL.Library\MiniSQL.Library.csproj" />
+    <ProjectReference Include="..\MiniSQL.BufferManager\MiniSQL.BufferManager.csproj" />
   </ItemGroup>
 
   <PropertyGroup>
