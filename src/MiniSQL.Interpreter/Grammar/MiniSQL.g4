@@ -37,7 +37,7 @@ grammar MiniSQL;
 
 query:
     EOF
-    | (simpleStatement | beginWork) (SEMICOLON_SYMBOL EOF? | EOF)
+    | (simpleStatement) (SEMICOLON_SYMBOL EOF? | EOF)
 ;
 
 simpleStatement:
@@ -99,35 +99,31 @@ selectStatement:
     | queryExpressionParens
 ;
 
-// BEGIN WORK is separated from transactional statements as it must not appear as part of a stored program.
-beginWork:
-    BEGIN_SYMBOL WORK_SYMBOL?
-;
-
 
 queryExpression:
      (
-        queryExpressionBody orderClause?
+        // queryExpressionBody orderClause?
+        queryExpressionBody
      //    | queryExpressionParens (orderClause limitClause? | limitClause)
     )
 ;
 
-orderClause:
-    ORDER_SYMBOL BY_SYMBOL orderList
-;
+// orderClause:
+//     ORDER_SYMBOL BY_SYMBOL orderList
+// ;
 
-orderList:
-    orderExpression (COMMA_SYMBOL orderExpression)*
-;
+// orderList:
+//     orderExpression (COMMA_SYMBOL orderExpression)*
+// ;
 
-orderExpression:
-    expr direction?
-;
+// orderExpression:
+//     expr direction?
+// ;
 
-direction:
-    ASC_SYMBOL
-    | DESC_SYMBOL
-;
+// direction:
+//     ASC_SYMBOL
+//     | DESC_SYMBOL
+// ;
 
 
 queryExpressionBody:
@@ -143,13 +139,13 @@ querySpecification:
 selectItemList: MULT_OPERATOR
 ;
 
-selectItem:
-    expr selectAlias?
-;
+// selectItem:
+//     expr selectAlias?
+// ;
 
-selectAlias:
-    AS_SYMBOL? (identifier | textStringLiteral)
-;
+// selectAlias:
+//     AS_SYMBOL? (identifier | textStringLiteral)
+// ;
 
 // TEXT_STRING_sys + TEXT_STRING_literal + TEXT_STRING_filesystem + TEXT_STRING + TEXT_STRING_password +
 // TEXT_STRING_validated in sql_yacc.yy.
@@ -241,7 +237,6 @@ tableElement:
 ;
 
 tableConstraintDef:
-//     constraintName? (
     (
         (type = PRIMARY_SYMBOL KEY_SYMBOL) keyListVariants
     )
@@ -264,10 +259,8 @@ fieldDefinition:
 
 // int char(n) float
 dataType: // type in sql_yacc.yy
-    type = (
-        INT_SYMBOL
-    )
-    | type = (FLOAT_SYMBOL)
+    type = INT_SYMBOL
+    | type = FLOAT_SYMBOL
     | type = CHAR_SYMBOL fieldLength?
 ;
 
@@ -280,9 +273,6 @@ real_ulonglong_number:
 ;
 
 columnAttribute:
-//     NOT_SYMBOL? nullLiteral
-//     | value = AUTO_INCREMENT_SYMBOL
-//     | PRIMARY_SYMBOL? value = KEY_SYMBOL
     value = UNIQUE_SYMBOL KEY_SYMBOL?
 ;
 
@@ -299,7 +289,8 @@ keyList:
 ;
 
 keyPart:
-    identifier fieldLength? direction?
+    // identifier fieldLength? direction?
+    identifier
 ;
 
 indexRef: // Always internal reference. Still all qualification variations are accepted.
@@ -308,13 +299,11 @@ indexRef: // Always internal reference. Still all qualification variations are a
 
 tableRef:
     qualifiedIdentifier
-    | dotIdentifier
 ;
 
 // A name for a field (column/index). Can be qualified with the current schema + table (although it's not a reference).
 fieldIdentifier:
-    dotIdentifier
-    | qualifiedIdentifier dotIdentifier?
+    qualifiedIdentifier
 ;
 
 // This rule encapsulates the frequently used dot + identifier sequence, which also requires a special
@@ -339,16 +328,48 @@ identifier:
 ;
 
 qualifiedIdentifier:
-    identifier dotIdentifier?
+    identifier
 ;
 
+//----------------- Expression support ---------------------------------------------------------------------------------
+
 expr:
-    boolPri (IS_SYMBOL notRule? type = (TRUE_SYMBOL | FALSE_SYMBOL | UNKNOWN_SYMBOL))? # exprIs
+    OPEN_PAR_SYMBOL expr CLOSE_PAR_SYMBOL                                              # exprPar
+    | (PLUS_OPERATOR | MINUS_OPERATOR) expr                                            # exprSign
     | NOT_SYMBOL expr                                                                  # exprNot
+    | expr op = (MULT_OPERATOR | DIV_OPERATOR)  expr                                   # exprMul
+    | expr op = (PLUS_OPERATOR | MINUS_OPERATOR) expr                                  # exprAdd
+    | expr op = compOp expr                                                            # exprCompare
     | expr op = (AND_SYMBOL | LOGICAL_AND_OPERATOR) expr                               # exprAnd
     | expr XOR_SYMBOL expr                                                             # exprXor
     | expr op = (OR_SYMBOL | LOGICAL_OR_OPERATOR) expr                                 # exprOr
+    | atom                                                                             # exprAtom
 ;
+
+compOp:
+    EQUAL_OPERATOR
+    | GREATER_OR_EQUAL_OPERATOR
+    | GREATER_THAN_OPERATOR
+    | LESS_OR_EQUAL_OPERATOR
+    | LESS_THAN_OPERATOR
+    | NOT_EQUAL_OPERATOR
+;
+
+atom
+   : scientific
+   | variable
+   ;
+
+scientific:
+    INT_NUMBER
+    | FLOAT_NUMBER
+    | SINGLE_QUOTED_TEXT
+    ;
+
+variable:
+    identifier
+    ;
+
 
 // lexer
 
@@ -403,6 +424,7 @@ DOT_IDENTIFIER:
 ;
 
 
+AND_SYMBOL:                      A N D;                                      // SQL-2003-R
 ASC_SYMBOL:                      A S C;                                      // SQL-2003-N
 AS_SYMBOL:                       A S;                                        // SQL-2003-R
 BEGIN_SYMBOL:                    B E G I N;                                  // SQL-2003-R
@@ -419,8 +441,10 @@ INSERT_SYMBOL:                   I N S E R T;                                // 
 INTO_SYMBOL:                     I N T O;                                    // SQL-2003-R
 INT_SYMBOL:                      I N T;                                      // SQL-2003-R
 KEY_SYMBOL:                      K E Y;                                      // SQL-2003-N
+NOT_SYMBOL:                      N O T;                                                                            // SQL-2003-R
 ON_SYMBOL:                       O N;                                        // SQL-2003-R
 ORDER_SYMBOL:                    O R D E R;                                  // SQL-2003-R
+OR_SYMBOL:                       O R;                                        // SQL-2003-R
 PRIMARY_SYMBOL:                  P R I M A R Y;                              // SQL-2003-R
 SELECT_SYMBOL:                   S E L E C T;                                // SQL-2003-R
 TABLES_SYMBOL:                   T A B L E S;
@@ -430,6 +454,8 @@ VALUES_SYMBOL:                   V A L U E S;                                // 
 VALUE_SYMBOL:                    V A L U E;                                  // SQL-2003-R
 WHERE_SYMBOL:                    W H E R E;                                  // SQL-2003-R
 WORK_SYMBOL:                     W O R K;                                    // SQL-2003-N
+XOR_SYMBOL:                      X O R;
+
 
 // Operators
 EQUAL_OPERATOR:            '='; // Also assign.
