@@ -15,6 +15,7 @@ grammar MiniSQL;
 // drop table student;
 
 // create index stunameidx on student ( sname );
+// create unique index stunameidx on student ( sname );
 
 // drop index stunameidx;
 
@@ -29,7 +30,6 @@ grammar MiniSQL;
 
 // quit;
 
-// TODO:
 // execfile 文件名 ;
 
 
@@ -49,6 +49,17 @@ simpleStatement:
     | deleteStatement
     | insertStatement
     | selectStatement
+
+    | quit
+    | execFileStatement
+;
+
+quit:
+    'quit'
+    ;
+
+execFileStatement:
+    'execfile' SINGLE_QUOTED_TEXT
 ;
 
 createStatement:
