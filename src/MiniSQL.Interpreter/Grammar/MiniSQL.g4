@@ -50,11 +50,11 @@ simpleStatement:
     | insertStatement
     | selectStatement
 
-    | quit
+    | quitStatement
     | execFileStatement
 ;
 
-quit:
+quitStatement:
     'quit'
     ;
 
@@ -235,7 +235,6 @@ whereClause:
 
 tableName:
     qualifiedIdentifier
-    | dotIdentifier
 ;
 
 tableElementList:
@@ -299,6 +298,8 @@ keyList:
     OPEN_PAR_SYMBOL keyPart (COMMA_SYMBOL keyPart)* CLOSE_PAR_SYMBOL
 ;
 
+//-----------------  identifiers - handled by `GetText()` ----------------- 
+
 keyPart:
     // identifier fieldLength? direction?
     identifier
@@ -315,12 +316,6 @@ tableRef:
 // A name for a field (column/index). Can be qualified with the current schema + table (although it's not a reference).
 fieldIdentifier:
     qualifiedIdentifier
-;
-
-// This rule encapsulates the frequently used dot + identifier sequence, which also requires a special
-// treatment in the lexer. See there in the DOT_IDENTIFIER rule.
-dotIdentifier:
-    DOT_SYMBOL identifier
 ;
 
 indexName:
