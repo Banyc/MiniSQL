@@ -35,9 +35,9 @@ grammar MiniSQL;
 
 // parser
 
-query:
+prog:
     EOF
-    | (simpleStatement) (SEMICOLON_SYMBOL EOF? | EOF)
+    | (simpleStatement SEMICOLON_SYMBOL)+ EOF
 ;
 
 simpleStatement:
@@ -59,7 +59,7 @@ quitStatement:
     ;
 
 execFileStatement:
-    EXECFILE_SYMBOL SINGLE_QUOTED_TEXT
+    EXECFILE_SYMBOL (SINGLE_QUOTED_TEXT | DOUBLE_QUOTED_TEXT)
 ;
 
 createStatement:
@@ -171,7 +171,7 @@ fieldDefinition:
 ;
 
 // int char(n) float
-dataType: // type in sql_yacc.yy
+dataType:
     type = INT_SYMBOL
     | type = FLOAT_SYMBOL
     | type = CHAR_SYMBOL fieldLength?
@@ -205,7 +205,6 @@ columnName:
 ;
 
 keyPart:
-    // identifier fieldLength? direction?
     identifier
 ;
 
@@ -319,19 +318,12 @@ fragment HEXDIGIT: [0-9a-fA-F];
 HEX_NUMBER: ('0x' HEXDIGIT+) | ('x\'' HEXDIGIT+ '\'');
 BIN_NUMBER: ('0b' [01]+) | ('b\'' [01]+ '\'');
 
-INT_NUMBER: DIGITS { setType(determineNumericType(getText())); };
+INT_NUMBER: DIGITS;
 
 // Float types must be handled first or the DOT_IDENTIIFER rule will make them to identifiers
 // (if there is no leading digit before the dot).
 DECIMAL_NUMBER: DIGITS? DOT_SYMBOL DIGITS;
 FLOAT_NUMBER:   (DIGITS? DOT_SYMBOL)? DIGITS [eE] (MINUS_OPERATOR | PLUS_OPERATOR)? DIGITS;
-
-// Special rule that should also match all keywords if they are directly preceded by a dot.
-// Hence it's defined before all keywords.
-// Here we make use of the ability in our base lexer to emit multiple tokens with a single rule.
-DOT_IDENTIFIER:
-    DOT_SYMBOL LETTER_WHEN_UNQUOTED_NO_DIGIT LETTER_WHEN_UNQUOTED* { emitDot(); } -> type(IDENTIFIER)
-;
 
 
 EXECFILE_SYMBOL:                 E X E C F I L E;                            // Custom
@@ -399,7 +391,7 @@ BITWISE_AND_OPERATOR: '&';
 BITWISE_XOR_OPERATOR: '^';
 
 LOGICAL_OR_OPERATOR:
-    '||' { setType(isSqlModeActive(PipesAsConcat) ? CONCAT_PIPES_SYMBOL : LOGICAL_OR_OPERATOR); }
+    '||'
 ;
 BITWISE_OR_OPERATOR: '|';
 
@@ -414,7 +406,8 @@ CLOSE_CURLY_SYMBOL: '}';
 UNDERLINE_SYMBOL:   '_';
 
 
-
+// White space handling
+WHITESPACE: [ \t\f\r\n] -> channel(HIDDEN); // Ignore whitespaces.
 
 // Identifiers might start with a digit, even though it is discouraged, and may not consist entirely of digits only.
 // All keywords above are automatically excluded.
@@ -434,33 +427,18 @@ fragment BACK_TICK:    '`';
 fragment SINGLE_QUOTE: '\'';
 fragment DOUBLE_QUOTE: '"';
 
-BACK_TICK_QUOTED_ID: BACK_TICK (({!isSqlModeActive(NoBackslashEscapes)}? '\\')? .)*? BACK_TICK;
-
 DOUBLE_QUOTED_TEXT: (
-        DOUBLE_QUOTE (({!isSqlModeActive(NoBackslashEscapes)}? '\\' .)? .)*? DOUBLE_QUOTE
+        DOUBLE_QUOTE (('\\' .)? .)*? DOUBLE_QUOTE
     )+
 ;
 
 SINGLE_QUOTED_TEXT: (
-        SINGLE_QUOTE (({!isSqlModeActive(NoBackslashEscapes)}? '\\')? .)*? SINGLE_QUOTE
+        SINGLE_QUOTE (('\\')? .)*? SINGLE_QUOTE
     )+
-;
-
-// There are 3 types of block comments:
-// /* ... */ - The standard multi line comment.
-// /*! ... */ - A comment used to mask code for other clients. In MySQL the content is handled as normal code.
-// /*!12345 ... */ - Same as the previous one except code is only used when the given number is lower
-//                   than the current server version (specifying so the minimum server version the code can run with).
-VERSION_COMMENT_START: ('/*!' DIGITS) (
-        {checkVersion(getText())}? // Will set inVersionComment if the number matches.
-        | .*? '*/'
-    ) -> channel(HIDDEN)
 ;
 
 // inVersionComment is a variable in the base lexer.
 // TODO: use a lexer mode instead of a member variable.
-MYSQL_COMMENT_START: '/*!' { inVersionComment = true; }                     -> channel(HIDDEN);
-VERSION_COMMENT_END: '*/' {inVersionComment}? { inVersionComment = false; } -> channel(HIDDEN);
 BLOCK_COMMENT:       ( '/**/' | '/*' ~[!] .*? '*/')                         -> channel(HIDDEN);
 
 POUND_COMMENT:    '#' ~([\n\r])*                                   -> channel(HIDDEN);
