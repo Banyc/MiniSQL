@@ -169,7 +169,7 @@ fromClause:
 ;
 
 tableReferenceList:
-    tableReference (COMMA_SYMBOL tableReference)*
+    tableReference  // only one table at a time
 ;
 
 tableReference: ( // Note: we have also a tableRef rule for identifiers that reference a table anywhere.
@@ -341,7 +341,7 @@ qualifiedIdentifier:
 
 expr:
     OPEN_PAR_SYMBOL expr CLOSE_PAR_SYMBOL                                              # exprPar
-    | (PLUS_OPERATOR | MINUS_OPERATOR) expr                                            # exprSign
+    | (PLUS_OPERATOR | MINUS_OPERATOR) expr                                            # exprSign  // review: to check if it conflict with exprAdd
     | NOT_SYMBOL expr                                                                  # exprNot
     | expr op = (MULT_OPERATOR | DIV_OPERATOR)  expr                                   # exprMul
     | expr op = (PLUS_OPERATOR | MINUS_OPERATOR) expr                                  # exprAdd

@@ -9,6 +9,7 @@ namespace MiniSQL.Library.Models
         Minus,
         Multiply,
         Divide,
+        Negative,
         And,
         Or,
         Not,
@@ -18,42 +19,58 @@ namespace MiniSQL.Library.Models
         NotEqual,
         LessThanOrEqualTo,
         MoreThanOrEqualTo,
-        Atom
+        // atom does not have an operator
+        AtomVariable,
+        AtomConcreteValue
     }
 
     public class Expression
     {
         public Operator Operator { get; set; }
-        // if nary, left will be null
         public Expression LeftOperant { get; set; } = null;
+        // if nary, this.RightOperant will be null
         public Expression RightOperant { get; set; } = null;
-        public AttributeValue Atom { get; set; } = null;
+        // use if this Expression is only the attribute
+        // this could be a number or a string
+        public AttributeValue ConcreteValue { get; set; } = null;
+        // use if this Expression is only an attribute (variable)
+        public string AttributeName { get; set; } = "";
 
+        // get the value of this Expression
         public AttributeValue Calculate(List<AttributeValue> row)
         {
-            // match from symbol table
-            if (this.Operator == Operator.Atom)
+            // fetch value from symbol table (from `row`)
+            if (this.Operator == Operator.AtomVariable)
             {
-                AttributeValue column = row.Find(x => x.AttributeName == this.Atom.AttributeName);
+                AttributeValue column = row.Find(x => x.AttributeName == this.AttributeName);
                 if (column == null)
-                    throw new System.Exception($"{this.Atom.AttributeName} Not found");
+                    throw new System.Exception($"Attribute \"{this.AttributeName}\" does not exist in this table");
                 return column;
             }
 
+            // directly return the concrete value
+            if (this.Operator == Operator.AtomConcreteValue)
+                return this.ConcreteValue;
+
+            // fetch the values of children
             AttributeValue leftValue = this.LeftOperant?.Calculate(row);
             AttributeValue rightValue = this.RightOperant?.Calculate(row);
             AttributeValue result = new AttributeValue();
 
+            // make sure the types of children are the same
             if (leftValue?.Type != rightValue?.Type)
             {
                 throw new System.Exception("Operants type not matched!");
             }
-            result.Type = rightValue.Type;
+            result.Type = leftValue.Type;
 
+            // calculate the two children into a value
             switch (this.Operator)
             {
-                case Operator.Atom:
-                    return this.Atom;
+                case Operator.AtomVariable:
+                    throw new System.Exception("AtomVariable is not supposed to reach this step");
+                case Operator.AtomConcreteValue:
+                    throw new System.Exception("AtomConcreteValue is not supposed to reach this step");
                 case Operator.Plus:
                     result.IntegerValue = leftValue.IntegerValue + rightValue.IntegerValue;
                     result.FloatValue = leftValue.FloatValue + rightValue.FloatValue;
@@ -63,7 +80,7 @@ namespace MiniSQL.Library.Models
                     result.IntegerValue = leftValue.IntegerValue - rightValue.IntegerValue;
                     result.FloatValue = leftValue.FloatValue - rightValue.FloatValue;
                     if (result.Type == AttributeType.Char)
-                        throw new System.Exception("String could not subtract");
+                        throw new System.Exception("String could not Subtract");
                     break;
                 case Operator.Multiply:
                     result.IntegerValue = leftValue.IntegerValue * rightValue.IntegerValue;
@@ -76,6 +93,12 @@ namespace MiniSQL.Library.Models
                     result.FloatValue = leftValue.FloatValue / rightValue.FloatValue;
                     if (result.Type == AttributeType.Char)
                         throw new System.Exception("String could not Divide");
+                    break;
+                case Operator.Negative:
+                    result.IntegerValue = -leftValue.IntegerValue;
+                    result.FloatValue = -leftValue.FloatValue;
+                    if (result.Type == AttributeType.Char)
+                        throw new System.Exception("String could not Negative");
                     break;
                 case Operator.And:
                     result.IntegerValue = leftValue.IntegerValue != 0 && rightValue.IntegerValue != 0 ? 1 : 0;
@@ -90,8 +113,8 @@ namespace MiniSQL.Library.Models
                         throw new System.Exception("String could not Or");
                     break;
                 case Operator.Not:
-                    result.IntegerValue = rightValue.IntegerValue == 0 ? 1 : 0;
-                    result.FloatValue = rightValue.FloatValue == 0 ? 1 : 0;
+                    result.IntegerValue = leftValue.IntegerValue == 0 ? 1 : 0;
+                    result.FloatValue = leftValue.FloatValue == 0 ? 1 : 0;
                     if (result.Type == AttributeType.Char)
                         throw new System.Exception("String could not Not");
                     break;

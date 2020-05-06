@@ -4,7 +4,7 @@ namespace MiniSQL.Library.Models
 {
     public class InsertStatement : IStatement
     {
-        public StatementType Type { get; set; } = StatementType.DeleteStatement;
+        public StatementType Type { get; set; } = StatementType.InsertStatement;
         public string TableName { get; set; }
         public List<AttributeValue> Values { get; set; }
     }

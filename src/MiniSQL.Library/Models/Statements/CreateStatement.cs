@@ -10,7 +10,7 @@ namespace MiniSQL.Library.Models
 
     // used when declaration, not definition
     // it won't accept concrete value
-    public class AttributeTypePair
+    public class AttributeDeclaration
     {
         public string AttributeName { get; set; }
         public AttributeType Type { get; set; }
@@ -27,6 +27,6 @@ namespace MiniSQL.Library.Models
         public List<string> Attributes { get; set; }
         // create table only
         public List<string> PrimaryKeys { get; set; }
-        public List<AttributeTypePair> AttributeTypePairs { get; set; }
+        public List<AttributeDeclaration> AttributeTypePairs { get; set; }
     }
 }
