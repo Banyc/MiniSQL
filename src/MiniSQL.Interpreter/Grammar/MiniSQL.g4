@@ -295,7 +295,7 @@ keyListVariants:
 ;
 
 keyList:
-    OPEN_PAR_SYMBOL keyPart (COMMA_SYMBOL keyPart)* CLOSE_PAR_SYMBOL
+    OPEN_PAR_SYMBOL keyPart CLOSE_PAR_SYMBOL  // each create index could only target one column
 ;
 
 //-----------------  identifiers - handled by `GetText()` ----------------- 

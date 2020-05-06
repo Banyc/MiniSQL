@@ -2,7 +2,7 @@ using System.Collections.Generic;
 
 namespace MiniSQL.Library.Models
 {
-    public enum CreateTarget
+    public enum CreateType
     {
         Table,
         Index,
@@ -14,17 +14,19 @@ namespace MiniSQL.Library.Models
     {
         public string AttributeName { get; set; }
         public AttributeType Type { get; set; }
-        public int CharLimit  { get; set; }
+        public int CharLimit { get; set; }
+        public bool IsUnique { get; set; }
     }
 
     public class CreateStatement : IStatement
     {
         public StatementType Type { get; set; } = StatementType.CreateStatement;
-        public CreateTarget Target { get; set; }
+        public CreateType CreateType { get; set; }
         public bool IsUnique { get; set; }
         public string TableName { get; set; }
         // create index only
-        public List<string> Attributes { get; set; }
+        public string IndexName { get; set; }
+        public string AttributeName { get; set; }
         // create table only
         public List<string> PrimaryKeys { get; set; }
         public List<AttributeDeclaration> AttributeTypePairs { get; set; }
