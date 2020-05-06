@@ -137,9 +137,7 @@ insertValues:
 ;
 
 valueList:
-    OPEN_PAR_SYMBOL values? CLOSE_PAR_SYMBOL (
-        COMMA_SYMBOL OPEN_PAR_SYMBOL values? CLOSE_PAR_SYMBOL
-    )*
+    OPEN_PAR_SYMBOL values? CLOSE_PAR_SYMBOL
 ;
 
 values:
@@ -150,7 +148,6 @@ whereClause:
     WHERE_SYMBOL expr
 ;
 
-
 tableElementList:
     tableElement (COMMA_SYMBOL tableElement)*
 ;
@@ -160,10 +157,9 @@ tableElement:
     | tableConstraintDef
 ;
 
+// only accept the last primary key
 tableConstraintDef:
-    (
-        (type = PRIMARY_SYMBOL KEY_SYMBOL) keyListVariants
-    )
+    (type = PRIMARY_SYMBOL KEY_SYMBOL) keyListVariants
 ;
 
 columnDefinition:
@@ -171,9 +167,7 @@ columnDefinition:
 ;
 
 fieldDefinition:
-    dataType (
-        columnAttribute*
-    )
+    dataType columnAttribute*
 ;
 
 // int char(n) float

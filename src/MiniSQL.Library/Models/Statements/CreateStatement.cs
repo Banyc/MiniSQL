@@ -14,21 +14,21 @@ namespace MiniSQL.Library.Models
     {
         public string AttributeName { get; set; }
         public AttributeType Type { get; set; }
-        public int CharLimit { get; set; }
-        public bool IsUnique { get; set; }
+        public int CharLimit { get; set; } = 1;
+        public bool IsUnique { get; set; } = false;
     }
 
     public class CreateStatement : IStatement
     {
         public StatementType Type { get; set; } = StatementType.CreateStatement;
         public CreateType CreateType { get; set; }
-        public bool IsUnique { get; set; }
+        public bool IsUnique { get; set; } = false;
         public string TableName { get; set; }
         // create index only
         public string IndexName { get; set; }
         public string AttributeName { get; set; }
         // create table only
-        public List<string> PrimaryKeys { get; set; }
-        public List<AttributeDeclaration> AttributeTypePairs { get; set; }
+        public string PrimaryKey { get; set; }
+        public List<AttributeDeclaration> AttributeDeclarations { get; set; }
     }
 }
