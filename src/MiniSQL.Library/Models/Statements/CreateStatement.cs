@@ -8,13 +8,8 @@ namespace MiniSQL.Library.Models
         Index,
     }
 
-    public enum AttributeType
-    {
-        Int,
-        Char,
-        Float,
-    }
-
+    // used when declaration, not definition
+    // it won't accept concrete value
     public class AttributeTypePair
     {
         public string AttributeName { get; set; }
