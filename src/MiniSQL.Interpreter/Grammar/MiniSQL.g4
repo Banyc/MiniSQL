@@ -55,11 +55,11 @@ simpleStatement:
 ;
 
 quitStatement:
-    'quit'
+    QUIT_SYMBOL
     ;
 
 execFileStatement:
-    'execfile' SINGLE_QUOTED_TEXT
+    EXECFILE_SYMBOL SINGLE_QUOTED_TEXT
 ;
 
 createStatement:
@@ -430,6 +430,8 @@ DOT_IDENTIFIER:
 ;
 
 
+EXECFILE_SYMBOL:                 E X E C F I L E;                            // Custom
+QUIT_SYMBOL:                     Q U I T;                                    // Custom
 AND_SYMBOL:                      A N D;                                      // SQL-2003-R
 ASC_SYMBOL:                      A S C;                                      // SQL-2003-N
 AS_SYMBOL:                       A S;                                        // SQL-2003-R
