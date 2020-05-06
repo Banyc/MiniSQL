@@ -12,6 +12,6 @@ namespace MiniSQL.Library.Models
     {
         public StatementType Type { get; set; } = StatementType.DropStatement;
         public DropTarget Target { get; set; }
-        public List<string> TargetNames { get; set; }
+        public string TargetName { get; set; }
     }
 }

@@ -77,9 +77,7 @@ createTable:
 
 createIndex:
     (
-        UNIQUE_SYMBOL? type = INDEX_SYMBOL (
-            indexName
-        ) createIndexTarget
+        UNIQUE_SYMBOL? type = INDEX_SYMBOL indexName createIndexTarget
     )
 ;
 
@@ -101,7 +99,7 @@ deleteStatement:
 
 insertStatement:
     INSERT_SYMBOL INTO_SYMBOL? tableRef (
-        insertFromConstructor
+        insertValues
     )
 ;
 
@@ -110,87 +108,16 @@ selectStatement:
     | queryExpressionParens
 ;
 
-
 queryExpression:
-     (
-        // queryExpressionBody orderClause?
-        queryExpressionBody
-     //    | queryExpressionParens (orderClause limitClause? | limitClause)
-    )
+    SELECT_SYMBOL MULT_OPERATOR fromClause? whereClause?
 ;
 
-// orderClause:
-//     ORDER_SYMBOL BY_SYMBOL orderList
-// ;
-
-// orderList:
-//     orderExpression (COMMA_SYMBOL orderExpression)*
-// ;
-
-// orderExpression:
-//     expr direction?
-// ;
-
-// direction:
-//     ASC_SYMBOL
-//     | DESC_SYMBOL
-// ;
-
-
-queryExpressionBody:
-    querySpecification
-;
-
-querySpecification:
-    SELECT_SYMBOL selectItemList fromClause? whereClause?
-;
-
-// selectItemList: (selectItem | MULT_OPERATOR) (COMMA_SYMBOL selectItem)*
-// ;
-selectItemList: MULT_OPERATOR
-;
-
-// selectItem:
-//     expr selectAlias?
-// ;
-
-// selectAlias:
-//     AS_SYMBOL? (identifier | textStringLiteral)
-// ;
-
-// TEXT_STRING_sys + TEXT_STRING_literal + TEXT_STRING_filesystem + TEXT_STRING + TEXT_STRING_password +
-// TEXT_STRING_validated in sql_yacc.yy.
 textStringLiteral:
     value = SINGLE_QUOTED_TEXT
 ;
 
 fromClause:
-    FROM_SYMBOL (tableReferenceList)
-;
-
-tableReferenceList:
-    tableReference  // only one table at a time
-;
-
-tableReference: ( // Note: we have also a tableRef rule for identifiers that reference a table anywhere.
-        tableFactor
-    )
-;
-
-/**
-  MySQL has a syntax extension where a comma-separated list of table
-  references is allowed as a table reference in itself, for instance
-    SELECT * FROM (t1, t2) JOIN t3 ON 1
-  which is not allowed in standard SQL. The syntax is equivalent to
-    SELECT * FROM (t1 CROSS JOIN t2) JOIN t3 ON 1
-  We call this rule tableReferenceListParens.
-*/
-tableFactor:
-    singleTable
-;
-
-singleTable:
-    tableRef
+    FROM_SYMBOL tableRef
 ;
 
 queryExpressionParens:
@@ -202,15 +129,7 @@ dropIndex:
 ;
 
 dropTable:
-    type = (TABLE_SYMBOL | TABLES_SYMBOL) tableRefList
-;
-
-tableRefList:
-    tableRef (COMMA_SYMBOL tableRef)*
-;
-
-insertFromConstructor:
-    insertValues
+    type = (TABLE_SYMBOL | TABLES_SYMBOL) tableRef  // drop one table at a time
 ;
 
 insertValues:
@@ -227,15 +146,10 @@ values:
     (expr) (COMMA_SYMBOL (expr))*
 ;
 
-
 whereClause:
     WHERE_SYMBOL expr
 ;
 
-
-tableName:
-    qualifiedIdentifier
-;
 
 tableElementList:
     tableElement (COMMA_SYMBOL tableElement)*
@@ -252,13 +166,8 @@ tableConstraintDef:
     )
 ;
 
-
 columnDefinition:
     columnName fieldDefinition
-;
-
-columnName:
-    fieldIdentifier
 ;
 
 fieldDefinition:
@@ -275,11 +184,7 @@ dataType: // type in sql_yacc.yy
 ;
 
 fieldLength:
-    OPEN_PAR_SYMBOL (real_ulonglong_number) CLOSE_PAR_SYMBOL
-;
-
-real_ulonglong_number:
-    INT_NUMBER
+    OPEN_PAR_SYMBOL (INT_NUMBER) CLOSE_PAR_SYMBOL
 ;
 
 columnAttribute:
@@ -291,14 +196,19 @@ createIndexTarget:
 ;
 
 keyListVariants:
-    keyList
+    OPEN_PAR_SYMBOL keyPart CLOSE_PAR_SYMBOL  // each create index/primary key could only target one column
 ;
 
-keyList:
-    OPEN_PAR_SYMBOL keyPart CLOSE_PAR_SYMBOL  // each create index could only target one column
-;
 
 //-----------------  identifiers - handled by `GetText()` ----------------- 
+
+tableName:
+    qualifiedIdentifier
+;
+
+columnName:
+    fieldIdentifier
+;
 
 keyPart:
     // identifier fieldLength? direction?
