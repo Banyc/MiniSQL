@@ -11,7 +11,10 @@ namespace MiniSQL.Library.Models
     public class DropStatement : IStatement
     {
         public StatementType Type { get; set; } = StatementType.DropStatement;
-        public DropTarget Target { get; set; }
-        public string TargetName { get; set; }
+        public DropTarget TargetType { get; set; }
+        // leave blank if drop table
+        public string IndexName { get; set; } = "";
+        // leave blank if drop index does not specify any table
+        public string TableName { get; set; } = "";
     }
 }

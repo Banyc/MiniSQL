@@ -151,16 +151,6 @@ public interface IMiniSQLListener : IParseTreeListener {
 	/// <param name="context">The parse tree.</param>
 	void ExitQueryExpression([NotNull] MiniSQLParser.QueryExpressionContext context);
 	/// <summary>
-	/// Enter a parse tree produced by <see cref="MiniSQLParser.textStringLiteral"/>.
-	/// </summary>
-	/// <param name="context">The parse tree.</param>
-	void EnterTextStringLiteral([NotNull] MiniSQLParser.TextStringLiteralContext context);
-	/// <summary>
-	/// Exit a parse tree produced by <see cref="MiniSQLParser.textStringLiteral"/>.
-	/// </summary>
-	/// <param name="context">The parse tree.</param>
-	void ExitTextStringLiteral([NotNull] MiniSQLParser.TextStringLiteralContext context);
-	/// <summary>
 	/// Enter a parse tree produced by <see cref="MiniSQLParser.fromClause"/>.
 	/// </summary>
 	/// <param name="context">The parse tree.</param>

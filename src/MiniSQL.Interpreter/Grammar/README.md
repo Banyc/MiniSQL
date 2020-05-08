@@ -44,9 +44,7 @@ antlr -Dlanguage=CSharp -visitor -o MiniSQL MiniSQL.g4
 
 ## Visualize
 
-First, 
-
-Then, set `pwd` to current folder and run the following command.
+Set `pwd` to current folder and run the following command.
 
 ```cmd
 antlr -o MiniSQL_Java MiniSQL.g4

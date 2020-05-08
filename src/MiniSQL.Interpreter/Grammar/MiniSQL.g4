@@ -112,10 +112,6 @@ queryExpression:
     SELECT_SYMBOL MULT_OPERATOR fromClause? whereClause?
 ;
 
-textStringLiteral:
-    value = SINGLE_QUOTED_TEXT
-;
-
 fromClause:
     FROM_SYMBOL tableRef
 ;
@@ -125,7 +121,7 @@ queryExpressionParens:
 ;
 
 dropIndex:
-    type = INDEX_SYMBOL indexRef ON_SYMBOL tableRef
+    type = INDEX_SYMBOL indexRef (ON_SYMBOL tableRef)?
 ;
 
 dropTable:
@@ -271,8 +267,9 @@ atom
 
 scientific:
     INT_NUMBER
-    | FLOAT_NUMBER
+    | DECIMAL_NUMBER
     | SINGLE_QUOTED_TEXT
+    | DOUBLE_QUOTED_TEXT
     ;
 
 variable:

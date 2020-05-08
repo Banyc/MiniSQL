@@ -18,7 +18,8 @@ namespace MiniSQL.Library.Models
         public string IndexName { get; set; }
         public string AttributeName { get; set; }
         // create table only
-        public string PrimaryKey { get; set; }
+        // it is assigned to "" if PrimaryKey does not exist
+        public string PrimaryKey { get; set; } = "";
         public List<AttributeDeclaration> AttributeDeclarations { get; set; }
     }
 }

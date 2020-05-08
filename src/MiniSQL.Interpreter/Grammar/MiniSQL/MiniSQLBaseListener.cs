@@ -179,18 +179,6 @@ public partial class MiniSQLBaseListener : IMiniSQLListener {
 	/// <param name="context">The parse tree.</param>
 	public virtual void ExitQueryExpression([NotNull] MiniSQLParser.QueryExpressionContext context) { }
 	/// <summary>
-	/// Enter a parse tree produced by <see cref="MiniSQLParser.textStringLiteral"/>.
-	/// <para>The default implementation does nothing.</para>
-	/// </summary>
-	/// <param name="context">The parse tree.</param>
-	public virtual void EnterTextStringLiteral([NotNull] MiniSQLParser.TextStringLiteralContext context) { }
-	/// <summary>
-	/// Exit a parse tree produced by <see cref="MiniSQLParser.textStringLiteral"/>.
-	/// <para>The default implementation does nothing.</para>
-	/// </summary>
-	/// <param name="context">The parse tree.</param>
-	public virtual void ExitTextStringLiteral([NotNull] MiniSQLParser.TextStringLiteralContext context) { }
-	/// <summary>
 	/// Enter a parse tree produced by <see cref="MiniSQLParser.fromClause"/>.
 	/// <para>The default implementation does nothing.</para>
 	/// </summary>

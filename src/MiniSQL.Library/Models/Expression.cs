@@ -12,6 +12,7 @@ namespace MiniSQL.Library.Models
         Negative,
         And,
         Or,
+        Xor,
         Not,
         LessThan,
         MoreThan,
@@ -32,12 +33,12 @@ namespace MiniSQL.Library.Models
         public Expression RightOperant { get; set; } = null;
         // use if this Expression is only the attribute
         // this could be a number or a string
-        public AttributeValue ConcreteValue { get; set; } = null;
+        public AtomValue ConcreteValue { get; set; } = null;
         // use if this Expression is only an attribute (variable)
         public string AttributeName { get; set; } = "";
 
         // get the value of this Expression
-        public AttributeValue Calculate(List<AttributeValue> row)
+        public AtomValue Calculate(List<AttributeValue> row)
         {
             // fetch value from symbol table (from `row`)
             if (this.Operator == Operator.AtomVariable)
@@ -53,9 +54,9 @@ namespace MiniSQL.Library.Models
                 return this.ConcreteValue;
 
             // fetch the values of children
-            AttributeValue leftValue = this.LeftOperant?.Calculate(row);
-            AttributeValue rightValue = this.RightOperant?.Calculate(row);
-            AttributeValue result = new AttributeValue();
+            AtomValue leftValue = this.LeftOperant?.Calculate(row);
+            AtomValue rightValue = this.RightOperant?.Calculate(row);
+            AtomValue result = new AtomValue();
 
             // make sure the types of children are the same
             if (leftValue?.Type != rightValue?.Type)
@@ -80,43 +81,51 @@ namespace MiniSQL.Library.Models
                     result.IntegerValue = leftValue.IntegerValue - rightValue.IntegerValue;
                     result.FloatValue = leftValue.FloatValue - rightValue.FloatValue;
                     if (result.Type == AttributeType.Char)
-                        throw new System.Exception("String could not Subtract");
+                        throw new System.InvalidOperationException("String could not Subtract");
                     break;
                 case Operator.Multiply:
                     result.IntegerValue = leftValue.IntegerValue * rightValue.IntegerValue;
                     result.FloatValue = leftValue.FloatValue * rightValue.FloatValue;
                     if (result.Type == AttributeType.Char)
-                        throw new System.Exception("String could not Multiply");
+                        throw new System.InvalidOperationException("String could not Multiply");
                     break;
                 case Operator.Divide:
                     result.IntegerValue = leftValue.IntegerValue / rightValue.IntegerValue;
                     result.FloatValue = leftValue.FloatValue / rightValue.FloatValue;
                     if (result.Type == AttributeType.Char)
-                        throw new System.Exception("String could not Divide");
+                        throw new System.InvalidOperationException("String could not Divide");
                     break;
                 case Operator.Negative:
                     result.IntegerValue = -leftValue.IntegerValue;
                     result.FloatValue = -leftValue.FloatValue;
                     if (result.Type == AttributeType.Char)
-                        throw new System.Exception("String could not Negative");
+                        throw new System.InvalidOperationException("String could not Negative");
                     break;
                 case Operator.And:
                     result.IntegerValue = leftValue.IntegerValue != 0 && rightValue.IntegerValue != 0 ? 1 : 0;
                     result.FloatValue = leftValue.FloatValue != 0 && rightValue.FloatValue != 0 ? 1 : 0;
                     if (result.Type == AttributeType.Char)
-                        throw new System.Exception("String could not And");
+                        throw new System.InvalidOperationException("String could not And");
                     break;
                 case Operator.Or:
                     result.IntegerValue = leftValue.IntegerValue != 0 || rightValue.IntegerValue != 0 ? 1 : 0;
                     result.FloatValue = leftValue.FloatValue != 0 || rightValue.FloatValue != 0 ? 1 : 0;
                     if (result.Type == AttributeType.Char)
-                        throw new System.Exception("String could not Or");
+                        throw new System.InvalidOperationException("String could not Or");
+                    break;
+                case Operator.Xor:
+                    result.IntegerValue = ((leftValue.IntegerValue != 0 || rightValue.IntegerValue != 0) 
+                                            && (leftValue.IntegerValue != 0 && rightValue.IntegerValue != 0)) ? 1 : 0;
+                    result.FloatValue = ((leftValue.FloatValue != 0 || rightValue.FloatValue != 0) 
+                                            && (leftValue.FloatValue != 0 && rightValue.FloatValue != 0)) ? 1 : 0;
+                    if (result.Type == AttributeType.Char)
+                        throw new System.InvalidOperationException("String could not Or");
                     break;
                 case Operator.Not:
                     result.IntegerValue = leftValue.IntegerValue == 0 ? 1 : 0;
                     result.FloatValue = leftValue.FloatValue == 0 ? 1 : 0;
                     if (result.Type == AttributeType.Char)
-                        throw new System.Exception("String could not Not");
+                        throw new System.InvalidOperationException("String could not Not");
                     break;
                 case Operator.LessThan:
                     result.Type = AttributeType.Int;

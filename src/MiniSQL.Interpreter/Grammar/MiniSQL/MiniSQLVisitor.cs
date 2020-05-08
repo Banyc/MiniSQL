@@ -104,12 +104,6 @@ public interface IMiniSQLVisitor<Result> : IParseTreeVisitor<Result> {
 	/// <return>The visitor result.</return>
 	Result VisitQueryExpression([NotNull] MiniSQLParser.QueryExpressionContext context);
 	/// <summary>
-	/// Visit a parse tree produced by <see cref="MiniSQLParser.textStringLiteral"/>.
-	/// </summary>
-	/// <param name="context">The parse tree.</param>
-	/// <return>The visitor result.</return>
-	Result VisitTextStringLiteral([NotNull] MiniSQLParser.TextStringLiteralContext context);
-	/// <summary>
 	/// Visit a parse tree produced by <see cref="MiniSQLParser.fromClause"/>.
 	/// </summary>
 	/// <param name="context">The parse tree.</param>

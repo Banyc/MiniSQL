@@ -6,6 +6,6 @@ namespace MiniSQL.Library.Models
     {
         public StatementType Type { get; set; } = StatementType.InsertStatement;
         public string TableName { get; set; }
-        public List<AttributeValue> Values { get; set; }
+        public List<AtomValue> Values { get; set; }
     }
 }
