@@ -20,7 +20,7 @@ namespace MiniSQL.Interpreter
             }
             else if (context.variable() != null)
             {
-                string variableName = (string)Visit(context.variable());
+                string variableName = context.variable().GetText();
                 obj.Operator = Operator.AtomVariable;
                 obj.AttributeName = variableName;
             }
@@ -225,15 +225,15 @@ namespace MiniSQL.Interpreter
             obj.RightOperant = right;
             if (context.compOp().EQUAL_OPERATOR() != null)
                 obj.Operator = Operator.Equal;
-            if (context.compOp().GREATER_OR_EQUAL_OPERATOR() != null)
+            else if (context.compOp().GREATER_OR_EQUAL_OPERATOR() != null)
                 obj.Operator = Operator.MoreThanOrEqualTo;
-            if (context.compOp().GREATER_THAN_OPERATOR() != null)
+            else if (context.compOp().GREATER_THAN_OPERATOR() != null)
                 obj.Operator = Operator.MoreThan;
-            if (context.compOp().LESS_OR_EQUAL_OPERATOR() != null)
+            else if (context.compOp().LESS_OR_EQUAL_OPERATOR() != null)
                 obj.Operator = Operator.LessThanOrEqualTo;
-            if (context.compOp().LESS_THAN_OPERATOR() != null)
+            else if (context.compOp().LESS_THAN_OPERATOR() != null)
                 obj.Operator = Operator.LessThan;
-            if (context.compOp().NOT_EQUAL_OPERATOR() != null)
+            else if (context.compOp().NOT_EQUAL_OPERATOR() != null)
                 obj.Operator = Operator.NotEqual;
             else
                 throw new System.NotImplementedException();
@@ -461,10 +461,10 @@ namespace MiniSQL.Interpreter
         public override object VisitQueryExpression([NotNull] MiniSQLParser.QueryExpressionContext context)
         {
             SelectStatement obj = new SelectStatement();
-            Expression exp = (Expression)Visit(context.whereClause());
-            string tableName = (string)Visit(context.fromClause());
-            obj.FromTable = tableName;
-            obj.Condition = exp;
+            if (context.whereClause() != null)
+                obj.Condition = (Expression)Visit(context.whereClause());
+            if (context.fromClause() != null)
+                obj.FromTable = (string)Visit(context.fromClause());
             return obj;
         }
 

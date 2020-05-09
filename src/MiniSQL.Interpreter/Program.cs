@@ -9,7 +9,8 @@ namespace MiniSQL.Interpreter
     {
         static void Main(string[] args)
         {
-            string input = File.ReadAllText("./Grammar/tests/index-create-delete-0.sql");
+            // string input = File.ReadAllText("./Grammar/tests/index-create-delete-0.sql");
+            string input = File.ReadAllText("./Grammar/tests/table-insert-delete-0.sql");
             
             var query = Parsing.GetQuery(input);
             
