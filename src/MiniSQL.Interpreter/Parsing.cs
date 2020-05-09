@@ -1,4 +1,5 @@
 using System;
+using System.IO;
 using Antlr4.Runtime;
 using Antlr4.Runtime.Tree;
 using MiniSQL.Library.Models;
@@ -18,6 +19,23 @@ namespace MiniSQL.Interpreter
             
             MiniSQLVisitor visitor = new MiniSQLVisitor();
             Query query = (Query)visitor.Visit(tree);
+
+            // import file
+            int index = 0;
+            while (index < query.StatementList.Count)
+            {
+                IStatement statement = query.StatementList[index];
+                if (statement.Type == StatementType.ExecFileStatement)
+                {
+                    ExecFileStatement execFile = (ExecFileStatement)statement;
+                    query.StatementList.RemoveAt(index);
+                    string fileText = File.ReadAllText(execFile.FilePath);
+                    Query ret = GetQuery(fileText);
+                    query.StatementList.InsertRange(index, ret.StatementList);
+                    continue;
+                }
+                index++;
+            }
             return query;
         } 
     }
