@@ -7,6 +7,7 @@ namespace MiniSQL.Library.Models
     {
         public string AttributeName { get; set; }
         public AttributeType Type { get; set; }
+        // char length is fixed. The remaining is padded with blanks.
         public int CharLimit { get; set; } = 1;
         public bool IsUnique { get; set; } = false;
     }

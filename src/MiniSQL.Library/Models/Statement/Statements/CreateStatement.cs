@@ -19,7 +19,17 @@ namespace MiniSQL.Library.Models
         public string AttributeName { get; set; }
         // create table only
         // it is assigned to "" if PrimaryKey does not exist
-        public string PrimaryKey { get; set; } = "";
+        public string primaryKey = "";
+        public string PrimaryKey
+        {
+            get { return primaryKey; }
+            set
+            {
+                if (this.AttributeDeclarations.Find(x => x.AttributeName == value) == null)
+                    throw new System.Exception($"Primary key {value} does not exist");
+                primaryKey = value;
+            }
+        }
         public List<AttributeDeclaration> AttributeDeclarations { get; set; }
     }
 }
