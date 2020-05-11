@@ -21,16 +21,22 @@ namespace MiniSQL.BufferManager.Models
         FloatingPoint = 7,
         // header size := 4
         // content size := 8
-        // TEXT = 2⋅n + 13
+        // HeaderValue of type TEXT could be `2⋅n + 13` where `n` is a positive number
         TEXT = 13,
     }
 
-    // TODO: test
+    // __format__
+    // <header size (1 byte)> <remaining header> <field>
     public class DBRecord
     {
         public byte[] FieldData { get; set; }
 
         public byte HeaderSize { get; set; }
+
+        public int RecordSize
+        {
+            get { return this.FieldData.Length + this.HeaderSize; }
+        }
 
         public List<int> HeaderList { get; private set; } = new List<int>();
 
@@ -84,7 +90,7 @@ namespace MiniSQL.BufferManager.Models
         {
             InitializeEmpty();
 
-            // the first bit is reserved for 
+            // the first bit is reserved for <header size>
             byte headerSize = 1;
             // set header
             foreach (AtomValue value in values)
@@ -104,7 +110,6 @@ namespace MiniSQL.BufferManager.Models
                         headerSize += 1;
                         break;
                     case AttributeTypes.Char:
-                        // int stringLength = Encoding.UTF8.GetByteCount(value.StringValue);  // only for varchar(n), not for char(n)
                         int stringLength = value.CharLimit;
                         this.HeaderList.Add(stringLength * 2 + (int)HeaderValue.TEXT);
                         headerSize += 4;
@@ -158,7 +163,7 @@ namespace MiniSQL.BufferManager.Models
             SetValues(values);
         }
 
-        // from raw data to object
+        // from raw data to this object
         public void UnPack(byte[] data, int startIndex)
         {
             InitializeEmpty();
@@ -208,6 +213,7 @@ namespace MiniSQL.BufferManager.Models
             this.FieldData = data.Skip(fieldStartIndex).Take(fieldLength).ToArray();
         }
 
+        // from this object to raw data
         public byte[] Pack()
         {
             List<byte> pack = new List<byte>();
