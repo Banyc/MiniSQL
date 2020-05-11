@@ -57,14 +57,14 @@ namespace MiniSQL.BufferManager.Controllers
             this.NumCells = 0;
         }
 
-        public InternalTableCell GetInternalTableCell(int address)
-        {
-            return new InternalTableCell(this.Data, address);
-        }
+        // public InternalTableCell GetInternalTableCell(int address)
+        // {
+        //     return new InternalTableCell(this.Data, address);
+        // }
 
-        public LeafTableCell GetLeafTableCell(int address)
-        {
-            return new LeafTableCell(this.Data, address);
-        }
+        // public LeafTableCell GetLeafTableCell(int address)
+        // {
+        //     return new LeafTableCell(this.Data, address);
+        // }
     }
 }

@@ -80,37 +80,37 @@ namespace MiniSQL.Library.Models
                 case Operator.Minus:
                     result.IntegerValue = leftValue.IntegerValue - rightValue.IntegerValue;
                     result.FloatValue = leftValue.FloatValue - rightValue.FloatValue;
-                    if (result.Type == AttributeType.Char)
+                    if (result.Type == AttributeTypes.Char)
                         throw new System.InvalidOperationException("String could not Subtract");
                     break;
                 case Operator.Multiply:
                     result.IntegerValue = leftValue.IntegerValue * rightValue.IntegerValue;
                     result.FloatValue = leftValue.FloatValue * rightValue.FloatValue;
-                    if (result.Type == AttributeType.Char)
+                    if (result.Type == AttributeTypes.Char)
                         throw new System.InvalidOperationException("String could not Multiply");
                     break;
                 case Operator.Divide:
                     result.IntegerValue = leftValue.IntegerValue / rightValue.IntegerValue;
                     result.FloatValue = leftValue.FloatValue / rightValue.FloatValue;
-                    if (result.Type == AttributeType.Char)
+                    if (result.Type == AttributeTypes.Char)
                         throw new System.InvalidOperationException("String could not Divide");
                     break;
                 case Operator.Negative:
                     result.IntegerValue = -leftValue.IntegerValue;
                     result.FloatValue = -leftValue.FloatValue;
-                    if (result.Type == AttributeType.Char)
+                    if (result.Type == AttributeTypes.Char)
                         throw new System.InvalidOperationException("String could not Negative");
                     break;
                 case Operator.And:
                     result.IntegerValue = leftValue.IntegerValue != 0 && rightValue.IntegerValue != 0 ? 1 : 0;
                     result.FloatValue = leftValue.FloatValue != 0 && rightValue.FloatValue != 0 ? 1 : 0;
-                    if (result.Type == AttributeType.Char)
+                    if (result.Type == AttributeTypes.Char)
                         throw new System.InvalidOperationException("String could not And");
                     break;
                 case Operator.Or:
                     result.IntegerValue = leftValue.IntegerValue != 0 || rightValue.IntegerValue != 0 ? 1 : 0;
                     result.FloatValue = leftValue.FloatValue != 0 || rightValue.FloatValue != 0 ? 1 : 0;
-                    if (result.Type == AttributeType.Char)
+                    if (result.Type == AttributeTypes.Char)
                         throw new System.InvalidOperationException("String could not Or");
                     break;
                 case Operator.Xor:
@@ -118,101 +118,101 @@ namespace MiniSQL.Library.Models
                                             && (leftValue.IntegerValue != 0 && rightValue.IntegerValue != 0)) ? 1 : 0;
                     result.FloatValue = ((leftValue.FloatValue != 0 || rightValue.FloatValue != 0) 
                                             && (leftValue.FloatValue != 0 && rightValue.FloatValue != 0)) ? 1 : 0;
-                    if (result.Type == AttributeType.Char)
+                    if (result.Type == AttributeTypes.Char)
                         throw new System.InvalidOperationException("String could not Or");
                     break;
                 case Operator.Not:
                     result.IntegerValue = leftValue.IntegerValue == 0 ? 1 : 0;
                     result.FloatValue = leftValue.FloatValue == 0 ? 1 : 0;
-                    if (result.Type == AttributeType.Char)
+                    if (result.Type == AttributeTypes.Char)
                         throw new System.InvalidOperationException("String could not Not");
                     break;
                 case Operator.LessThan:
-                    result.Type = AttributeType.Int;
+                    result.Type = AttributeTypes.Int;
                     switch (leftValue.Type)
                     {
-                        case AttributeType.Char:
+                        case AttributeTypes.Char:
                             result.IntegerValue = string.Compare(leftValue.StringValue, rightValue.StringValue) < 0 ? 1 : 0;
                             break;
-                        case AttributeType.Float:
+                        case AttributeTypes.Float:
                             result.IntegerValue = leftValue.FloatValue < rightValue.FloatValue ? 1 : 0;
                             break;
-                        case AttributeType.Int:
+                        case AttributeTypes.Int:
                             result.IntegerValue = leftValue.IntegerValue < rightValue.IntegerValue ? 1 : 0;
                             break;
                     }
                     break;
                 case Operator.MoreThan:
-                    result.Type = AttributeType.Int;
+                    result.Type = AttributeTypes.Int;
                     switch (leftValue.Type)
                     {
-                        case AttributeType.Char:
+                        case AttributeTypes.Char:
                             result.IntegerValue = string.Compare(leftValue.StringValue, rightValue.StringValue) > 0 ? 1 : 0;
                             break;
-                        case AttributeType.Float:
+                        case AttributeTypes.Float:
                             result.IntegerValue = leftValue.FloatValue > rightValue.FloatValue ? 1 : 0;
                             break;
-                        case AttributeType.Int:
+                        case AttributeTypes.Int:
                             result.IntegerValue = leftValue.IntegerValue > rightValue.IntegerValue ? 1 : 0;
                             break;
                     }
                     break;
                 case Operator.Equal:
-                    result.Type = AttributeType.Int;
+                    result.Type = AttributeTypes.Int;
                     switch (leftValue.Type)
                     {
-                        case AttributeType.Char:
+                        case AttributeTypes.Char:
                             result.IntegerValue = string.Compare(leftValue.StringValue, rightValue.StringValue) == 0 ? 1 : 0;
                             break;
-                        case AttributeType.Float:
+                        case AttributeTypes.Float:
                             result.IntegerValue = leftValue.FloatValue == rightValue.FloatValue ? 1 : 0;
                             break;
-                        case AttributeType.Int:
+                        case AttributeTypes.Int:
                             result.IntegerValue = leftValue.IntegerValue == rightValue.IntegerValue ? 1 : 0;
                             break;
                     }
                     break;
                 case Operator.NotEqual:
-                    result.Type = AttributeType.Int;
+                    result.Type = AttributeTypes.Int;
                     switch (leftValue.Type)
                     {
-                        case AttributeType.Char:
+                        case AttributeTypes.Char:
                             result.IntegerValue = string.Compare(leftValue.StringValue, rightValue.StringValue) != 0 ? 1 : 0;
                             break;
-                        case AttributeType.Float:
+                        case AttributeTypes.Float:
                             result.IntegerValue = leftValue.FloatValue != rightValue.FloatValue ? 1 : 0;
                             break;
-                        case AttributeType.Int:
+                        case AttributeTypes.Int:
                             result.IntegerValue = leftValue.IntegerValue != rightValue.IntegerValue ? 1 : 0;
                             break;
                     }
                     break;
                 case Operator.LessThanOrEqualTo:
-                    result.Type = AttributeType.Int;
+                    result.Type = AttributeTypes.Int;
                     switch (leftValue.Type)
                     {
-                        case AttributeType.Char:
+                        case AttributeTypes.Char:
                             result.IntegerValue = string.Compare(leftValue.StringValue, rightValue.StringValue) <= 0 ? 1 : 0;
                             break;
-                        case AttributeType.Float:
+                        case AttributeTypes.Float:
                             result.IntegerValue = leftValue.FloatValue <= rightValue.FloatValue ? 1 : 0;
                             break;
-                        case AttributeType.Int:
+                        case AttributeTypes.Int:
                             result.IntegerValue = leftValue.IntegerValue <= rightValue.IntegerValue ? 1 : 0;
                             break;
                     }
                     break;
                 case Operator.MoreThanOrEqualTo:
-                    result.Type = AttributeType.Int;
+                    result.Type = AttributeTypes.Int;
                     switch (leftValue.Type)
                     {
-                        case AttributeType.Char:
+                        case AttributeTypes.Char:
                             result.IntegerValue = string.Compare(leftValue.StringValue, rightValue.StringValue) >= 0 ? 1 : 0;
                             break;
-                        case AttributeType.Float:
+                        case AttributeTypes.Float:
                             result.IntegerValue = leftValue.FloatValue >= rightValue.FloatValue ? 1 : 0;
                             break;
-                        case AttributeType.Int:
+                        case AttributeTypes.Int:
                             result.IntegerValue = leftValue.IntegerValue >= rightValue.IntegerValue ? 1 : 0;
                             break;
                     }

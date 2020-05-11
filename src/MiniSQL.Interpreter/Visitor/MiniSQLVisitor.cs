@@ -107,13 +107,13 @@ namespace MiniSQL.Interpreter
             switch (type)
             {
                 case "int":
-                    attribute.Type = AttributeType.Int;
+                    attribute.Type = AttributeTypes.Int;
                     break;
                 case "float":
-                    attribute.Type = AttributeType.Float;
+                    attribute.Type = AttributeTypes.Float;
                     break;
                 case "char":
-                    attribute.Type = AttributeType.Char;
+                    attribute.Type = AttributeTypes.Char;
                     if (context.fieldLength() != null)
                         attribute.CharLimit = (int)Visit(context.fieldLength());
                     break;
@@ -327,7 +327,7 @@ namespace MiniSQL.Interpreter
             // optimize expression
             if (context.PLUS_OPERATOR() != null)
             {
-                if (left.ConcreteValue.Type == AttributeType.Char)
+                if (left.ConcreteValue.Type == AttributeTypes.Char)
                     throw new System.InvalidOperationException("Operator '+' cannot be applied to operand of type 'string'");
                 return left;
             }
@@ -486,23 +486,23 @@ namespace MiniSQL.Interpreter
             AtomValue value = new AtomValue();
             if (context.INT_NUMBER() != null)
             {
-                value.Type = AttributeType.Int;
+                value.Type = AttributeTypes.Int;
                 value.IntegerValue = int.Parse(context.INT_NUMBER().GetText());
             }
             else if (context.DECIMAL_NUMBER() != null)
             {
-                value.Type = AttributeType.Float;
+                value.Type = AttributeTypes.Float;
                 value.FloatValue = float.Parse(context.DECIMAL_NUMBER().GetText());
             }
             else if (context.SINGLE_QUOTED_TEXT() != null)
             {
-                value.Type = AttributeType.Char;
+                value.Type = AttributeTypes.Char;
                 string withQuotes = context.SINGLE_QUOTED_TEXT().GetText();
                 value.StringValue = withQuotes.Substring(1, withQuotes.Length - 2);
             }
             else if (context.DOUBLE_QUOTED_TEXT() != null)
             {
-                value.Type = AttributeType.Char;
+                value.Type = AttributeTypes.Char;
                 string withQuotes = context.DOUBLE_QUOTED_TEXT().GetText();
                 value.StringValue = withQuotes.Substring(1, withQuotes.Length - 2);
             }

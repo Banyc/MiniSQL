@@ -3,6 +3,7 @@ using System.Text;
 using System.Collections.Generic;
 using System.Linq;
 using MiniSQL.Library.Models;
+using MiniSQL.Library.Utilities;
 
 namespace MiniSQL.BufferManager.Models
 {
@@ -24,246 +25,207 @@ namespace MiniSQL.BufferManager.Models
         TEXT = 13,
     }
 
+    // TODO: test
     public class DBRecord
     {
-        public byte[] Data { get; set; }
+        public byte[] FieldData { get; set; }
 
-        public byte HeaderSize
+        public byte HeaderSize { get; set; }
+
+        public List<int> HeaderList { get; private set; } = new List<int>();
+
+        private List<int> FieldOffsets = new List<int>();
+
+        private void InitializeEmpty()
         {
-            get { return this.Data[0]; }
-            set { this.Data[0] = value; }
+            this.HeaderSize = 0;
+            this.HeaderList.Clear();
+            this.FieldData = null;
+            this.FieldOffsets.Clear();
         }
 
-        public int FieldCount  { get; set; }
-
-        public byte[] Header
+        // get stored values
+        public List<AtomValue> GetValues()
         {
-            get { return this.Data.Take(this.HeaderSize).ToArray(); }
-            set { Array.Copy(value, 0, this.Data, 0, this.HeaderSize); }
+            List<AtomValue> values = new List<AtomValue>();
+            int i;
+            for (i = 0; i < this.HeaderList.Count; i++)
+            {
+                AtomValue value = new AtomValue();
+                int headerValue = this.HeaderList[i];
+                if (headerValue == (int)HeaderValue.INTEGER)
+                {
+                    value.Type = AttributeTypes.Int;
+                    value.IntegerValue = BitConverter.ToInt32(this.FieldData, this.FieldOffsets[i]);
+                }
+                else if (headerValue == (int)HeaderValue.FloatingPoint)
+                {
+                    value.Type = AttributeTypes.Float;
+                    value.FloatValue = BitConverter.ToDouble(this.FieldData, this.FieldOffsets[i]);
+                }
+                else if (headerValue == (int)HeaderValue.NULL)
+                    value.Type = AttributeTypes.Null;
+
+                else if ((headerValue - (int)HeaderValue.TEXT) % 2 == 0)
+                {
+                    value.Type = AttributeTypes.Char;
+                    int stringLength = (headerValue - (int)HeaderValue.TEXT) / 2;
+                    value.StringValue = Encoding.UTF8.GetString(this.FieldData, this.FieldOffsets[i], stringLength).TrimEnd('\0');
+                }
+                else
+                    throw new Exception($"Header value {headerValue} does not exists");
+
+                values.Add(value);
+            }
+            return values;
         }
 
-        public byte[] Field
+        public void SetValues(List<AtomValue> values)
         {
-            get { return this.Data.Skip(this.HeaderSize).ToArray(); }
-            set { Array.Copy(value, 0, this.Data, 0, value.Length); }
+            InitializeEmpty();
+
+            // the first bit is reserved for 
+            byte headerSize = 1;
+            // set header
+            foreach (AtomValue value in values)
+            {
+                switch (value.Type)
+                {
+                    case AttributeTypes.Null:
+                        this.HeaderList.Add((int)HeaderValue.NULL);
+                        headerSize += 1;
+                        break;
+                    case AttributeTypes.Int:
+                        this.HeaderList.Add((int)HeaderValue.INTEGER);
+                        headerSize += 1;
+                        break;
+                    case AttributeTypes.Float:
+                        this.HeaderList.Add((int)HeaderValue.FloatingPoint);
+                        headerSize += 1;
+                        break;
+                    case AttributeTypes.Char:
+                        // int stringLength = Encoding.UTF8.GetByteCount(value.StringValue);  // only for varchar(n), not for char(n)
+                        int stringLength = value.CharLimit;
+                        this.HeaderList.Add(stringLength * 2 + (int)HeaderValue.TEXT);
+                        headerSize += 4;
+                        break;
+                }
+            }
+
+            // set headerSize
+            this.HeaderSize = headerSize;
+
+            // set field
+            int fieldOffset = 0;
+            List<byte> field = new List<byte>();
+            foreach (AtomValue value in values)
+            {
+                byte[] binaryValue;
+                this.FieldOffsets.Add(fieldOffset);
+                switch (value.Type)
+                {
+                    case AttributeTypes.Null:
+                        fieldOffset += 0;
+                        break;
+                    case AttributeTypes.Int:
+                        binaryValue = BitConverter.GetBytes(value.IntegerValue);
+                        field.AddRange(binaryValue);
+                        fieldOffset += 4;
+                        break;
+                    case AttributeTypes.Float:
+                        binaryValue = BitConverter.GetBytes(value.FloatValue);
+                        field.AddRange(binaryValue);
+                        fieldOffset += 8;
+                        break;
+                    case AttributeTypes.Char:
+                        binaryValue = Encoding.UTF8.GetBytes(value.StringValue);
+                        Array.Resize(ref binaryValue, value.CharLimit);
+                        field.AddRange(binaryValue);
+                        fieldOffset += binaryValue.Length;
+                        break;
+                }
+            }
+            this.FieldData = field.ToArray();
         }
 
         public DBRecord(byte[] data, int startIndex)
         {
-            // TODO
-
+            UnPack(data, startIndex);
         }
 
-        // TODO: Test
-        public DBRecord(List<AtomValue> row, string primaryKey = "")
+        public DBRecord(List<AtomValue> values)
         {
-            // count the length of Data array
-            int count = 0;
-            // headersize + 1
-            count += 1;
-            foreach (var value in row)
-            {
-                switch (value.Type)
-                {
-                    case AttributeType.Int:
-                        // header size + 1
-                        count += 1;
-                        if (value.IntegerValue != null)
-                            // field size + 4
-                            count += 4;
-                        break;
-                    case AttributeType.Float:
-                        // header size + 1
-                        count += 1;
-                        if (value.FloatValue != null)
-                            // field size + 8
-                            count += 8;
-                        break;
-                    case AttributeType.Char:
-                        if (value.StringValue != null)
-                        {
-                            // header size + 4
-                            count += 4;
-                            // field size + n
-                            count += Encoding.UTF8.GetBytes(value.StringValue).Length;
-                        }
-                        else
-                        {
-                            // header size + 1
-                            count += 1;
-                        }
-                        break;
-                }
-            }
-            this.Data = new byte[count];
-
-            int index = 0;
-            index++;
-            // set header
-            foreach (var value in row)
-            {
-                switch (value.Type)
-                {
-                    case AttributeType.Int:
-                        if (value.IntegerValue != null)
-                        {
-                            this.Data[index] = (byte)HeaderValue.INTEGER;
-                        }
-                        else
-                        {
-                            this.Data[index] = (byte)HeaderValue.NULL;
-                        }
-                        index++;
-                        break;
-                    case AttributeType.Float:
-                        if (value.FloatValue != null)
-                        {
-                            this.Data[index] = (byte)HeaderValue.FloatingPoint;
-                        }
-                        else
-                        {
-                            this.Data[index] = (byte)HeaderValue.NULL;
-                        }
-                        index++;
-                        break;
-                    case AttributeType.Char:
-                        if (value.StringValue != null)
-                        {
-                            Array.Copy(BitConverter.GetBytes(Encoding.UTF8.GetBytes(value.StringValue).Length * 2 + 13), 0, this.Data, index, 4);
-                            index += 4;
-                        }
-                        else
-                        {
-                            this.Data[index] = (byte)HeaderValue.NULL;
-                            index += 1;
-                        }
-                        break;
-                }
-            }
-            
-            // set headerSize
-            this.Data[0] = (byte)index;
-
-            // set field
-            foreach (var value in row)
-            {
-                switch (value.Type)
-                {
-                    case AttributeType.Int:
-                        if (value.IntegerValue != null)
-                        {
-                            Array.Copy(BitConverter.GetBytes(value.IntegerValue.Value), 0, this.Data, index, 4);
-                            index += 4;
-                        }
-                        break;
-                    case AttributeType.Float:
-                        if (value.IntegerValue != null)
-                        {
-                            Array.Copy(BitConverter.GetBytes(value.FloatValue.Value), 0, this.Data, index, 8);
-                            index += 8;
-                        }
-                        break;
-                    case AttributeType.Char:
-                        if (value.StringValue != null)
-                        {
-                            byte[] StringBinary = Encoding.UTF8.GetBytes(value.StringValue);
-                            Array.Copy(StringBinary, 0, this.Data, index, StringBinary.Length);
-                            index += 4;
-                        }
-                        break;
-                }
-            }
-
-            // assert
-            if (count != index)
-                throw new Exception($"count {count} != index {index}");
+            SetValues(values);
         }
 
-        // public List<AtomValue> GetValues(CreateStatement schemaTable)
-        public List<AtomValue> GetValues(List<AttributeDeclaration> declarations, AttributeValue primaryKey = null)
+        // from raw data to object
+        public void UnPack(byte[] data, int startIndex)
         {
-            List<AtomValue> values = new List<AtomValue>();
-            byte[] header = this.Header;
-            byte[] field = this.Field;
-            int headerIndex = 1;
-            int fieldIndex = 0;
-
-            foreach (var declaration in declarations)
+            InitializeEmpty();
+            // first byte
+            this.HeaderSize = data[0];
+            // header
+            int index = 1;
+            while (index < this.HeaderSize)
             {
-                AtomValue value = new AtomValue();
-                value.Type = declaration.Type;
+                int value;
+                VarintType varintType;
+                (value, varintType) = VarintBitConverter.FromVarint(data, index);
 
-                switch (declaration.Type)
-                {
-                    case AttributeType.Int:
-                        if (header[headerIndex] == (byte)HeaderValue.NULL)
-                        {
-                            value.IntegerValue = null;
-                        }
-                        else
-                        {
-                            value.IntegerValue = BitConverter.ToInt32(field, fieldIndex);
-                            fieldIndex += 4;
-                        }
-                        headerIndex += 1;
-                        break;
-                    case AttributeType.Float:
-                        if (header[headerIndex] == (byte)HeaderValue.NULL)
-                        {
-                            value.FloatValue = null;
-                        }
-                        else
-                        {
-                            value.FloatValue = BitConverter.ToDouble(field, fieldIndex);
-                            fieldIndex += 8;
-                        }
-                        headerIndex += 1;
-                        break;
-                    case AttributeType.Char:
-                        if (header[headerIndex] == (byte)HeaderValue.NULL)
-                        {
-                            value.StringValue = null;
-                        }
-                        else
-                        {
-                            int stringLength = (BitConverter.ToInt32(header, headerIndex) - 13) / 2;
-                            value.StringValue = Encoding.UTF8.GetString(field.Skip(fieldIndex).Take(stringLength).ToArray());
-                            fieldIndex += 8;
-                        }
-                        headerIndex += 1;
-                        break;
-                }
-
-                // the value that corresponds to the table’s primary key is always stored as a NULL value
-                // so, we need to recover primary key
-                if (primaryKey != null)
-                {
-                    if (primaryKey.AttributeName == declaration.AttributeName)
-                    {
-                        switch (declaration.Type)
-                        {
-                            case AttributeType.Float:
-                                value.FloatValue = primaryKey.FloatValue;
-                                break;
-                            case AttributeType.Int:
-                                value.IntegerValue = primaryKey.IntegerValue;
-                                break;
-                            case AttributeType.Char:
-                                value.StringValue = primaryKey.StringValue;
-                                break;
-                        }
-                    }
-                }
-
-                values.Add(value);
+                this.HeaderList.Add(value);
+                if (varintType == VarintType.Varint32)
+                    // string
+                    index += 4;
+                else
+                    index += 1;
             }
 
-            return values;
-        }
-    
-        // public HeaderValue GetType(int headerIndex)
-        // {
+            int fieldStartIndex = index;
 
-        // }
+            // field
+            int fieldOffset = 0;
+
+            foreach (int headerValue in this.HeaderList)
+            {
+                this.FieldOffsets.Add(fieldOffset);
+                if (headerValue == (int)HeaderValue.INTEGER)
+                    fieldOffset += 4;
+                else if (headerValue == (int)HeaderValue.FloatingPoint)
+                    fieldOffset += 8;
+                else if (headerValue == (int)HeaderValue.NULL)
+                    fieldOffset += 0;
+                else if ((headerValue - (int)HeaderValue.TEXT) % 2 == 0)
+                {
+                    int stringLength = (headerValue - (int)HeaderValue.TEXT) / 2;
+                    fieldOffset += stringLength;
+                }
+                else
+                    throw new Exception($"Header value {headerValue} does not exists");
+            }
+
+            int fieldLength = fieldOffset;
+
+            this.FieldData = data.Skip(fieldStartIndex).Take(fieldLength).ToArray();
+        }
+
+        public byte[] Pack()
+        {
+            List<byte> pack = new List<byte>();
+            // header
+            pack.Add(this.HeaderSize);
+            foreach (int headerValue in this.HeaderList)
+            {
+                if (headerValue == (int)HeaderValue.NULL
+                    || headerValue == (int)HeaderValue.INTEGER)
+                    pack.AddRange(VarintBitConverter.ToVarint((uint)headerValue, VarintType.Varint8));
+                else if ((headerValue - (int)HeaderValue.TEXT) % 2 == 0)
+                    pack.AddRange(VarintBitConverter.ToVarint((uint)headerValue, VarintType.Varint32));
+                else
+                    throw new Exception($"Header value {headerValue} does not exists");
+            }
+            // field
+            pack.AddRange(this.FieldData);
+            return pack.ToArray();
+        }
     }
 }
