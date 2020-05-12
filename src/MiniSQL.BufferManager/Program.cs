@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Diagnostics;
+using System.IO;
 using MiniSQL.BufferManager.Controllers;
 using MiniSQL.BufferManager.Models;
 using MiniSQL.Library.Models;
@@ -23,7 +24,45 @@ namespace MiniSQL.BufferManager
 
             TestLeafIndexCell();
 
+            TestPager();
+
             Console.WriteLine("BufferManager Test End");
+        }
+
+        static void TestPager()
+        {
+            string dbPath = "./dbfile.minidb";
+            File.Delete(dbPath);
+
+            Pager pager = new Pager(dbPath);
+
+            Debug.Assert(pager.PageCount == 0);
+            
+            pager.NewPage();
+            Debug.Assert(pager.PageCount == 1);
+
+            MemoryPage page = pager.ReadPage(1);
+            page.Data[2] = 114;
+            page.Data[3] = 5;
+            page.Data[4] = 14;
+
+            pager.WritePage(page);
+            MemoryPage page1 = pager.ReadPage(1);
+
+            Debug.Assert(page.Data[2] == page1.Data[2]);
+            Debug.Assert(page.Data[3] == page1.Data[3]);
+            Debug.Assert(page.Data[4] == page1.Data[4]);
+
+            pager.Close();
+
+            pager.Open(dbPath);
+            page1 = pager.ReadPage(1);
+
+            Debug.Assert(page.Data[2] == page1.Data[2]);
+            Debug.Assert(page.Data[3] == page1.Data[3]);
+            Debug.Assert(page.Data[4] == page1.Data[4]);
+
+            pager.Close();
         }
 
         static void TestLeafIndexCell()

@@ -4,3 +4,4 @@ obj/
 .antlr/
 .vscode/
 *secret*
+*.minidb
