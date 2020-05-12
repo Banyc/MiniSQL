@@ -26,7 +26,72 @@ namespace MiniSQL.BufferManager
 
             TestPager();
 
+            TestPagerSwapping();
+
             Console.WriteLine("BufferManager Test End");
+        }
+
+        static void TestPagerSwapping()
+        {
+            string dbPath = "./dbfile.minidb";
+            File.Delete(dbPath);
+
+            Pager pager = new Pager(dbPath);
+
+            pager.NewPage();
+            pager.NewPage();
+            pager.NewPage();
+            pager.NewPage();
+            pager.NewPage();
+            pager.NewPage();
+            pager.NewPage();
+
+            MemoryPage page1 = pager.ReadPage(1);
+            page1.IsPinned = true;
+            MemoryPage page2 = pager.ReadPage(2);
+            page2.Data[0] = 2;
+            MemoryPage page3 = pager.ReadPage(3);
+            MemoryPage page4 = pager.ReadPage(4);
+            MemoryPage page5 = pager.ReadPage(5);
+            Debug.Assert(page1.IsSwappedOut == false);
+            Debug.Assert(page2.IsSwappedOut == true);
+            Debug.Assert(page3.IsSwappedOut == false);
+            Debug.Assert(page4.IsSwappedOut == false);
+            Debug.Assert(page5.IsSwappedOut == false);
+            MemoryPage page6 = pager.ReadPage(6);
+            Debug.Assert(page1.IsSwappedOut == false);
+            Debug.Assert(page2.IsSwappedOut == true);
+            Debug.Assert(page3.IsSwappedOut == true);
+            Debug.Assert(page4.IsSwappedOut == false);
+            Debug.Assert(page5.IsSwappedOut == false);
+            Debug.Assert(page6.IsSwappedOut == false);
+            page4.Data[0] = 4;
+            MemoryPage page7 = pager.ReadPage(7);
+            Debug.Assert(page1.IsSwappedOut == false);
+            Debug.Assert(page2.IsSwappedOut == true);
+            Debug.Assert(page3.IsSwappedOut == true);
+            Debug.Assert(page4.IsSwappedOut == false);
+            Debug.Assert(page5.IsSwappedOut == true);
+            Debug.Assert(page6.IsSwappedOut == false);
+            Debug.Assert(page7.IsSwappedOut == false);
+
+            // not enough pages
+            bool error = false;
+            try
+            {
+                MemoryPage page8 = pager.ReadPage(8);
+            }
+            catch(Exception)
+            {
+                error = true;
+            }
+            Debug.Assert(error == true);
+
+            Debug.Assert(page1.IsSwappedOut == false);
+            Debug.Assert(page2.Data[0] == 2);
+            // page2.ReleaseDataMutex();
+
+            pager.Close();
         }
 
         static void TestPager()
