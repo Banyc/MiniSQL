@@ -118,7 +118,12 @@ namespace MiniSQL.BufferManager.Controllers
 
         public void Close()
         {
-            this.Stream.Close();
+            lock (this)
+            {
+                while (this.Pages.Count > 0)
+                    RemovePage(this.Pages.First());
+                this.Stream.Close();
+            }
         }
 
         public void SetPageAsMostRecentlyUsed(MemoryPage page)
