@@ -38,9 +38,19 @@ namespace MiniSQL.BufferManager.Models
             get { return this.FieldData.Length + this.HeaderSize; }
         }
 
-        public List<int> HeaderList { get; private set; } = new List<int>();
+        public List<uint> HeaderList { get; private set; } = new List<uint>();
 
         private List<int> FieldOffsets = new List<int>();
+
+        public DBRecord(byte[] data, int startIndex)
+        {
+            Unpack(data, startIndex);
+        }
+
+        public DBRecord(List<AtomValue> values)
+        {
+            SetValues(values);
+        }
 
         private void InitializeEmpty()
         {
@@ -58,7 +68,7 @@ namespace MiniSQL.BufferManager.Models
             for (i = 0; i < this.HeaderList.Count; i++)
             {
                 AtomValue value = new AtomValue();
-                int headerValue = this.HeaderList[i];
+                uint headerValue = this.HeaderList[i];
                 if (headerValue == (int)HeaderValue.INTEGER)
                 {
                     value.Type = AttributeTypes.Int;
@@ -75,7 +85,8 @@ namespace MiniSQL.BufferManager.Models
                 else if ((headerValue - (int)HeaderValue.TEXT) % 2 == 0)
                 {
                     value.Type = AttributeTypes.Char;
-                    int stringLength = (headerValue - (int)HeaderValue.TEXT) / 2;
+                    int stringLength = (int)(headerValue - (uint)HeaderValue.TEXT) / 2;
+                    value.CharLimit = stringLength;
                     value.StringValue = Encoding.UTF8.GetString(this.FieldData, this.FieldOffsets[i], stringLength).TrimEnd('\0');
                 }
                 else
@@ -86,7 +97,7 @@ namespace MiniSQL.BufferManager.Models
             return values;
         }
 
-        public void SetValues(List<AtomValue> values)
+        private void SetValues(List<AtomValue> values)
         {
             InitializeEmpty();
 
@@ -111,7 +122,7 @@ namespace MiniSQL.BufferManager.Models
                         break;
                     case AttributeTypes.Char:
                         int stringLength = value.CharLimit;
-                        this.HeaderList.Add(stringLength * 2 + (int)HeaderValue.TEXT);
+                        this.HeaderList.Add((uint)stringLength * 2 + (int)HeaderValue.TEXT);
                         headerSize += 4;
                         break;
                 }
@@ -153,39 +164,29 @@ namespace MiniSQL.BufferManager.Models
             this.FieldData = field.ToArray();
         }
 
-        public DBRecord(byte[] data, int startIndex)
-        {
-            UnPack(data, startIndex);
-        }
-
-        public DBRecord(List<AtomValue> values)
-        {
-            SetValues(values);
-        }
-
         // from raw data to this object
-        public void UnPack(byte[] data, int startIndex)
+        public void Unpack(byte[] data, int startIndex)
         {
             InitializeEmpty();
             // first byte
-            this.HeaderSize = data[0];
+            this.HeaderSize = data[startIndex];
             // header
-            int index = 1;
-            while (index < this.HeaderSize)
+            int headerOffset = 1;
+            while (headerOffset < this.HeaderSize)
             {
-                int value;
+                uint value;
                 VarintType varintType;
-                (value, varintType) = VarintBitConverter.FromVarint(data, index);
+                (value, varintType) = VarintBitConverter.FromVarint(data, headerOffset + startIndex);
 
                 this.HeaderList.Add(value);
                 if (varintType == VarintType.Varint32)
                     // string
-                    index += 4;
+                    headerOffset += 4;
                 else
-                    index += 1;
+                    headerOffset += 1;
             }
 
-            int fieldStartIndex = index;
+            int fieldStartIndex = headerOffset + startIndex;
 
             // field
             int fieldOffset = 0;

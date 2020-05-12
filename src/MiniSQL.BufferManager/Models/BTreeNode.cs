@@ -1,13 +1,13 @@
 using System;
 using MiniSQL.BufferManager.Models;
 
-namespace MiniSQL.BufferManager.Controllers
+namespace MiniSQL.BufferManager.Models
 {
-    public class TablePage : MemoryPage
+    public class BTreeNode : MemoryPage
     {
-        public PageType PageType
+        public PageTypes PageType
         {
-            get { return (PageType)this.Data[0]; }
+            get { return (PageTypes)this.Data[0]; }
             set { this.Data[0] = (byte)value; }
         }
         // The byte offset at which the free space starts. 
@@ -38,16 +38,16 @@ namespace MiniSQL.BufferManager.Controllers
             set { Array.Copy(BitConverter.GetBytes(value), 0, this.Data, 8, 4); }
         }
 
-        public TablePage()
+        public BTreeNode()
         {
 
         }
 
-        public void InitializeEmpty(PageType pageType)
+        public void InitializeEmpty(PageTypes pageType)
         {
             this.PageType = pageType;
             this.CellsOffset = this.PageSize;
-            if (this.PageType == PageType.InternalIndexPage || this.PageType == PageType.InternalTablePage)
+            if (this.PageType == PageTypes.InternalIndexPage || this.PageType == PageTypes.InternalTablePage)
                 this.FreeOffset = 8;
             else
             {
@@ -57,14 +57,35 @@ namespace MiniSQL.BufferManager.Controllers
             this.NumCells = 0;
         }
 
-        // public InternalTableCell GetInternalTableCell(int address)
-        // {
-        //     return new InternalTableCell(this.Data, address);
-        // }
+        public void DeleteBTreeCell(int address)
+        {
+            // TODO
+        }
 
-        // public LeafTableCell GetLeafTableCell(int address)
-        // {
-        //     return new LeafTableCell(this.Data, address);
-        // }
+        public BTreeCell GetBTreeCell(int address)
+        {
+            BTreeCell cell = null;
+            switch (this.PageType)
+            {
+                case PageTypes.InternalIndexPage:
+                    cell = new InternalTableCell(this.Data, address);
+                    break;
+                case PageTypes.InternalTablePage:
+                    break;
+                case PageTypes.LeafIndexPage:
+                    break;
+                case PageTypes.LeafTablePage:
+                    cell = new LeafTableCell(this.Data, address);
+                    break;
+                default:
+                    throw new Exception($"Page type {this.PageType} does not exist");
+            }
+            return cell;
+        }
+
+        public void InsertBTreeCell(BTreeCell cell, int address)
+        {
+            // TODO
+        }
     }
 }

@@ -15,6 +15,7 @@ namespace MiniSQL.Interpreter
             
             var query = Parsing.GetQuery(input);
             
+            // set breakpoint here
             Console.WriteLine("Unit test end.");
         }
     }

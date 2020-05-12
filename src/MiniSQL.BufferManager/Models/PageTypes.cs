@@ -1,6 +1,6 @@
 namespace MiniSQL.BufferManager.Models
 {
-    public enum PageType
+    public enum PageTypes
     {
         InternalTablePage = 0x05,
         LeafTablePage = 0x0D,

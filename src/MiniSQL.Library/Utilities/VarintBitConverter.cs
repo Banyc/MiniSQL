@@ -12,16 +12,16 @@ namespace MiniSQL.Library.Utilities
     public class VarintBitConverter
     {
         // it could only distinguish unsigned varint32 and varint8
-        public static (int, VarintType) FromVarint(byte[] data, int startIndex)
+        public static (uint, VarintType) FromVarint(byte[] data, int startIndex)
         {
             VarintType type;
-            int value;
+            uint value;
             // most significant bit is 1
             if ((data[startIndex] & 0x80) != 0)
             {
                 type = VarintType.Varint32;
 
-                value = VarintBitConverter.ToInt32(data, startIndex);
+                value = VarintBitConverter.ToUInt32(data, startIndex);
             }
             // most significant bit is 0
             else
@@ -40,6 +40,15 @@ namespace MiniSQL.Library.Utilities
                 return VarintBitConverter.GetVarintBytes((byte)value);
             else
                 return VarintBitConverter.GetVarintBytes(value);
+        
+        }
+        // it could only distinguish unsigned varint32 and varint8
+        public static (byte[], VarintType) ToVarint(uint value)
+        {
+            if (value < 0x80)
+                return (VarintBitConverter.GetVarintBytes((byte)value), VarintType.Varint8);
+            else
+                return (VarintBitConverter.GetVarintBytes(value), VarintType.Varint32);
         }
 
         public static byte[] GetVarintBytes(byte value)
@@ -68,14 +77,14 @@ namespace MiniSQL.Library.Utilities
             return result;
         }
 
-        public static int ToInt32(byte[] data, int startIndex)
+        public static uint ToUInt32(byte[] data, int startIndex)
         {
-            int result = 0;
+            uint result = 0;
 
-            result = (data[startIndex + 3] & 0x7f);
-            result |= (data[startIndex + 2] & 0x7f) << 7;
-            result |= (data[startIndex + 1] & 0x7f) << 14;
-            result |= (data[startIndex + 0] & 0x7f) << 21;
+            result = ((uint)data[startIndex + 3] & 0x7f);
+            result |= ((uint)data[startIndex + 2] & 0x7f) << 7;
+            result |= ((uint)data[startIndex + 1] & 0x7f) << 14;
+            result |= ((uint)data[startIndex + 0] & 0x7f) << 21;
 
             return result;
         }

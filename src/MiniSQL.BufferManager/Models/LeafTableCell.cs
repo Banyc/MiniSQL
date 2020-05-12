@@ -1,44 +1,48 @@
-// using System;
-// using System.Linq;
-// using MiniSQL.Library.Models;
+using System;
+using System.Collections.Generic;
+using System.Linq;
+using MiniSQL.Library.Models;
 
-// namespace MiniSQL.BufferManager.Models
-// {
-//     public class LeafTableCell
-//     {
-//         public byte[] Data;
+namespace MiniSQL.BufferManager.Models
+{
+    // <DBRecordSize (4 bytes)> <Key> <DBRecord>
+    public class LeafTableCell : BTreeCell
+    {
+        public LeafTableCell(byte[] data, int startIndex)
+        {
+            Unpack(data, startIndex);
+        }
 
-//         public LeafTableCell(byte[] data, int startIndex)
-//         {
-//             // TODO
-//         }
+        public LeafTableCell(DBRecord key, DBRecord record)
+        {
+            this.Key = key;
+            this.DBRecord = record;
+        }
 
-//         // Length of DB–Record in bytes.
-//         public UInt32 DBRecordSize
-//         {
-//             get { return BitConverter.ToUInt32(this.Data, 0); }
-//             set { Array.Copy(BitConverter.GetBytes(value), 0, this.Data, 0, 4); }
-//         }
-//         // TODO: replace `UInt32 Key` to `byte[] Key` and `DBRecord KeyObject`
-//         // DBRecord is a database record and Key is its primary key.
-//         public UInt32 Key
-//         {
-//             get { return BitConverter.ToUInt32(this.Data, 4); }
-//             set { Array.Copy(BitConverter.GetBytes(value), 0, this.Data, 4, 4); }
-//         }
-//         public byte[] DBRecord
-//         {
-//             get { return this.Data.Skip(8).ToArray(); }
-//             set
-//             {
-//                 Array.Copy(value, 0, this.Data, 8, value.Length);
-//                 this.DBRecordSize = (uint)this.Data.Length;
-//             }
-//         }
-//         public DBRecord DBRecordObject
-//         {
-//             get { return new DBRecord(this.DBRecord, 0); }
-//             set { this.DBRecord = value.Data; }
-//         }
-//     }
-// }
+        // DBRecord is a database record and Key is its primary key.
+        public DBRecord DBRecord { get; set; }
+
+        public int DBRecordSize
+        {
+            get { return this.DBRecord.RecordSize; }
+        }
+
+        public override byte[] Pack()
+        {
+            List<byte> pack = new List<byte>();
+            pack.AddRange(BitConverter.GetBytes(this.DBRecordSize));
+            pack.AddRange(this.Key.Pack());
+            pack.AddRange(this.DBRecord.Pack());
+            return pack.ToArray();
+        }
+
+        public override void Unpack(byte[] data, int startIndex)
+        {
+            int startOffsetOfKey = 4;
+            this.Key = new DBRecord(data, startIndex + startOffsetOfKey);
+            int keySize = this.Key.RecordSize;
+            int startOffsetOfRecord = startOffsetOfKey + keySize;
+            this.DBRecord = new DBRecord(data, startIndex + startOffsetOfRecord);
+        }
+    }
+}

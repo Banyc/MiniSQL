@@ -1,50 +1,43 @@
-// using System;
-// using System.Linq;
+using System;
+using System.Collections.Generic;
+using System.Linq;
 
-// namespace MiniSQL.BufferManager.Models
-// {
-//     // <childPage> <key>
-//     // <childPage> <DBRecord>
-//     public class InternalTableCell
-//     {
-//         public byte[] Data;
+namespace MiniSQL.BufferManager.Models
+{
+    // <childPage (4 bytes)> <key>
+    // <childPage (4 bytes)> <DBRecord>
+    public class InternalTableCell : BTreeCell
+    {
+        public InternalTableCell(byte[] data, int startIndex)
+        {
+            Unpack(data, startIndex);
+        }
 
-//         public InternalTableCell(byte[] data, int startIndex)
-//         {
-//             // TODO
-//         }
+        public InternalTableCell(DBRecord key, UInt32 childPage)
+        {
+            this.Key = key;
+            this.ChildPage = childPage;
+        }
 
-//         public InternalTableCell(DBRecord keyObject, UInt32 childPage)
-//         {
-//             int size = keyObject.Data.Length + 4;
-//             this.Data = new byte[size];
-//             this.ChildPage = childPage;
-//             this.KeyObject = keyObject;
-//         }
+        // ChildPage “pointer”
+        // this “pointer” is the number of the page where the referenced node can be found
+        // ChildPage is the number of the page containing the entries with keys less than or equal to Key.
+        public UInt32 ChildPage { get; set; }
 
-//         // ChildPage “pointer”
-//         // this “pointer” is the number of the page where the referenced node can be found
-//         // ChildPage is the number of the page containing the entries with keys less than or equal to Key.
-//         public UInt32 ChildPage
-//         {
-//             get { return BitConverter.ToUInt32(this.Data, 0); }
-//             set { Array.Copy(BitConverter.GetBytes(value), 0, this.Data, 0, 4); }
-//         }
-//         // Key is primary key.
-//         // public UInt32 Key
-//         // {
-//         //     get { return BitConverter.ToUInt32(this.Data, 4); }
-//         //     set { Array.Copy(BitConverter.GetBytes(value), 0, this.Data, 4, 4); }
-//         // }
-//         public byte[] Key
-//         {
-//             get { return this.Data.Skip(4).ToArray(); }
-//             set { Array.Copy(value, 0, this.Data, 4, value.Length); }
-//         }
-//         public DBRecord KeyObject
-//         {
-//             get { return new DBRecord(this.Key, 0); }
-//             set { this.Key = value.Data; }
-//         }
-//     }
-// }
+        public override byte[] Pack()
+        {
+            List<byte> pack = new List<byte>();
+            pack.AddRange(BitConverter.GetBytes(this.ChildPage));
+            pack.AddRange(this.Key.Pack());
+            return pack.ToArray();
+        }
+
+        public override void Unpack(byte[] data, int startIndex)
+        {
+            this.ChildPage = BitConverter.ToUInt32(data, startIndex);
+            int startOffsetOfKey = 4;
+            this.Key = new DBRecord(data, startIndex + startOffsetOfKey);
+            int keySize = this.Key.RecordSize;
+        }
+    }
+}

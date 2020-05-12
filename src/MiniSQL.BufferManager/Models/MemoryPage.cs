@@ -6,7 +6,7 @@ namespace MiniSQL.BufferManager.Models
     {
         // start from 1
         public long PageNumber { get; set; }
-        public byte[] Data { get; set; } = null;
+        public byte[] Data = null;
         public UInt16 PageSize { get; set; } 
         public bool IsPinned { get; set; } = false;
 
