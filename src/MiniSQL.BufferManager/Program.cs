@@ -28,12 +28,77 @@ namespace MiniSQL.BufferManager
 
             TestPagerSwapping();
 
+            TestInsertIntoBTreeNode();
+
             Console.WriteLine("BufferManager Test End");
+        }
+
+        static void TestInsertIntoBTreeNode()
+        {
+            string dbPath = "./testdbfile.minidb";
+            File.Delete(dbPath);
+
+            Pager pager = new Pager(dbPath);
+            pager.NewPage();
+            pager.NewPage();
+
+            MemoryPage page = pager.ReadPage(1);
+
+            BTreeNode node = new BTreeNode(page);
+            node.InitializeEmptyFormat(PageTypes.InternalIndexPage);
+
+
+
+            List<DBRecord> keys = new List<DBRecord>();
+            keys.Add(GetTestBRecord(1));
+            keys.Add(GetTestBRecord(6));
+            keys.Add(GetTestBRecord(2));
+            keys.Add(GetTestBRecord(5));
+            keys.Add(GetTestBRecord(3));
+            keys.Add(GetTestBRecord(4));
+
+            List<InternalIndexCell> cells = new List<InternalIndexCell>();
+            cells.Add(new InternalIndexCell(keys[0], 114, GetTestBRecord(0)));
+            cells.Add(new InternalIndexCell(keys[1], 114, GetTestBRecord(1)));
+            cells.Add(new InternalIndexCell(keys[2], 114, GetTestBRecord(2)));
+            cells.Add(new InternalIndexCell(keys[3], 114, GetTestBRecord(3)));
+            cells.Add(new InternalIndexCell(keys[4], 114, GetTestBRecord(4)));
+            cells.Add(new InternalIndexCell(keys[5], 114, GetTestBRecord(5)));
+
+            byte[] raw = cells[0].Pack();
+            InternalIndexCell cellClone = new InternalIndexCell(raw, 0);
+
+            node.InsertBTreeCell(cells[0]);
+            node.InsertBTreeCell(cells[1]);
+            node.InsertBTreeCell(cells[2]);
+            node.InsertBTreeCell(cells[3]);
+            node.InsertBTreeCell(cells[4]);
+            node.InsertBTreeCell(cells[5]);
+
+            List<ushort> offsets = node.CellOffsetArray;
+            List<InternalIndexCell> clonecells = new List<InternalIndexCell>();
+            clonecells.Add((InternalIndexCell)node.GetBTreeCell(offsets[0]));
+            clonecells.Add((InternalIndexCell)node.GetBTreeCell(offsets[1]));
+            clonecells.Add((InternalIndexCell)node.GetBTreeCell(offsets[2]));
+            clonecells.Add((InternalIndexCell)node.GetBTreeCell(offsets[3]));
+            clonecells.Add((InternalIndexCell)node.GetBTreeCell(offsets[4]));
+            clonecells.Add((InternalIndexCell)node.GetBTreeCell(offsets[5]));
+
+            List<AtomValue> cloneCellKey = clonecells[0].Key.GetValues();
+
+            Debug.Assert(node.GetBTreeCell(offsets[0]).Key.GetValues()[0].IntegerValue == 1);
+            Debug.Assert(node.GetBTreeCell(offsets[1]).Key.GetValues()[0].IntegerValue == 2);
+            Debug.Assert(node.GetBTreeCell(offsets[2]).Key.GetValues()[0].IntegerValue == 3);
+            Debug.Assert(node.GetBTreeCell(offsets[3]).Key.GetValues()[0].IntegerValue == 4);
+            Debug.Assert(node.GetBTreeCell(offsets[4]).Key.GetValues()[0].IntegerValue == 5);
+            Debug.Assert(node.GetBTreeCell(offsets[5]).Key.GetValues()[0].IntegerValue == 6);
+
+            pager.Close();
         }
 
         static void TestPagerSwapping()
         {
-            string dbPath = "./dbfile.minidb";
+            string dbPath = "./testdbfile.minidb";
             File.Delete(dbPath);
 
             Pager pager = new Pager(dbPath);
@@ -81,7 +146,7 @@ namespace MiniSQL.BufferManager
             {
                 MemoryPage page8 = pager.ReadPage(8);
             }
-            catch(Exception)
+            catch (Exception)
             {
                 error = true;
             }
@@ -89,20 +154,19 @@ namespace MiniSQL.BufferManager
 
             Debug.Assert(page1.IsSwappedOut == false);
             Debug.Assert(page2.Data[0] == 2);
-            // page2.ReleaseDataMutex();
 
             pager.Close();
         }
 
         static void TestPager()
         {
-            string dbPath = "./dbfile.minidb";
+            string dbPath = "./testdbfile.minidb";
             File.Delete(dbPath);
 
             Pager pager = new Pager(dbPath);
 
             Debug.Assert(pager.PageCount == 0);
-            
+
             pager.NewPage();
             Debug.Assert(pager.PageCount == 1);
 
@@ -137,7 +201,7 @@ namespace MiniSQL.BufferManager
 
             // init key
             List<AtomValue> keyValues = new List<AtomValue>();
-            AtomValue key = new AtomValue() {Type = AttributeTypes.Char, CharLimit = 8, StringValue = "114514"};
+            AtomValue key = new AtomValue() { Type = AttributeTypes.Char, CharLimit = 8, StringValue = "114514" };
             keyValues.Add(key);
             DBRecord keyRecord = new DBRecord(keyValues);
 
@@ -165,7 +229,7 @@ namespace MiniSQL.BufferManager
 
             // init key
             List<AtomValue> keyValues = new List<AtomValue>();
-            AtomValue key = new AtomValue() {Type = AttributeTypes.Char, CharLimit = 8, StringValue = "114514"};
+            AtomValue key = new AtomValue() { Type = AttributeTypes.Char, CharLimit = 8, StringValue = "114514" };
             keyValues.Add(key);
             DBRecord keyRecord = new DBRecord(keyValues);
 
@@ -217,7 +281,7 @@ namespace MiniSQL.BufferManager
 
             // init key
             List<AtomValue> keyValues = new List<AtomValue>();
-            AtomValue key = new AtomValue() {Type = AttributeTypes.Char, CharLimit = 8, StringValue = "114514"};
+            AtomValue key = new AtomValue() { Type = AttributeTypes.Char, CharLimit = 8, StringValue = "114514" };
             keyValues.Add(key);
             DBRecord keyRecord = new DBRecord(keyValues);
 
@@ -242,9 +306,9 @@ namespace MiniSQL.BufferManager
         {
             // init record
             List<AtomValue> values = new List<AtomValue>();
-            AtomValue value1 = new AtomValue() {Type = AttributeTypes.Int, IntegerValue = 222};
-            AtomValue value2 = new AtomValue() {Type = AttributeTypes.Null};
-            AtomValue value3 = new AtomValue() {Type = AttributeTypes.Char, CharLimit = 5, StringValue = "222"};
+            AtomValue value1 = new AtomValue() { Type = AttributeTypes.Int, IntegerValue = 222 };
+            AtomValue value2 = new AtomValue() { Type = AttributeTypes.Null };
+            AtomValue value3 = new AtomValue() { Type = AttributeTypes.Char, CharLimit = 5, StringValue = "222" };
             values.Add(value1);
             values.Add(value2);
             values.Add(value3);
@@ -271,13 +335,13 @@ namespace MiniSQL.BufferManager
             }
         }
 
-        static DBRecord GetTestBRecord()
+        static DBRecord GetTestBRecord(int key = 222)
         {
             // init record
             List<AtomValue> values = new List<AtomValue>();
-            AtomValue value1 = new AtomValue() {Type = AttributeTypes.Int, IntegerValue = 222};
-            AtomValue value2 = new AtomValue() {Type = AttributeTypes.Null};
-            AtomValue value3 = new AtomValue() {Type = AttributeTypes.Char, CharLimit = 5, StringValue = "222"};
+            AtomValue value1 = new AtomValue() { Type = AttributeTypes.Int, IntegerValue = key };
+            AtomValue value2 = new AtomValue() { Type = AttributeTypes.Null };
+            AtomValue value3 = new AtomValue() { Type = AttributeTypes.Char, CharLimit = 5, StringValue = "222" };
             values.Add(value1);
             values.Add(value2);
             values.Add(value3);
