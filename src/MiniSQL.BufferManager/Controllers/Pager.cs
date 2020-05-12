@@ -114,7 +114,6 @@ namespace MiniSQL.BufferManager.Controllers
             this.Stream.Write(page.Data, 0, page.PageSize);
             this.Stream.Flush(true);
             page.IsDirty = false;
-            // page.ReleaseDataMutex();
         }
 
         public void Close()

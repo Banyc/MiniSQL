@@ -11,15 +11,11 @@ namespace MiniSQL.BufferManager.Models
         public long PageNumber { get; set; } = 0;
         // this page has been swapped out if this.data is null
         private byte[] data = null;
-        // NOTICE: remember to release the mutex when done using this.Data after getting it
-        // private Mutex dataMutex { get; set; } = new Mutex();
-        // NOTICE: remember to release the mutex when done using this.Data after getting it
         // NOTICE: don't watch this property when debugging!
         public byte[] Data
         {
-            get  // NOTICE: remember to release mutex manually
+            get
             {
-                // this.dataMutex.WaitOne();
                 if (data == null)
                 {
                     pager.ReadPage(this);
@@ -29,14 +25,12 @@ namespace MiniSQL.BufferManager.Models
             }
             set
             {
-                // this.dataMutex.WaitOne();
                 lock (this)
                 {
                     this.pager.SetPageAsMostRecentlyUsed(this);
                     this.IsDirty = true;
                     data = value;
                 }
-                // this.dataMutex.ReleaseMutex();
             }
         }
         public bool IsDirty { get; set; } = false;
@@ -53,11 +47,6 @@ namespace MiniSQL.BufferManager.Models
         {
             this.pager = pager;
         }
-
-        // public void ReleaseDataMutex()
-        // {
-        //     dataMutex.ReleaseMutex();
-        // }
 
         public void CommitChanges()
         {
