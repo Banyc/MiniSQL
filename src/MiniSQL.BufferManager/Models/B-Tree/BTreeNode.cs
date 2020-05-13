@@ -10,39 +10,39 @@ namespace MiniSQL.BufferManager.Models
     // each node exclusively owns one page
     public class BTreeNode : IEnumerable<BTreeCell>
     {
-        private MemoryPage page = null;
+        private readonly MemoryPage _page = null;
         public PageTypes PageType
         {
-            get { return (PageTypes)page.Data[0 + page.AvaliableOffset]; }
-            set { page.Data[0 + page.AvaliableOffset] = (byte)value; }
+            get { return (PageTypes)_page.Data[0 + _page.AvaliableOffset]; }
+            set { _page.Data[0 + _page.AvaliableOffset] = (byte)value; }
         }
         // The byte offset at which the free space starts. 
         // Note that this must be updated every time the cell offset array grows.
         public UInt16 FreeOffset
         {
-            get { return BitConverter.ToUInt16(page.Data, 1 + page.AvaliableOffset); }
-            set { Array.Copy(BitConverter.GetBytes(value), 0, page.Data, 1 + page.AvaliableOffset, 2); }
+            get { return BitConverter.ToUInt16(_page.Data, 1 + _page.AvaliableOffset); }
+            set { Array.Copy(BitConverter.GetBytes(value), 0, _page.Data, 1 + _page.AvaliableOffset, 2); }
         }
         // number of cells
         public UInt16 NumCells
         {
-            get { return BitConverter.ToUInt16(page.Data, 3 + page.AvaliableOffset); }
-            set { Array.Copy(BitConverter.GetBytes(value), 0, page.Data, 3 + page.AvaliableOffset, 2); }
+            get { return BitConverter.ToUInt16(_page.Data, 3 + _page.AvaliableOffset); }
+            set { Array.Copy(BitConverter.GetBytes(value), 0, _page.Data, 3 + _page.AvaliableOffset, 2); }
         }
         // The byte offset at which the cells start.
         // If the page contains no cells, this field contains the value PageSize. 
         // This value must be updated every time a cell is added.
         public UInt16 CellsOffset
         {
-            get { return BitConverter.ToUInt16(page.Data, 5 + page.AvaliableOffset); }
-            set { Array.Copy(BitConverter.GetBytes(value), 0, page.Data, 5 + page.AvaliableOffset, 2); }
+            get { return BitConverter.ToUInt16(_page.Data, 5 + _page.AvaliableOffset); }
+            set { Array.Copy(BitConverter.GetBytes(value), 0, _page.Data, 5 + _page.AvaliableOffset, 2); }
         }
         // internal node only
         // RightPage pointer is, essentially, the “rightmost pointer” in a B-Tree node
         public UInt32 RightPage
         {
-            get { return BitConverter.ToUInt32(page.Data, 8 + page.AvaliableOffset); }
-            set { Array.Copy(BitConverter.GetBytes(value), 0, page.Data, 8 + page.AvaliableOffset, 4); }
+            get { return BitConverter.ToUInt32(_page.Data, 8 + _page.AvaliableOffset); }
+            set { Array.Copy(BitConverter.GetBytes(value), 0, _page.Data, 8 + _page.AvaliableOffset, 4); }
         }
 
         // the offset array at the low address of the page
@@ -61,7 +61,7 @@ namespace MiniSQL.BufferManager.Models
                 for (i = 0; i < this.NumCells; i++)
                 {
                     // of each cell
-                    UInt16 offset = BitConverter.ToUInt16(this.page.Data, startAddress);
+                    UInt16 offset = BitConverter.ToUInt16(this._page.Data, startAddress);
                     offsets.Add(offset);
                     startAddress += 2;
                 }
@@ -74,7 +74,7 @@ namespace MiniSQL.BufferManager.Models
                 // visits those items one-by-one and copy them to page
                 foreach (UInt16 offset in value)
                 {
-                    Array.Copy(BitConverter.GetBytes(offset), 0, page.Data, startAddress, 2);
+                    Array.Copy(BitConverter.GetBytes(offset), 0, _page.Data, startAddress, 2);
                     startAddress += 2;
                 }
                 // update metadata at header
@@ -86,14 +86,14 @@ namespace MiniSQL.BufferManager.Models
         // constructor
         public BTreeNode(MemoryPage page)
         {
-            this.page = page;
+            this._page = page;
         }
 
         // formatting an empty page with initialized B-Tree node (page) header
         public void InitializeEmptyFormat(PageTypes pageType)
         {
             this.PageType = pageType;
-            this.CellsOffset = page.PageSize;
+            this.CellsOffset = _page.PageSize;
             // internal pages (nodes) do not have `RightPage` section in header
             if (this.PageType == PageTypes.InternalIndexPage || this.PageType == PageTypes.InternalTablePage)
                 this.FreeOffset = 8;
@@ -101,7 +101,7 @@ namespace MiniSQL.BufferManager.Models
             else
             {
                 this.RightPage = 0;
-                this.FreeOffset = (ushort)(page.AvaliableOffset + 8 + 4);
+                this.FreeOffset = (ushort)(_page.AvaliableOffset + 8 + 4);
             }
             this.NumCells = 0;
         }
@@ -128,7 +128,7 @@ namespace MiniSQL.BufferManager.Models
             if (physicalRankOfDeletingCell == offsetsSorted.Count - 1)
             {
                 // cell being delete physically at the end of the node
-                sizeOfDeletingBTreeCell = this.page.PageSize - address;
+                sizeOfDeletingBTreeCell = this._page.PageSize - address;
             }
             else
             {
@@ -145,7 +145,7 @@ namespace MiniSQL.BufferManager.Models
                 offsets[index] = (ushort)(originalOffset + sizeOfDeletingBTreeCell);
                 // update cell's physical location
                 byte[] raw = GetBTreeCell(originalOffset).Pack();
-                Array.Copy(raw, 0, this.page.Data, originalOffset + sizeOfDeletingBTreeCell, raw.Length);
+                Array.Copy(raw, 0, this._page.Data, originalOffset + sizeOfDeletingBTreeCell, raw.Length);
             }
             this.CellOffsetArray = offsets;
             this.CellsOffset += (ushort)sizeOfDeletingBTreeCell;
@@ -158,16 +158,16 @@ namespace MiniSQL.BufferManager.Models
             switch (this.PageType)
             {
                 case PageTypes.InternalIndexPage:
-                    cell = new InternalIndexCell(page.Data, (int)address);
+                    cell = new InternalIndexCell(_page.Data, (int)address);
                     break;
                 case PageTypes.InternalTablePage:
-                    cell = new InternalTableCell(page.Data, (int)address);
+                    cell = new InternalTableCell(_page.Data, (int)address);
                     break;
                 case PageTypes.LeafIndexPage:
-                    cell = new LeafIndexCell(page.Data, (int)address);
+                    cell = new LeafIndexCell(_page.Data, (int)address);
                     break;
                 case PageTypes.LeafTablePage:
-                    cell = new LeafTableCell(page.Data, (int)address);
+                    cell = new LeafTableCell(_page.Data, (int)address);
                     break;
                 default:
                     throw new Exception($"Page type {this.PageType} does not exist");
@@ -182,7 +182,7 @@ namespace MiniSQL.BufferManager.Models
 
             // handle the part in higher address
             int startAddress = this.CellsOffset - raw.Length;
-            Array.Copy(raw, 0, this.page.Data, startAddress, raw.Length);
+            Array.Copy(raw, 0, this._page.Data, startAddress, raw.Length);
             this.CellsOffset = (ushort)startAddress;
 
             // get key values

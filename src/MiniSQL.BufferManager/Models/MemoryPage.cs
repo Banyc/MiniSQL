@@ -7,7 +7,7 @@ namespace MiniSQL.BufferManager.Models
     // mapping a block to memory page and manage the page
     public class MemoryPage
     {
-        private Pager pager = null;
+        private readonly Pager _pager = null;
         // start from 1
         public long PageNumber { get; set; } = 0;
         // this page has been swapped out if this.data is null
@@ -19,16 +19,16 @@ namespace MiniSQL.BufferManager.Models
             {
                 if (data == null)
                 {
-                    pager.ReadPage(this);
+                    _pager.ReadPage(this);
                 }
-                this.pager.SetPageAsMostRecentlyUsed(this);
+                this._pager.SetPageAsMostRecentlyUsed(this);
                 return data;
             }
             set
             {
                 lock (this)
                 {
-                    this.pager.SetPageAsMostRecentlyUsed(this);
+                    this._pager.SetPageAsMostRecentlyUsed(this);
                     this.IsDirty = true;
                     data = value;
                 }
@@ -52,19 +52,19 @@ namespace MiniSQL.BufferManager.Models
             get
             {
                 if (PageNumber == 1)
-                    return pager.FileHeaderSize;
+                    return _pager.FileHeaderSize;
                 return 0;
             }
         }
         // constructor
         public MemoryPage(Pager pager)
         {
-            this.pager = pager;
+            this._pager = pager;
         }
         // write page back to file
         public void CommitChanges()
         {
-            this.pager.WritePage(this);
+            this._pager.WritePage(this);
         }
         // free up spaces
         public void Free()
