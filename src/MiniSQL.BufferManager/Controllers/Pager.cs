@@ -16,6 +16,7 @@ namespace MiniSQL.BufferManager.Controllers
         public UInt16 PageSize { get; set; } = 4 * 1024;
         public List<MemoryPage> Pages { get; set; } = new List<MemoryPage>();
         public int InMemoryPageCountLimit { get; set; } = 4;
+        public ushort FileHeaderOffset { get; private set; } = 100;
 
         public Pager(string dbPath, UInt16 pageSize = 4 * 1024, int pageCountLimit = 4)
         {

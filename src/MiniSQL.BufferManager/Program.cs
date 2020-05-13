@@ -28,12 +28,12 @@ namespace MiniSQL.BufferManager
 
             TestPagerSwapping();
 
-            TestInsertIntoBTreeNode();
+            TestInsertIntoAndDeletionInsideBTreeNode();
 
             Console.WriteLine("BufferManager Test End");
         }
 
-        static void TestInsertIntoBTreeNode()
+        static void TestInsertIntoAndDeletionInsideBTreeNode()
         {
             string dbPath = "./testdbfile.minidb";
             File.Delete(dbPath);
@@ -92,6 +92,52 @@ namespace MiniSQL.BufferManager
             Debug.Assert(node.GetBTreeCell(offsets[3]).Key.GetValues()[0].IntegerValue == 4);
             Debug.Assert(node.GetBTreeCell(offsets[4]).Key.GetValues()[0].IntegerValue == 5);
             Debug.Assert(node.GetBTreeCell(offsets[5]).Key.GetValues()[0].IntegerValue == 6);
+
+            List<AtomValue> tmpAtomList = null;
+            // find
+            (BTreeCell cell, ushort offset, int indexInOffsetArray) = node.FindBTreeCell(keys[2]);
+            tmpAtomList = cell.Key.GetValues();
+            Debug.Assert(tmpAtomList[0].IntegerValue == 2);
+
+            // delete
+            node.DeleteBTreeCell(offset);
+
+            // check deletion
+            offsets = node.CellOffsetArray;
+            tmpAtomList = node.GetBTreeCell(offsets[0]).Key.GetValues();
+            Debug.Assert(tmpAtomList[0].IntegerValue == 1);
+            tmpAtomList = node.GetBTreeCell(offsets[1]).Key.GetValues();
+            Debug.Assert(tmpAtomList[0].IntegerValue == 3);
+            tmpAtomList = node.GetBTreeCell(offsets[2]).Key.GetValues();
+            Debug.Assert(tmpAtomList[0].IntegerValue == 4);
+            tmpAtomList = node.GetBTreeCell(offsets[3]).Key.GetValues();
+            Debug.Assert(tmpAtomList[0].IntegerValue == 5);
+            tmpAtomList = node.GetBTreeCell(offsets[4]).Key.GetValues();
+            Debug.Assert(tmpAtomList[0].IntegerValue == 6);
+
+            // delete
+            node.DeleteBTreeCell(offsets[2]);
+
+            // check deletion
+            offsets = node.CellOffsetArray;
+            tmpAtomList = node.GetBTreeCell(offsets[0]).Key.GetValues();
+            Debug.Assert(tmpAtomList[0].IntegerValue == 1);
+            tmpAtomList = node.GetBTreeCell(offsets[1]).Key.GetValues();
+            Debug.Assert(tmpAtomList[0].IntegerValue == 3);
+            tmpAtomList = node.GetBTreeCell(offsets[2]).Key.GetValues();
+            Debug.Assert(tmpAtomList[0].IntegerValue == 5);
+            tmpAtomList = node.GetBTreeCell(offsets[3]).Key.GetValues();
+            Debug.Assert(tmpAtomList[0].IntegerValue == 6);
+
+            // delete all
+            node.DeleteBTreeCell(offsets[0]);
+            offsets = node.CellOffsetArray;
+            node.DeleteBTreeCell(offsets[0]);
+            offsets = node.CellOffsetArray;
+            node.DeleteBTreeCell(offsets[0]);
+            offsets = node.CellOffsetArray;
+            node.DeleteBTreeCell(offsets[0]);
+            offsets = node.CellOffsetArray;
 
             pager.Close();
         }

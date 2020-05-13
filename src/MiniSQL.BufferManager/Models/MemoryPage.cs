@@ -40,7 +40,19 @@ namespace MiniSQL.BufferManager.Models
         public bool IsPinned { get; set; } = false;
         public bool IsSwappedOut
         {
-            get { return data == null; } 
+            get { return data == null; }
+        }
+
+        // after which address the page is available.
+        // in order not to corrupt the file header
+        public ushort AvaliableOffset
+        {
+            get
+            {
+                if (PageNumber == 1)
+                    return pager.FileHeaderOffset;
+                return 0;
+            }
         }
 
         public MemoryPage(Pager pager)
