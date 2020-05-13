@@ -7,23 +7,29 @@ using System.Threading;
 
 namespace MiniSQL.BufferManager.Controllers
 {
-    // map file bytes to pages of bytes
+    // map file bytes to pages of bytes and do page swapping when the number of pages hits the limit
     public class Pager
     {
+        // file handler
         public FileStream Stream { get; set; }
         // number of blocks in file (not in memory)
         public long PageCount { get; set; }
+        // size of each page
         public UInt16 PageSize { get; set; } = 4 * 1024;
+        // all the pages read from the file
         public List<MemoryPage> Pages { get; set; } = new List<MemoryPage>();
         public int InMemoryPageCountLimit { get; set; } = 4;
-        public ushort FileHeaderOffset { get; private set; } = 100;
+        // how big is the file header in bytes
+        public ushort FileHeaderSize { get; private set; } = 100;
 
+        // constructor
         public Pager(string dbPath, UInt16 pageSize = 4 * 1024, int pageCountLimit = 4)
         {
             this.InMemoryPageCountLimit = pageCountLimit;
             Open(dbPath, pageSize);
         }
 
+        // from file
         public void Open(string dbPath, UInt16 pageSize = 4 * 1024)
         {
             // the statement order is fixed
@@ -32,6 +38,7 @@ namespace MiniSQL.BufferManager.Controllers
             this.PageCount = this.Stream.Length / this.PageSize;
         }
 
+        // from file
         public byte[] ReadHeader()
         {
             byte[] header = new byte[100];
@@ -47,6 +54,7 @@ namespace MiniSQL.BufferManager.Controllers
             this.PageCount = this.Stream.Length / this.PageSize;
         }
 
+        // write file header to the file
         private void WritePageSizeToFirstPage()
         {
             lock (this)
@@ -58,11 +66,13 @@ namespace MiniSQL.BufferManager.Controllers
             }
         }
 
+        // extends the limits of the number of pages by one
         public void NewPage()
         {
             this.PageCount++;
         }
 
+        // free a page from main memory
         public void RemovePage(MemoryPage page)
         {
             lock (this)
@@ -74,6 +84,7 @@ namespace MiniSQL.BufferManager.Controllers
             }
         }
 
+        // from file
         public MemoryPage ReadPage(long pageNumber)
         {
             if (pageNumber > this.PageCount || pageNumber <= 0)
@@ -86,6 +97,8 @@ namespace MiniSQL.BufferManager.Controllers
             return newPage;
         }
 
+        // from file
+        // this function is mainly for page reloading after the page being swapped out
         public void ReadPage(MemoryPage page)
         {
             if (page.PageNumber > this.PageCount || page.PageNumber <= 0)
@@ -106,6 +119,8 @@ namespace MiniSQL.BufferManager.Controllers
             }
         }
 
+        // write page to secondary memory (the disk)
+        // the changes will not immediately affect the file in secondary memory (the disk)
         public void WritePage(MemoryPage page)
         {
             if (page.PageNumber > this.PageCount || page.PageNumber <= 0)
@@ -117,6 +132,8 @@ namespace MiniSQL.BufferManager.Controllers
             page.IsDirty = false;
         }
 
+        // write back dirty pages and close connection to the file system
+        // the changes will not immediately affect the file in secondary memory (the disk)
         public void Close()
         {
             lock (this)
@@ -127,6 +144,7 @@ namespace MiniSQL.BufferManager.Controllers
             }
         }
 
+        // mark a page as active and prevent it from being swapped out
         public void SetPageAsMostRecentlyUsed(MemoryPage page)
         {
             lock (this)
@@ -144,6 +162,7 @@ namespace MiniSQL.BufferManager.Controllers
             }
         }
 
+        // swap out the lest recently used page
         private void RemoveLRUPage()
         {
             lock (this)

@@ -10,10 +10,12 @@ namespace MiniSQL.BufferManager.Models
         InternalIndexCell,
     }
 
+    // base class for all types of B-Tree cells
     public abstract class BTreeCell
     {
         public CellTypes Types { get; set; }
         // key being indexed if it is in an index cell
+        // or the primary key if it is in a table cell
         public DBRecord Key { get; set; }
 
         protected BTreeCell() { }

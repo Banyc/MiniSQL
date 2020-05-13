@@ -8,11 +8,13 @@ namespace MiniSQL.BufferManager.Models
     // <DBRecordSize (4 bytes)> <Key> <DBRecord>
     public class LeafTableCell : BTreeCell
     {
+        // constructor
         public LeafTableCell(byte[] data, int startIndex)
         {
             Unpack(data, startIndex);
         }
 
+        // constructor
         public LeafTableCell(DBRecord key, DBRecord record)
         {
             this.Key = key;
@@ -21,12 +23,13 @@ namespace MiniSQL.BufferManager.Models
 
         // DBRecord is a database record and Key is its primary key.
         public DBRecord DBRecord { get; set; }
-
+        // size of the DBRecord field in binary form
         public int DBRecordSize
         {
             get { return this.DBRecord.RecordSize; }
         }
 
+        // to bytes
         public override byte[] Pack()
         {
             List<byte> pack = new List<byte>();
@@ -36,6 +39,7 @@ namespace MiniSQL.BufferManager.Models
             return pack.ToArray();
         }
 
+        // from bytes
         public override void Unpack(byte[] data, int startIndex)
         {
             int startOffsetOfKey = 4;

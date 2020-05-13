@@ -6,6 +6,8 @@ using MiniSQL.Library.Models;
 
 namespace MiniSQL.BufferManager.Models
 {
+    // The term "offset" is the same as "address"
+    // each node exclusively owns one page
     public class BTreeNode : IEnumerable<BTreeCell>
     {
         private MemoryPage page = null;
@@ -21,6 +23,7 @@ namespace MiniSQL.BufferManager.Models
             get { return BitConverter.ToUInt16(page.Data, 1 + page.AvaliableOffset); }
             set { Array.Copy(BitConverter.GetBytes(value), 0, page.Data, 1 + page.AvaliableOffset, 2); }
         }
+        // number of cells
         public UInt16 NumCells
         {
             get { return BitConverter.ToUInt16(page.Data, 3 + page.AvaliableOffset); }
@@ -42,16 +45,22 @@ namespace MiniSQL.BufferManager.Models
             set { Array.Copy(BitConverter.GetBytes(value), 0, page.Data, 8 + page.AvaliableOffset, 4); }
         }
 
+        // the offset array at the low address of the page
+        // the array indicates the offset (address) of each cell at the high address space
+        // the order of the array is carefully set in ascending order. It is based on the first value of `Key` of each cell.
         public List<UInt16> CellOffsetArray
         {
             get
             {
+                // build a container for output
                 List<UInt16> offsets = new List<ushort>();
                 int i;
+                // locates the first item in the offset array
                 int startAddress = this.FreeOffset - this.NumCells * 2;
+                // visits those items one-by-one and load them to the container
                 for (i = 0; i < this.NumCells; i++)
                 {
-                    // of each offset
+                    // of each cell
                     UInt16 offset = BitConverter.ToUInt16(this.page.Data, startAddress);
                     offsets.Add(offset);
                     startAddress += 2;
@@ -60,28 +69,35 @@ namespace MiniSQL.BufferManager.Models
             }
             set
             {
+                // locates the first item in the offset array
                 int startAddress = this.FreeOffset - this.NumCells * 2;
+                // visits those items one-by-one and copy them to page
                 foreach (UInt16 offset in value)
                 {
                     Array.Copy(BitConverter.GetBytes(offset), 0, page.Data, startAddress, 2);
                     startAddress += 2;
                 }
+                // update metadata at header
                 this.FreeOffset = (UInt16)startAddress;
                 this.NumCells = (UInt16)value.Count;
             }
         }
 
+        // constructor
         public BTreeNode(MemoryPage page)
         {
             this.page = page;
         }
 
+        // formatting an empty page with initialized B-Tree node (page) header
         public void InitializeEmptyFormat(PageTypes pageType)
         {
             this.PageType = pageType;
             this.CellsOffset = page.PageSize;
+            // internal pages (nodes) do not have `RightPage` section in header
             if (this.PageType == PageTypes.InternalIndexPage || this.PageType == PageTypes.InternalTablePage)
                 this.FreeOffset = 8;
+            // leaf pages (nodes) do have `RightPage` section in header
             else
             {
                 this.RightPage = 0;
@@ -90,6 +106,7 @@ namespace MiniSQL.BufferManager.Models
             this.NumCells = 0;
         }
 
+        // delete a tree cell
         public void DeleteBTreeCell(BTreeCell cell)
         {
             (BTreeCell cellFound, UInt16 offset, int indexInOffsetArray) = FindBTreeCell(cell, false);
@@ -134,6 +151,7 @@ namespace MiniSQL.BufferManager.Models
             this.CellsOffset += (ushort)sizeOfDeletingBTreeCell;
         }
 
+        // get a cell given an offset (address)
         public BTreeCell GetBTreeCell(UInt32 address)
         {
             BTreeCell cell = null;
@@ -157,6 +175,7 @@ namespace MiniSQL.BufferManager.Models
             return cell;
         }
 
+        // insert a cell. It will place the new cell in ascending order
         public void InsertBTreeCell(BTreeCell cell)
         {
             byte[] raw = cell.Pack();
@@ -181,21 +200,28 @@ namespace MiniSQL.BufferManager.Models
         }
 
         // NOTICE: if `isFuzzySearch`, this function will return the first cell that with key equal or larger than that of `cell`'s
+        // if no cell matches, the output `cell` field will be `null` and `offset` will be set to 0
         public (BTreeCell cell, UInt16 offset, int indexInOffsetArray) FindBTreeCell(BTreeCell cell, bool isFuzzySearch = true)
         {
             return FindBTreeCell(cell.Key, isFuzzySearch);
         }
 
+        // NOTICE: if `isFuzzySearch`, this function will return the first cell that with key equal or larger than that of `cell`'s
+        // if no cell matches, the output `cell` field will be `null` and `offset` will be set to 0
         public (BTreeCell cell, UInt16 offset, int indexInOffsetArray) FindBTreeCell(DBRecord key, bool isFuzzySearch = true)
         {
             List<AtomValue> keyValues = key.GetValues();
             return FindBTreeCell(keyValues, isFuzzySearch);
         }
 
+        // NOTICE: if `isFuzzySearch`, this function will return the first cell that with key equal or larger than that of `cell`'s
+        // if no cell matches, the output `cell` field will be `null` and `offset` will be set to 0
         public (BTreeCell cell, UInt16 offset, int indexInOffsetArray) FindBTreeCell(List<AtomValue> keys, bool isFuzzySearch = true)
         {
+            // get the list of existing peers to visit
             List<UInt16> offsets = this.CellOffsetArray;
 
+            // find peer
             int i;
             bool isFound = false;
             BTreeCell peer = null;
@@ -246,7 +272,7 @@ namespace MiniSQL.BufferManager.Models
                         throw new Exception("Key could not be NULL");
                 }
             }
-
+            // handle cases when matched cell found or not found
             UInt16 offset = 0;
             if (isFound)
             {
@@ -263,6 +289,7 @@ namespace MiniSQL.BufferManager.Models
             return (peer, offset, i);
         }
 
+        // make this object to be iterable
         public IEnumerator<BTreeCell> GetEnumerator()
         {
             foreach (var offset in this.CellOffsetArray)
@@ -271,11 +298,13 @@ namespace MiniSQL.BufferManager.Models
             }
         }
 
+        // make this object to be iterable
         IEnumerator IEnumerable.GetEnumerator()
         {
             return (IEnumerator)GetEnumerator();
         }
 
+        // overrides "object[index]" operator
         public BTreeCell this[int index]
         {
             get

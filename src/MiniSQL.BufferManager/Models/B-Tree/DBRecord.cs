@@ -29,29 +29,33 @@ namespace MiniSQL.BufferManager.Models
     // <header size (1 byte)> <remaining header> <field>
     public class DBRecord
     {
+        // data of field section only
         public byte[] FieldData { get; set; }
-
+        // size of the header (metadata)
         public byte HeaderSize { get; set; }
-
+        // size of the whole record in binary form
         public int RecordSize
         {
             get { return this.FieldData.Length + this.HeaderSize; }
         }
-
+        // the list of the types of each field at the head of the record
         public List<uint> HeaderList { get; private set; } = new List<uint>();
-
+        // the list of offsets to each field
         private List<int> FieldOffsets = new List<int>();
 
+        // constructor
         public DBRecord(byte[] data, int startIndex)
         {
             Unpack(data, startIndex);
         }
 
+        // constructor
         public DBRecord(List<AtomValue> values)
         {
             SetValues(values);
         }
 
+        // initialize the object to be empty
         private void InitializeEmpty()
         {
             this.HeaderSize = 0;
@@ -60,7 +64,7 @@ namespace MiniSQL.BufferManager.Models
             this.FieldOffsets.Clear();
         }
 
-        // get stored values
+        // get stored values in models (objects)
         public List<AtomValue> GetValues()
         {
             List<AtomValue> values = new List<AtomValue>();
@@ -97,6 +101,7 @@ namespace MiniSQL.BufferManager.Models
             return values;
         }
 
+        // set the record based on a list of values
         private void SetValues(List<AtomValue> values)
         {
             InitializeEmpty();

@@ -4,6 +4,7 @@ using MiniSQL.BufferManager.Controllers;
 
 namespace MiniSQL.BufferManager.Models
 {
+    // mapping a block to memory page and manage the page
     public class MemoryPage
     {
         private Pager pager = null;
@@ -33,6 +34,7 @@ namespace MiniSQL.BufferManager.Models
                 }
             }
         }
+        // If the page has not saved after being modified
         public bool IsDirty { get; set; } = false;
         public UInt16 PageSize { get; set; }
 
@@ -50,21 +52,21 @@ namespace MiniSQL.BufferManager.Models
             get
             {
                 if (PageNumber == 1)
-                    return pager.FileHeaderOffset;
+                    return pager.FileHeaderSize;
                 return 0;
             }
         }
-
+        // constructor
         public MemoryPage(Pager pager)
         {
             this.pager = pager;
         }
-
+        // write page back to file
         public void CommitChanges()
         {
             this.pager.WritePage(this);
         }
-
+        // free up spaces
         public void Free()
         {
             this.Data = null;

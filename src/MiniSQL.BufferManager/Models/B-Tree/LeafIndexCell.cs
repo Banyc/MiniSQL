@@ -6,10 +6,13 @@ namespace MiniSQL.BufferManager.Models
 {
     public class LeafIndexCell : BTreeCell
     {
+        // primary key of the table
+        // it is NOT the key being indexed
         public DBRecord PrimaryKey { get; set; }
 
-        // Key is the key being indexed
+        // the property `Key` is the key being indexed
 
+        // the size of the cell
         public uint RemainingSize
         {
             get
@@ -19,6 +22,7 @@ namespace MiniSQL.BufferManager.Models
             }
         }
 
+        // the size of header excluding the field <remaining size>
         public uint HeaderSize
         {
             get
@@ -27,21 +31,25 @@ namespace MiniSQL.BufferManager.Models
                 return (uint)VarintSize.GetVarintSize(size + 4);
             }
         }
-
+        // size of index key
         public uint KeyIdxSize { get { return (uint)this.Key.RecordSize; } }
+        // size of primary key (not the key being indexed)
         public uint KeyPKSize { get { return (uint)this.PrimaryKey.RecordSize; } }
 
+        // constructor
         public LeafIndexCell(byte[] data, int startIndex)
         {
             Unpack(data, startIndex);
         }
 
+        // constructor
         public LeafIndexCell(DBRecord key, DBRecord primaryKey)
         {
             this.Key = key;
             this.PrimaryKey = primaryKey;
         }
 
+        // to bytes
         public override byte[] Pack()
         {
             List<byte> pack = new List<byte>();
@@ -54,6 +62,7 @@ namespace MiniSQL.BufferManager.Models
             return pack.ToArray();
         }
 
+        // from bytes
         public override void Unpack(byte[] data, int startIndex)
         {
             uint tmpUInt;
