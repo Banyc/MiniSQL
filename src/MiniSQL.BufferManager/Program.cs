@@ -94,6 +94,20 @@ namespace MiniSQL.BufferManager
             Debug.Assert(node.GetBTreeCell(offsets[5]).Key.GetValues()[0].IntegerValue == 6);
 
             List<AtomValue> tmpAtomList = null;
+
+            // iterate
+            int i = 1;
+            foreach (var iteratedCell in node)
+            {
+                tmpAtomList = iteratedCell.Key.GetValues();
+                Debug.Assert(tmpAtomList[0].IntegerValue == i);
+                i++;
+            }
+
+            // node indexing
+            AssertCell(node[0], cells[0]);
+            AssertCell(node[1], cells[2]);
+
             // find
             (BTreeCell cell, ushort offset, int indexInOffsetArray) = node.FindBTreeCell(keys[2]);
             tmpAtomList = cell.Key.GetValues();
@@ -129,9 +143,16 @@ namespace MiniSQL.BufferManager
             tmpAtomList = node.GetBTreeCell(offsets[3]).Key.GetValues();
             Debug.Assert(tmpAtomList[0].IntegerValue == 6);
 
+            // delete by index
+            node.DeleteBTreeCell(node[0]);
+            tmpAtomList = node[0].Key.GetValues();
+            Debug.Assert(tmpAtomList[0].IntegerValue == 3);
+            tmpAtomList = node[1].Key.GetValues();
+            Debug.Assert(tmpAtomList[0].IntegerValue == 5);
+            tmpAtomList = node[2].Key.GetValues();
+            Debug.Assert(tmpAtomList[0].IntegerValue == 6);
+
             // delete all
-            node.DeleteBTreeCell(offsets[0]);
-            offsets = node.CellOffsetArray;
             node.DeleteBTreeCell(offsets[0]);
             offsets = node.CellOffsetArray;
             node.DeleteBTreeCell(offsets[0]);

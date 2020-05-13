@@ -1,11 +1,12 @@
 using System;
+using System.Collections;
 using System.Collections.Generic;
 using MiniSQL.BufferManager.Models;
 using MiniSQL.Library.Models;
 
 namespace MiniSQL.BufferManager.Models
 {
-    public class BTreeNode
+    public class BTreeNode : IEnumerable<BTreeCell>
     {
         private MemoryPage page = null;
         public PageTypes PageType
@@ -89,6 +90,13 @@ namespace MiniSQL.BufferManager.Models
             this.NumCells = 0;
         }
 
+        public void DeleteBTreeCell(BTreeCell cell)
+        {
+            (BTreeCell cellFound, UInt16 offset, int indexInOffsetArray) = FindBTreeCell(cell, false);
+            DeleteBTreeCell(offset);
+        }
+
+        // NOTICE: remember to re-get the `CellOffsetArray` after deletion
         public void DeleteBTreeCell(UInt16 address)
         {
             List<UInt16> offsetsSorted = this.CellOffsetArray;
@@ -97,6 +105,7 @@ namespace MiniSQL.BufferManager.Models
             int physicalRankOfDeletingCell = offsetsSorted.IndexOf(address);
             if (physicalRankOfDeletingCell < 0)
                 throw new Exception($"There is no B-Tree cell at offset {address}");
+            // remove from header
             offsets.Remove(address);
             int sizeOfDeletingBTreeCell;
             if (physicalRankOfDeletingCell == offsetsSorted.Count - 1)
@@ -163,84 +172,27 @@ namespace MiniSQL.BufferManager.Models
             List<UInt16> offsets = this.CellOffsetArray;
             // find the next peer of the cell
             int i;
-            // bool isExitLoop = false;
-            // for (i = 0; i < offsets.Count && !isExitLoop; i++)
-            // {
-            //     BTreeCell peer = GetBTreeCell(offsets[i]);
-
-            //     switch (keyValues[0].Type)
-            //     {
-            //         case AttributeTypes.Int:
-            //             if (keyValues[0].IntegerValue <= peer.Key.GetValues()[0].IntegerValue)
-            //                 isExitLoop = true;
-            //             break;
-            //         case AttributeTypes.Float:
-            //             if (keyValues[0].FloatValue <= peer.Key.GetValues()[0].FloatValue)
-            //                 isExitLoop = true;
-            //             break;
-            //         case AttributeTypes.Char:
-            //             if (string.Compare(keyValues[0].StringValue, peer.Key.GetValues()[0].StringValue) <= 0)
-            //                 isExitLoop = true;
-            //             break;
-            //         case AttributeTypes.Null:
-            //         default:
-            //             throw new Exception("Key could not be NULL");
-            //     }
-            // }
             BTreeCell cellTemp;
             UInt16 offset;
             (cellTemp, offset, i) = FindBTreeCell(keyValues);
-            // it found the index of the next peer, so the new cell should be one index ahead of the peer
-            // if (isExitLoop)
-            //     i--;
-            offsets.Insert(i, (UInt16)startAddress);
             // update header
+            offsets.Insert(i, (UInt16)startAddress);
             this.CellOffsetArray = offsets;
         }
 
-        public (BTreeCell cell, UInt16 offset, int indexInOffsetArray) FindBTreeCell(DBRecord key)
+        // NOTICE: if `isFuzzySearch`, this function will return the first cell that with key equal or larger than that of `cell`'s
+        public (BTreeCell cell, UInt16 offset, int indexInOffsetArray) FindBTreeCell(BTreeCell cell, bool isFuzzySearch = true)
         {
-            List<AtomValue> keyValues = key.GetValues();
-            return FindBTreeCell(keyValues);
+            return FindBTreeCell(cell.Key, isFuzzySearch);
         }
 
-        // public (BTreeCell, UInt16) FindBTreeCell(List<AtomValue> key)
-        // {
-        //     List<UInt16> offsets = this.CellOffsetArray;
-        //     BTreeCell peer = null;
-        //     bool isExitLoop = false;
-        //     UInt16 offsetSoFar = 0;
-        //     foreach (UInt16 offset in offsets)
-        //     {
-        //         if (isExitLoop)
-        //         {
-        //             offsetSoFar = offset;
-        //             break;
-        //         }
-        //         peer = GetBTreeCell(offset);
-        //         switch (key[0].Type)
-        //         {
-        //             case AttributeTypes.Int:
-        //                 if (key[0].IntegerValue <= peer.Key.GetValues()[0].IntegerValue)
-        //                     isExitLoop = true;
-        //                 break;
-        //             case AttributeTypes.Float:
-        //                 if (key[0].FloatValue <= peer.Key.GetValues()[0].FloatValue)
-        //                     isExitLoop = true;
-        //                 break;
-        //             case AttributeTypes.Char:
-        //                 if (string.Compare(key[0].StringValue, peer.Key.GetValues()[0].StringValue) <= 0)
-        //                     isExitLoop = true;
-        //                 break;
-        //             case AttributeTypes.Null:
-        //             default:
-        //                 throw new Exception("Key could not be NULL");
-        //         }
-        //     }
-        //     return (peer, offsetSoFar);
-        // }
+        public (BTreeCell cell, UInt16 offset, int indexInOffsetArray) FindBTreeCell(DBRecord key, bool isFuzzySearch = true)
+        {
+            List<AtomValue> keyValues = key.GetValues();
+            return FindBTreeCell(keyValues, isFuzzySearch);
+        }
 
-        public (BTreeCell cell, UInt16 offset, int indexInOffsetArray) FindBTreeCell(List<AtomValue> keys)
+        public (BTreeCell cell, UInt16 offset, int indexInOffsetArray) FindBTreeCell(List<AtomValue> keys, bool isFuzzySearch = true)
         {
             List<UInt16> offsets = this.CellOffsetArray;
 
@@ -254,16 +206,40 @@ namespace MiniSQL.BufferManager.Models
                 switch (keys[0].Type)
                 {
                     case AttributeTypes.Int:
-                        if (keys[0].IntegerValue <= peer.Key.GetValues()[0].IntegerValue)
-                            isFound = true;
+                        if (isFuzzySearch)
+                        {
+                            if (keys[0].IntegerValue <= peer.Key.GetValues()[0].IntegerValue)
+                                isFound = true;
+                        }
+                        else
+                        {
+                            if (keys[0].IntegerValue == peer.Key.GetValues()[0].IntegerValue)
+                                isFound = true;
+                        }
                         break;
                     case AttributeTypes.Float:
-                        if (keys[0].FloatValue <= peer.Key.GetValues()[0].FloatValue)
-                            isFound = true;
+                        if (isFuzzySearch)
+                        {
+                            if (keys[0].FloatValue <= peer.Key.GetValues()[0].FloatValue)
+                                isFound = true;
+                        }
+                        else
+                        {
+                            if (keys[0].FloatValue == peer.Key.GetValues()[0].FloatValue)
+                                isFound = true;
+                        }
                         break;
                     case AttributeTypes.Char:
-                        if (string.Compare(keys[0].StringValue, peer.Key.GetValues()[0].StringValue) <= 0)
-                            isFound = true;
+                        if (isFuzzySearch)
+                        {
+                            if (string.Compare(keys[0].StringValue, peer.Key.GetValues()[0].StringValue) <= 0)
+                                isFound = true;
+                        }
+                        else
+                        {
+                            if (string.Compare(keys[0].StringValue, peer.Key.GetValues()[0].StringValue) == 0)
+                                isFound = true;
+                        }
                         break;
                     case AttributeTypes.Null:
                     default:
@@ -285,6 +261,27 @@ namespace MiniSQL.BufferManager.Models
             }
 
             return (peer, offset, i);
+        }
+
+        public IEnumerator<BTreeCell> GetEnumerator()
+        {
+            foreach (var offset in this.CellOffsetArray)
+            {
+                yield return this.GetBTreeCell(offset);
+            }
+        }
+
+        IEnumerator IEnumerable.GetEnumerator()
+        {
+            return (IEnumerator)GetEnumerator();
+        }
+
+        public BTreeCell this[int index]
+        {
+            get
+            {
+                return GetBTreeCell(this.CellOffsetArray[index]);
+            }
         }
     }
 }
