@@ -13,11 +13,11 @@ namespace MiniSQL.BufferManager.Controllers
         // file handler
         public FileStream Stream { get; set; }
         // number of blocks in file (not in memory)
-        public long PageCount { get; set; }
+        public int PageCount { get; set; }
         // size of each page
         public UInt16 PageSize { get; set; } = 4 * 1024;
         // all the pages read from the file
-        public List<MemoryPage> Pages { get; set; } = new List<MemoryPage>();
+        public Dictionary<int, (MemoryPage, DateTime)> Pages { get; set; } = new Dictionary<int, (MemoryPage, DateTime)>();
         public int InMemoryPageCountLimit { get; set; } = 4;
         // how big is the file header in bytes
         public ushort FileHeaderSize { get; private set; } = 100;
@@ -35,31 +35,36 @@ namespace MiniSQL.BufferManager.Controllers
             // the statement order is fixed
             this.PageSize = pageSize;
             this.Stream = File.Open(dbPath, FileMode.OpenOrCreate, FileAccess.ReadWrite);
-            this.PageCount = this.Stream.Length / this.PageSize;
+            this.PageCount = (int)this.Stream.Length / this.PageSize;
         }
 
         // from file
-        public byte[] ReadHeader()
+        // NOTICE: this method could ONLY used when initialization of pager
+        private byte[] ReadHeader()
         {
-            byte[] header = new byte[100];
-            this.Stream.Read(header, 0, 100);
-            this.Stream.Close();
-            return header;
+            lock (this)
+            {
+                byte[] header = new byte[100];
+                this.Stream.Seek(0, SeekOrigin.Begin);
+                this.Stream.Read(header, 0, 100);
+                return header;
+            }
         }
 
         private void ReadPageSizeFromFile()
         {
             byte[] header = ReadHeader();
             int pageSize = BitConverter.ToInt16(header, 0x10);
-            this.PageCount = this.Stream.Length / this.PageSize;
+            this.PageCount = (int)this.Stream.Length / this.PageSize;
         }
 
         // write file header to the file
+        // use when the page file is newly created
         private void WritePageSizeToFirstPage()
         {
             lock (this)
             {
-                MemoryPage firstPage = this.Pages[0];
+                MemoryPage firstPage = ReadPage(1);
                 UInt16 pageSize = this.PageSize;
                 byte[] pageSizeBytes = BitConverter.GetBytes(pageSize);
                 Array.Copy(pageSizeBytes, 0, firstPage.Data, 0x10, 2);
@@ -67,9 +72,16 @@ namespace MiniSQL.BufferManager.Controllers
         }
 
         // extends the limits of the number of pages by one
-        public void NewPage()
+        public void ExtendNumberOfPages()
         {
             this.PageCount++;
+        }
+
+        // get a newly allocated page
+        public MemoryPage GetNewPage()
+        {
+            ExtendNumberOfPages();
+            return ReadPage(this.PageCount);
         }
 
         // free a page from main memory
@@ -77,7 +89,7 @@ namespace MiniSQL.BufferManager.Controllers
         {
             lock (this)
             {
-                this.Pages.Remove(page);
+                this.Pages.Remove(page.PageNumber);
                 if (page.IsDirty)
                     WritePage(page);
                 page.Free();
@@ -85,12 +97,20 @@ namespace MiniSQL.BufferManager.Controllers
         }
 
         // from file
-        public MemoryPage ReadPage(long pageNumber)
+        public MemoryPage ReadPage(int pageNumber)
         {
             if (pageNumber > this.PageCount || pageNumber <= 0)
                 throw new System.InvalidOperationException($"Page #{pageNumber} does not exists");
-            MemoryPage newPage = new MemoryPage(this);
-            newPage.PageNumber = pageNumber;
+
+            // if (this.Pages.ContainsKey(pageNumber))
+            // {
+            //     (MemoryPage page, DateTime lastAccessTime) = this.Pages[pageNumber];
+            //     // renew the last access time
+            //     SetPageAsMostRecentlyUsed(pageNumber);
+            //     return page;
+            // }
+
+            MemoryPage newPage = new MemoryPage(this, pageNumber);
 
             ReadPage(newPage);
 
@@ -106,16 +126,29 @@ namespace MiniSQL.BufferManager.Controllers
 
             lock (this)
             {
+                // directly get the shared part and return
+                if (this.Pages.ContainsKey(page.PageNumber))
+                {
+                    (MemoryPage existingPage, DateTime lastAccessTime) = this.Pages[page.PageNumber];
+                    // renew the last access time
+                    SetPageAsMostRecentlyUsed(page.PageNumber);
+                    // share the same data
+                    page.Core = existingPage.Core;
+                    return;
+                }
+
+                // remove LRU if out of limit
                 if (this.Pages.Count >= this.InMemoryPageCountLimit)
                     RemoveLRUPage();
 
-                page.PageSize = this.PageSize;
+                // page.PageSize = this.PageSize;
+                page.Core = new MemoryPage.MemoryPageCore();
                 page.Data = new byte[this.PageSize];
 
                 this.Stream.Seek((page.PageNumber - 1) * this.PageSize, SeekOrigin.Begin);
                 this.Stream.Read(page.Data, 0, page.PageSize);
 
-                this.Pages.Add(page);
+                this.Pages.Add(page.PageNumber, (page, DateTime.Now));
             }
         }
 
@@ -139,26 +172,23 @@ namespace MiniSQL.BufferManager.Controllers
             lock (this)
             {
                 while (this.Pages.Count > 0)
-                    RemovePage(this.Pages.First());
+                    RemovePage(this.Pages.First().Value.Item1);
                 this.Stream.Close();
             }
         }
 
         // mark a page as active and prevent it from being swapped out
-        public void SetPageAsMostRecentlyUsed(MemoryPage page)
+        public void SetPageAsMostRecentlyUsed(int pageNumber)
         {
             lock (this)
             {
-                if (this.Pages.Count > 0 && this.Pages.Last() != page)
-                {
-                    int index = this.Pages.IndexOf(page);
-                    // to prevent unexpected `Add` if page has not been in this.Pages
-                    if (index >= 0)
-                    {
-                        this.Pages.RemoveAt(index);
-                        this.Pages.Add(page);
-                    }
-                }
+                // if a MemoryPage is initialized, this method will also be called
+                if (!this.Pages.ContainsKey(pageNumber))
+                    return;
+                // find page
+                (MemoryPage page, DateTime lastAccessTime) = this.Pages[pageNumber];
+                // renew the last access time
+                this.Pages[pageNumber] = (page, DateTime.Now);
             }
         }
 
@@ -169,10 +199,24 @@ namespace MiniSQL.BufferManager.Controllers
             {
                 if (this.Pages.Count == 0)
                     return;
-                int victimIndex = 0;
-                while (this.Pages[victimIndex].IsPinned == true)
-                    victimIndex++;
-                MemoryPage victim = this.Pages[victimIndex];
+                DateTime lru = DateTime.Now;
+                MemoryPage victim = null;
+                foreach (var keyValue in this.Pages)
+                {
+                    if (keyValue.Value.Item1.IsPinned)
+                        continue;
+                    if (keyValue.Value.Item2 <= lru)
+                    {
+                        lru = keyValue.Value.Item2;
+                        victim = keyValue.Value.Item1;
+                    }
+                }
+
+                if (victim == null)
+                {
+                    throw new Exception("Cannot find any valid LRU page!");
+                }
+
                 RemovePage(victim);
             }
         }

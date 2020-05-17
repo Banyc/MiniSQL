@@ -1,23 +1,21 @@
 using System;
-using System.Collections.Generic;
-using System.Diagnostics;
-using System.IO;
 using MiniSQL.BufferManager.Models;
-using MiniSQL.Library.Models;
 
 namespace MiniSQL.BufferManager.Controllers
 {
     public class BTreeController
     {
         private readonly Pager _pager;
-        private readonly ushort MaxCell = 100;
+        private readonly FreeList _freeList;
+
         // constructor
-        public BTreeController(Pager pager)
+        public BTreeController(Pager pager, FreeList freeList)
         {
             this._pager = pager;
+            this._freeList = freeList;
         }
 
-        /*public void InsertCell(BTreeNode root, BTreeCell cell)
+        public void InsertCell(BTreeNode root, BTreeCell cell)
         {
             throw new NotImplementedException();
         }
@@ -41,122 +39,31 @@ namespace MiniSQL.BufferManager.Controllers
         private void MergeNode(BTreeNode leftNode, BTreeNode rightNode)
         {
             throw new NotImplementedException();
-        }*/
+        }
 
-
-        public (BTreeNode result, bool isFind) Recur_FindNode(DBRecord keys, BTreeNode T)
+        // recycle page to free list
+        private void DeleteNode(BTreeNode node)
         {
-            BTreeNode result = T;
-            MemoryPage Nextpage = null;
-            if (this == null)
-                return (result, false);
-            else
+            MemoryPage page = node.GetRawPage();
+            node.IsDisabled = true;
+            _freeList.RecyclePage(page);
+        }
+
+        // allocate a new node from free list or from pager
+        private BTreeNode GetNewNode(PageTypes nodeType)
+        {
+            // allocate
+            MemoryPage newPage = _freeList.AllocatePage();
+            if (newPage == null)
             {
-                BTreeCell cell;
-                UInt16 offset;
-                int indexInOffsetArray;
-                //internal leaf,go to the child
-                if (T.PageType == PageTypes.InternalIndexPage || T.PageType == PageTypes.InternalTablePage)
-                {
-                    (cell, offset, indexInOffsetArray) = T.FindBTreeCell(keys);
-                    if (offset == 0)  //rightpage
-                    {
-                        Nextpage = _pager.ReadPage(T.RightPage);
-                        result = new BTreeNode(Nextpage);
-                    }
-                    else             //child page in cell
-                    {
-                        if (cell.Types == CellTypes.InternalIndexCell)
-                        {
-                            InternalIndexCell internalIndexCell = (InternalIndexCell)cell;
-                            Nextpage = _pager.ReadPage(internalIndexCell.ChildPage);
-                            result = new BTreeNode(Nextpage);
-                        }
-                        else
-                        {
-                            InternalTableCell internalTableCell = (InternalTableCell)cell;
-                            Nextpage = _pager.ReadPage(internalTableCell.ChildPage);
-                            result = new BTreeNode(Nextpage);
-                        }
-                    }
-                    return Recur_FindNode(keys,result);
-                }
-                //leaf node
-                else
-                {
-                    (cell, offset, indexInOffsetArray) = T.FindBTreeCell(keys);
-                    if (offset == 0)
-                    {
-                        return (T, false);
-                    }
-                    else
-                    {
-                        if (cell.Key == keys)
-                        {
-                            return (T, true);
-                        }
-                        else
-                        {
-                            return (T, false);
-                        }
-                    }
-                }
+                newPage = _pager.GetNewPage();
             }
+            
+            // initialize node
+            BTreeNode node = new BTreeNode(newPage);
+            node.InitializeEmptyFormat(nodeType);
+
+            return node;
         }
-
-        public void InsertNode(BTreeCell cell)
-        {
-
-        }
-        public void InsertWithoutSplit(BTreeCell cell,BTreeNode T)
-        {
-            BTreeNode targer = null;
-            bool flag;
-            (targer, flag) = Recur_FindNode(cell.Key, T);
-            if(flag==true)
-                throw new Exception("Cannot insert duplicate key!");
-            else
-            {
-                if (T.NumCells >= MaxCell)
-                {
-                    throw new Exception("The cells in the page overflow!");
-                }
-                else
-                    T.InsertBTreeCell(cell);
-            }
-        }
-
-        public void InsertWithSplit(BTreeCell cell)
-        {
-
-        }
-
-
-        public void DeleteNode(BTreeCell cell)
-        {
-
-        }
-
-        public void DeleteWithoutMerge(BTreeCell cell,BTreeNode T)
-        {
-            BTreeNode targer = null;
-            bool flag;
-            (targer, flag) = Recur_FindNode(cell.Key, T);
-            if (flag == false)
-                throw new Exception("Cannot find the cell!");
-            else
-            {
-                T.DeleteBTreeCell(cell);
-            }
-        }
-
-        public void DeleteWithMerge(BTreeCell cell)
-        {
-
-        }
-
-
-
-
     }
 }

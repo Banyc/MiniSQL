@@ -45,6 +45,9 @@ namespace MiniSQL.BufferManager.Models
             set { Array.Copy(BitConverter.GetBytes(value), 0, _page.Data, 8 + _page.AvaliableOffset, 4); }
         }
 
+        // if tree node is freed/disabled
+        public bool IsDisabled { get; set; } = false;
+
         // the offset array at the low address of the page
         // the array indicates the offset (address) of each cell at the high address space
         // the order of the array is carefully set in ascending order. It is based on the first value of `Key` of each cell.
@@ -87,6 +90,12 @@ namespace MiniSQL.BufferManager.Models
         public BTreeNode(MemoryPage page)
         {
             this._page = page;
+        }
+
+        // use it when freeing this node
+        public MemoryPage GetRawPage()
+        {
+            return _page;
         }
 
         // formatting an empty page with initialized B-Tree node (page) header
