@@ -10,49 +10,93 @@ namespace MiniSQL.BufferManager.Models
         // this core is shared by all MemoryPage with the same page number
         public class MemoryPageCore
         {
+            internal readonly Pager _pager;
+            // start from 1
+            public int PageNumber { get; internal set; } = 0;
             // this page has been swapped out if this.data is null
+            // It is only permitted to be directly accessed by `Pager` to swap in
             internal byte[] data = null;
             public UInt16 PageSize { get => (UInt16)data.Length; }
+            // if swapped out, the core will be out of date and needs to sync by swapping in. Replace the whole `Core` if necessary.
             public bool IsSwappedOut
             {
                 get { return data == null; }
             }
             // prevent page swapping manually
             public bool IsPinned { get; set; } = false;
+            // If the page has not saved after being modified
+            public bool IsDirty { get; set; } = false;
+
+            // constructor
+            public MemoryPageCore(Pager pager, int pageNumber)
+            {
+                this._pager = pager;
+                this.PageNumber = pageNumber;
+            }
         }
 
+        // if swapped out, the core will be out of date and needs to sync by swapping in. Replace the whole `Core` if necessary.
         public MemoryPageCore Core { get; set; }
-        private readonly Pager _pager = null;
         // start from 1
-        public int PageNumber { get; private set; } = 0;
+        public int PageNumber
+        {
+            get
+            {
+                return this.Core.PageNumber;
+            }
+            private set
+            {
+                this.Core.PageNumber = value;
+            }
+        }
         // NOTICE: don't watch this property when debugging!
         public byte[] Data
         {
             get
             {
-                if (Core.data == null)
-                {
-                    _pager.ReadPage(this);
-                }
-                this._pager.SetPageAsMostRecentlyUsed(this.PageNumber);
-                return Core.data;
-            }
-            set
-            {
-                lock (this)
-                {
-                    this._pager.SetPageAsMostRecentlyUsed(this.PageNumber);
-                    this.IsDirty = true;
-                    Core.data = value;
-                }
+                EnsureSwapIn();
+                this.Core._pager.SetPageAsMostRecentlyUsed(this.PageNumber);
+                // everytime this property is read, it is assumed to be modified since byte array could not be detected chances
+                this.IsDirty = true;
+                return this.Core.data;
             }
         }
         // If the page has not saved after being modified
-        public bool IsDirty { get; set; } = false;
-        public UInt16 PageSize { get => this.Core.PageSize; }
-
+        public bool IsDirty
+        {
+            get
+            {
+                EnsureSwapIn();
+                return this.Core.IsDirty;
+            }
+            set
+            {
+                EnsureSwapIn();
+                this.Core.IsDirty = value;
+            }
+        }
+        public UInt16 PageSize
+        {
+            get
+            {
+                EnsureSwapIn();
+                return this.Core.PageSize;
+            }
+        }
         // prevent page swapping manually
-        public bool IsPinned { get => this.Core.IsPinned; set => this.Core.IsPinned = value; }
+        public bool IsPinned
+        {
+            get
+            {
+                EnsureSwapIn();
+                return this.Core.IsPinned;
+            }
+            set
+            {
+                EnsureSwapIn();
+                this.Core.IsPinned = value;
+            }
+        }
         public bool IsSwappedOut { get => this.Core.IsSwappedOut; }
 
         // after which address the page is available.
@@ -62,25 +106,48 @@ namespace MiniSQL.BufferManager.Models
             get
             {
                 if (PageNumber == 1)
-                    return _pager.FileHeaderSize;
+                    return this.Core._pager.FileHeaderSize;
                 return 0;
             }
         }
         // constructor
-        public MemoryPage(Pager pager, int pageNumber)
+        public MemoryPage(MemoryPageCore core)
         {
-            this._pager = pager;
-            this.PageNumber = pageNumber;
+            this.Core = core;
+        }
+        public byte this[int index]
+        {
+            get
+            {
+                EnsureSwapIn();
+                this.Core._pager.SetPageAsMostRecentlyUsed(this.PageNumber);
+                // everytime this property is read, it is assumed to be modified since byte array could not be detected chances
+                return this.Core.data[index];
+            }
+            set
+            {
+                EnsureSwapIn();
+                this.Core._pager.SetPageAsMostRecentlyUsed(this.PageNumber);
+                this.IsDirty = true;
+                this.Core.data[index] = value;
+            }
+        }
+        public void EnsureSwapIn()
+        {
+            if (this.IsSwappedOut)
+            {
+                this.Core._pager.ReadPage(this);
+            }
         }
         // write page back to file
         public void CommitChanges()
         {
-            this._pager.WritePage(this);
+            this.Core._pager.WritePage(this);
         }
         // free up spaces
         public void Free()
         {
-            this.Data = null;
+            this.Core.data = null;
         }
     }
 }
