@@ -1,3 +1,4 @@
+using System.Collections.Generic;
 using MiniSQL.Library.Models;
 
 namespace MiniSQL.Library.Interfaces
@@ -14,11 +15,13 @@ namespace MiniSQL.Library.Interfaces
         // update the root page of a table or an index
         // if succeeded, return true. Vice versa
         bool TryUpdateSchemaRecord(string name, int rootPage);
-        // according to the name required, return the full schema record
-        SchemaRecord GetSchemaRecord(string name);
-        // check validation of the insert statement
-        bool CheckInsertStatementValidation(InsertStatement insertStatement);
-        // check validation of the delete statement
-        bool CheckDeleteStatementValidation(DeleteStatement deleteStatement);
+        // according to the table name required, return corresponding schema record
+        SchemaRecord GetTableSchemaRecord(string tableName);
+        // according to the table name required, return the all index schema records that is associated to the table
+        List<SchemaRecord> GetIndicesSchemaRecord(string tableName);
+        // according to the index name required, return corresponding schema record
+        SchemaRecord GetIndexSchemaRecord(string indexName);
+        // check validation of the create statement
+        bool IsValid(IStatement statement);
     }
 }

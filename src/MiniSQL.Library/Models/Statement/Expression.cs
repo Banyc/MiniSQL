@@ -37,6 +37,12 @@ namespace MiniSQL.Library.Models
         // use if this Expression is only an attribute (variable)
         public string AttributeName { get; set; } = "";
 
+        // TODO
+        public Expression GetMinimalBinaryExpression(string variableName)
+        {
+            throw new System.NotImplementedException();
+        }
+
         // get the value of this Expression
         public AtomValue Calculate(List<AttributeValue> row)
         {

@@ -1,6 +1,8 @@
 using System;
+using System.Collections.Generic;
 using MiniSQL.BufferManager.Interfaces;
 using MiniSQL.BufferManager.Models;
+using MiniSQL.Library.Models;
 
 namespace MiniSQL.BufferManager.Controllers
 {
@@ -21,12 +23,22 @@ namespace MiniSQL.BufferManager.Controllers
             throw new NotImplementedException();
         }
 
-        public void DeleteCell(BTreeNode root, BTreeCell cell)
+        public BTreeCell FindCell(DBRecord key)
         {
             throw new NotImplementedException();
         }
 
-        public BTreeCell FindCell(DBRecord key)
+        public List<BTreeCell> FindCells(Expression expression)
+        {
+            throw new NotImplementedException();
+        }
+
+        public void DeleteCells(BTreeNode root, Expression expression)
+        {
+            throw new NotImplementedException();
+        }
+
+        public void DeleteCell(BTreeNode root, DBRecord key)
         {
             throw new NotImplementedException();
         }
