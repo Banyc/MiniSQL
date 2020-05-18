@@ -121,7 +121,6 @@ namespace MiniSQL.BufferManager.Models
             {
                 EnsureSwapIn();
                 this.Core._pager.SetPageAsMostRecentlyUsed(this.PageNumber);
-                // everytime this property is read, it is assumed to be modified since byte array could not be detected chances
                 return this.Core.data[index];
             }
             set

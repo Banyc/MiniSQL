@@ -13,7 +13,7 @@ namespace MiniSQL.Interpreter
             // string input = File.ReadAllText("./Grammar/tests/table-insert-delete-0.sql");
             string input = File.ReadAllText("./Grammar/tests/execfile.sql");
             
-            var query = Parsing.GetQuery(input);
+            var query = Parsing.StaticGetQuery(input);
             
             // set breakpoint here
             Console.WriteLine("Unit test end.");
