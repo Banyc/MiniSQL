@@ -37,6 +37,109 @@ namespace MiniSQL.Library.Models
         // use if this Expression is only an attribute (variable)
         public string AttributeName { get; set; } = "";
 
+        // {attribute name: expression with only the variable/attribute}
+        private Dictionary<string, Expression> ands = null;
+        // to help B-Tree's single key searching
+        public Dictionary<string, Expression> Ands
+        {
+            get
+            {
+                if (this.ands == null)
+                {
+                    this.ands = new Dictionary<string, Expression>();
+                    this.BuildAndList();
+                    return this.ands;
+                }
+                else
+                    return this.ands;
+            }
+        }
+
+        private void BuildAndList()
+        {
+            if (this.Operator == Operator.AtomConcreteValue || this.Operator == Operator.AtomVariable)
+            {
+                return;
+            }
+            this.LeftOperant.BuildAndList();
+            this.RightOperant.BuildAndList();
+
+            if (this.Operator == Operator.Equal
+                    || this.Operator == Operator.LessThan
+                    || this.Operator == Operator.LessThanOrEqualTo
+                    || this.Operator == Operator.MoreThan
+                    || this.Operator == Operator.MoreThanOrEqualTo
+                    // excluded not equal
+                    // || this.Operator == Operator.NotEqual
+                    )
+            {
+                if (this.LeftOperant.Operator == Operator.AtomConcreteValue
+                    && this.RightOperant.Operator == Operator.AtomVariable)
+                {
+                    // swap variable to the left
+                    Expression tmp = this.LeftOperant;
+                    this.LeftOperant = this.RightOperant;
+                    this.RightOperant = tmp;
+                    // change operator
+                    switch (this.Operator)
+                    {
+                        case Operator.LessThan:
+                            this.Operator = Operator.MoreThan;
+                            break;
+                        case Operator.LessThanOrEqualTo:
+                            this.Operator = Operator.MoreThanOrEqualTo;
+                            break;
+                        case Operator.MoreThan:
+                            this.Operator = Operator.LessThan;
+                            break;
+                        case Operator.MoreThanOrEqualTo:
+                            this.Operator = Operator.LessThanOrEqualTo;
+                            break;
+                    }
+                    // add to the "and" list
+                    this.Ands[this.LeftOperant.AttributeName] = this;
+                }
+                else if (this.LeftOperant.Operator == Operator.AtomVariable
+                    && this.RightOperant.Operator == Operator.AtomConcreteValue)
+                    this.Ands[this.LeftOperant.AttributeName] = this;
+            }
+            // only operator `and` could take `Ands` in its children
+            else if (this.Operator == Operator.And)
+            {
+                foreach (var andExpresion in this.LeftOperant.Ands.ToList())
+                {
+                    this.Ands[andExpresion.Key] = andExpresion.Value;
+                }
+                // duplicate key will be overwritten
+                foreach (var andExpresion in this.RightOperant.Ands.ToList())
+                {
+                    this.Ands[andExpresion.Key] = andExpresion.Value;
+                }
+            }
+        }
+
+        public bool CheckKey(string attributeName, AtomValue valueToCheck)
+        {
+            if (this.Ands.ContainsKey(attributeName))
+            {
+                AtomValue result = this.Ands[attributeName].Calculate(new List<AttributeValue>
+                {
+                    new AttributeValue
+                    {
+                        AttributeName = attributeName,
+                        Type = valueToCheck.Type,
+                        CharLimit = valueToCheck.CharLimit,
+                        FloatValue = valueToCheck.FloatValue,
+                        IntegerValue = valueToCheck.IntegerValue,
+                        StringValue = valueToCheck.StringValue}});
+                return result.BooleanValue;
+            }
+            else
+            {
+                return true;
+            }
+        }
+
         // get the value of this Expression
         public AtomValue Calculate(List<AttributeValue> row)
         {
@@ -65,6 +168,7 @@ namespace MiniSQL.Library.Models
             }
             result.Type = leftValue.Type;
 
+            // TODO: move those logic to class AtomValue
             // calculate the two children into a value
             switch (this.Operator)
             {
@@ -114,9 +218,9 @@ namespace MiniSQL.Library.Models
                         throw new System.InvalidOperationException("String could not Or");
                     break;
                 case Operator.Xor:
-                    result.IntegerValue = ((leftValue.IntegerValue != 0 || rightValue.IntegerValue != 0) 
+                    result.IntegerValue = ((leftValue.IntegerValue != 0 || rightValue.IntegerValue != 0)
                                             && (leftValue.IntegerValue != 0 && rightValue.IntegerValue != 0)) ? 1 : 0;
-                    result.FloatValue = ((leftValue.FloatValue != 0 || rightValue.FloatValue != 0) 
+                    result.FloatValue = ((leftValue.FloatValue != 0 || rightValue.FloatValue != 0)
                                             && (leftValue.FloatValue != 0 && rightValue.FloatValue != 0)) ? 1 : 0;
                     if (result.Type == AttributeTypes.Char)
                         throw new System.InvalidOperationException("String could not Or");

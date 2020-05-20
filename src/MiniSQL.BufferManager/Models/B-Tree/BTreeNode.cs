@@ -6,6 +6,7 @@ using MiniSQL.Library.Models;
 
 namespace MiniSQL.BufferManager.Models
 {
+    // TODO: to test the inter-node operations
     // The term "offset" is the same as "address"
     // each node exclusively owns one page
     public class BTreeNode : IEnumerable<BTreeCell>
@@ -37,7 +38,8 @@ namespace MiniSQL.BufferManager.Models
             get { return BitConverter.ToUInt16(_page.Data, 5 + _page.AvaliableOffset); }
             set { Array.Copy(BitConverter.GetBytes(value), 0, _page.Data, 5 + _page.AvaliableOffset, 2); }
         }
-        // internal node only
+        // deprecated: internal node only
+        // WORKAROUND: all types of node have the `RightPage` pointer
         // RightPage pointer is, essentially, the “rightmost pointer” in a B-Tree node
         public UInt32 RightPage
         {
@@ -103,12 +105,18 @@ namespace MiniSQL.BufferManager.Models
         {
             this.PageType = pageType;
             this.CellsOffset = _page.PageSize;
-            // internal pages (nodes) do not have `RightPage` section in header
             if (this.PageType == PageTypes.InternalIndexPage || this.PageType == PageTypes.InternalTablePage)
-                this.FreeOffset = 8;
-            // leaf pages (nodes) do have `RightPage` section in header
+            {
+                // internal pages (nodes) have `RightPage` section in header
+                this.RightPage = 0;
+                this.FreeOffset = (ushort)(_page.AvaliableOffset + 8 + 4);
+            }
             else
             {
+                // deprecated: leaf pages (nodes) do not have `RightPage` section in header
+                // this.FreeOffset = (ushort)(_page.AvaliableOffset + 8);
+
+                // WORKAROUND: leaf pages (nodes) ALSO have `RightPage` section in header
                 this.RightPage = 0;
                 this.FreeOffset = (ushort)(_page.AvaliableOffset + 8 + 4);
             }
@@ -225,7 +233,13 @@ namespace MiniSQL.BufferManager.Models
 
         // NOTICE: if `isFuzzySearch`, this function will return the first cell that with key equal or larger than that of `cell`'s
         // if no cell matches, the output `cell` field will be `null` and `offset` will be set to 0
+        // WORKAROUND: only the first key is used. The remaining keys will be ignored
         public (BTreeCell cell, UInt16 offset, int indexInOffsetArray) FindBTreeCell(List<AtomValue> keys, bool isFuzzySearch = true)
+        {
+            return FindBTreeCell(keys[0], isFuzzySearch);
+        }
+
+        public (BTreeCell cell, UInt16 offset, int indexInOffsetArray) FindBTreeCell(AtomValue key, bool isFuzzySearch = true)
         {
             // get the list of existing peers to visit
             List<UInt16> offsets = this.CellOffsetArray;
@@ -238,41 +252,41 @@ namespace MiniSQL.BufferManager.Models
             {
                 peer = GetBTreeCell(offsets[i]);
 
-                switch (keys[0].Type)
+                switch (key.Type)
                 {
                     case AttributeTypes.Int:
                         if (isFuzzySearch)
                         {
-                            if (keys[0].IntegerValue <= peer.Key.GetValues()[0].IntegerValue)
+                            if (key.IntegerValue <= peer.Key.GetValues()[0].IntegerValue)
                                 isFound = true;
                         }
                         else
                         {
-                            if (keys[0].IntegerValue == peer.Key.GetValues()[0].IntegerValue)
+                            if (key.IntegerValue == peer.Key.GetValues()[0].IntegerValue)
                                 isFound = true;
                         }
                         break;
                     case AttributeTypes.Float:
                         if (isFuzzySearch)
                         {
-                            if (keys[0].FloatValue <= peer.Key.GetValues()[0].FloatValue)
+                            if (key.FloatValue <= peer.Key.GetValues()[0].FloatValue)
                                 isFound = true;
                         }
                         else
                         {
-                            if (keys[0].FloatValue == peer.Key.GetValues()[0].FloatValue)
+                            if (key.FloatValue == peer.Key.GetValues()[0].FloatValue)
                                 isFound = true;
                         }
                         break;
                     case AttributeTypes.Char:
                         if (isFuzzySearch)
                         {
-                            if (string.Compare(keys[0].StringValue, peer.Key.GetValues()[0].StringValue) <= 0)
+                            if (string.Compare(key.StringValue, peer.Key.GetValues()[0].StringValue) <= 0)
                                 isFound = true;
                         }
                         else
                         {
-                            if (string.Compare(keys[0].StringValue, peer.Key.GetValues()[0].StringValue) == 0)
+                            if (string.Compare(key.StringValue, peer.Key.GetValues()[0].StringValue) == 0)
                                 isFound = true;
                         }
                         break;

@@ -246,6 +246,7 @@ namespace MiniSQL.BufferManager
             Debug.Assert(page5.IsSwappedOut == false);
             Debug.Assert(page6.IsSwappedOut == false);
             page4.Data[0] = 4;
+            page4[1] = 44;
             MemoryPage page7 = pager.ReadPage(7);
             Debug.Assert(page1.IsSwappedOut == false);
             Debug.Assert(page2.IsSwappedOut == true);
@@ -269,6 +270,8 @@ namespace MiniSQL.BufferManager
 
             Debug.Assert(page1.IsSwappedOut == false);
             Debug.Assert(page2.Data[0] == 2);
+            Debug.Assert(page4.Data[0] == 4);
+            Debug.Assert(page4[1] == 44);
 
             pager.Close();
         }

@@ -4,6 +4,7 @@ using System.Collections.Generic;
 using MiniSQL.BufferManager.Models;
 using System.Linq;
 using System.Threading;
+using static MiniSQL.BufferManager.Models.MemoryPage;
 
 namespace MiniSQL.BufferManager.Controllers
 {
@@ -102,15 +103,8 @@ namespace MiniSQL.BufferManager.Controllers
             if (pageNumber > this.PageCount || pageNumber <= 0)
                 throw new System.InvalidOperationException($"Page #{pageNumber} does not exists");
 
-            // if (this.Pages.ContainsKey(pageNumber))
-            // {
-            //     (MemoryPage page, DateTime lastAccessTime) = this.Pages[pageNumber];
-            //     // renew the last access time
-            //     SetPageAsMostRecentlyUsed(pageNumber);
-            //     return page;
-            // }
-
-            MemoryPage newPage = new MemoryPage(this, pageNumber);
+            MemoryPageCore core = new MemoryPageCore(this, pageNumber);
+            MemoryPage newPage = new MemoryPage(core);
 
             ReadPage(newPage);
 
@@ -141,12 +135,11 @@ namespace MiniSQL.BufferManager.Controllers
                 if (this.Pages.Count >= this.InMemoryPageCountLimit)
                     RemoveLRUPage();
 
-                // page.PageSize = this.PageSize;
-                page.Core = new MemoryPage.MemoryPageCore();
-                page.Data = new byte[this.PageSize];
+                page.Core = new MemoryPage.MemoryPageCore(this, page.PageNumber);
+                page.Core.data = new byte[this.PageSize];
 
                 this.Stream.Seek((page.PageNumber - 1) * this.PageSize, SeekOrigin.Begin);
-                this.Stream.Read(page.Data, 0, page.PageSize);
+                this.Stream.Read(page.Core.data, 0, page.Core.PageSize);
 
                 this.Pages.Add(page.PageNumber, (page, DateTime.Now));
             }
