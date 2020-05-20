@@ -124,14 +124,14 @@ namespace MiniSQL.Library.Models
             {
                 AtomValue result = this.Ands[attributeName].Calculate(new List<AttributeValue>
                 {
-                    new AttributeValue
+                    new AttributeValue(attributeName, new AtomValue()
                     {
-                        AttributeName = attributeName,
                         Type = valueToCheck.Type,
                         CharLimit = valueToCheck.CharLimit,
                         FloatValue = valueToCheck.FloatValue,
                         IntegerValue = valueToCheck.IntegerValue,
-                        StringValue = valueToCheck.StringValue}});
+                    })
+                });
                 return result.BooleanValue;
             }
             else
@@ -147,9 +147,9 @@ namespace MiniSQL.Library.Models
             if (this.Operator == Operator.AtomVariable)
             {
                 AttributeValue column = row.Find(x => x.AttributeName == this.AttributeName);
-                if (column == null)
+                if (object.ReferenceEquals(column, null))
                     throw new System.Exception($"Attribute \"{this.AttributeName}\" does not exist in this table");
-                return column;
+                return column.Value;
             }
 
             // directly return the concrete value

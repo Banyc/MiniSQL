@@ -28,9 +28,9 @@ namespace MiniSQL.Library.Models
                             return true;
                     // workaround
                     case AttributeTypes.Null:
-                        return true;
+                        return false;
                     default:
-                        return true;
+                        return false;
                 }
             }
             set
@@ -62,6 +62,265 @@ namespace MiniSQL.Library.Models
                     default:
                         throw new System.InvalidCastException("bool could not cast to unknown type");
                 }
+            }
+        }
+
+        public static AtomValue operator <(AtomValue leftValue, AtomValue rightValue)
+        {
+            ThrowErrorIfNotSameType(leftValue, rightValue);
+            AtomValue result = new AtomValue();
+            result.Type = AttributeTypes.Int;
+            switch (leftValue.Type)
+            {
+                case AttributeTypes.Char:
+                    result.IntegerValue = string.Compare(leftValue.StringValue, rightValue.StringValue) < 0 ? 1 : 0;
+                    break;
+                case AttributeTypes.Float:
+                    result.IntegerValue = leftValue.FloatValue < rightValue.FloatValue ? 1 : 0;
+                    break;
+                case AttributeTypes.Int:
+                    result.IntegerValue = leftValue.IntegerValue < rightValue.IntegerValue ? 1 : 0;
+                    break;
+                case AttributeTypes.Null:
+                    throw new System.NullReferenceException();
+            }
+            return result;
+        }
+
+        public static AtomValue operator >(AtomValue leftValue, AtomValue rightValue)
+        {
+            ThrowErrorIfNotSameType(leftValue, rightValue);
+            AtomValue result = new AtomValue();
+            result.Type = AttributeTypes.Int;
+            switch (leftValue.Type)
+            {
+                case AttributeTypes.Char:
+                    result.IntegerValue = string.Compare(leftValue.StringValue, rightValue.StringValue) > 0 ? 1 : 0;
+                    break;
+                case AttributeTypes.Float:
+                    result.IntegerValue = leftValue.FloatValue > rightValue.FloatValue ? 1 : 0;
+                    break;
+                case AttributeTypes.Int:
+                    result.IntegerValue = leftValue.IntegerValue > rightValue.IntegerValue ? 1 : 0;
+                    break;
+                case AttributeTypes.Null:
+                    throw new System.NullReferenceException();
+            }
+            return result;
+        }
+
+        public static AtomValue operator <=(AtomValue leftValue, AtomValue rightValue)
+        {
+            ThrowErrorIfNotSameType(leftValue, rightValue);
+            AtomValue result = new AtomValue();
+            result.Type = AttributeTypes.Int;
+            switch (leftValue.Type)
+            {
+                case AttributeTypes.Char:
+                    result.IntegerValue = string.Compare(leftValue.StringValue, rightValue.StringValue) <= 0 ? 1 : 0;
+                    break;
+                case AttributeTypes.Float:
+                    result.IntegerValue = leftValue.FloatValue <= rightValue.FloatValue ? 1 : 0;
+                    break;
+                case AttributeTypes.Int:
+                    result.IntegerValue = leftValue.IntegerValue <= rightValue.IntegerValue ? 1 : 0;
+                    break;
+                case AttributeTypes.Null:
+                    throw new System.NullReferenceException();
+            }
+            return result;
+        }
+
+        public static AtomValue operator >=(AtomValue leftValue, AtomValue rightValue)
+        {
+            ThrowErrorIfNotSameType(leftValue, rightValue);
+            AtomValue result = new AtomValue();
+            result.Type = AttributeTypes.Int;
+            switch (leftValue.Type)
+            {
+                case AttributeTypes.Char:
+                    result.IntegerValue = string.Compare(leftValue.StringValue, rightValue.StringValue) >= 0 ? 1 : 0;
+                    break;
+                case AttributeTypes.Float:
+                    result.IntegerValue = leftValue.FloatValue >= rightValue.FloatValue ? 1 : 0;
+                    break;
+                case AttributeTypes.Int:
+                    result.IntegerValue = leftValue.IntegerValue >= rightValue.IntegerValue ? 1 : 0;
+                    break;
+                case AttributeTypes.Null:
+                    throw new System.NullReferenceException();
+            }
+            return result;
+        }
+
+        public static AtomValue operator ==(AtomValue leftValue, AtomValue rightValue)
+        {
+            AtomValue result = new AtomValue();
+            result.Type = AttributeTypes.Int;
+            if (object.ReferenceEquals(null, leftValue) && object.ReferenceEquals(null, rightValue))
+            {
+                result.IntegerValue = 1;
+                return result;
+            }
+            else if (object.ReferenceEquals(null, leftValue) || object.ReferenceEquals(null, rightValue))
+            {
+                result.IntegerValue = 0;
+                return result;
+            }
+            ThrowErrorIfNotSameType(leftValue, rightValue);
+            switch (leftValue.Type)
+            {
+                case AttributeTypes.Char:
+                    result.IntegerValue = string.Compare(leftValue.StringValue, rightValue.StringValue) == 0 ? 1 : 0;
+                    break;
+                case AttributeTypes.Float:
+                    result.IntegerValue = leftValue.FloatValue == rightValue.FloatValue ? 1 : 0;
+                    break;
+                case AttributeTypes.Int:
+                    result.IntegerValue = leftValue.IntegerValue == rightValue.IntegerValue ? 1 : 0;
+                    break;
+                case AttributeTypes.Null:
+                    result.IntegerValue = 1;
+                    break;
+            }
+            return result;
+        }
+
+        public static AtomValue operator !=(AtomValue leftValue, AtomValue rightValue)
+        {
+            ThrowErrorIfNotSameType(leftValue, rightValue);
+            AtomValue result = new AtomValue();
+            result.Type = AttributeTypes.Int;
+            switch (leftValue.Type)
+            {
+                case AttributeTypes.Char:
+                    result.IntegerValue = string.Compare(leftValue.StringValue, rightValue.StringValue) != 0 ? 1 : 0;
+                    break;
+                case AttributeTypes.Float:
+                    result.IntegerValue = leftValue.FloatValue != rightValue.FloatValue ? 1 : 0;
+                    break;
+                case AttributeTypes.Int:
+                    result.IntegerValue = leftValue.IntegerValue != rightValue.IntegerValue ? 1 : 0;
+                    break;
+                case AttributeTypes.Null:
+                    throw new System.NullReferenceException();
+            }
+            return result;
+        }
+
+        public static AtomValue operator +(AtomValue leftValue, AtomValue rightValue)
+        {
+            ThrowErrorIfNotSameType(leftValue, rightValue);
+            AtomValue result = new AtomValue();
+            result.Type = leftValue.Type;
+            switch (leftValue.Type)
+            {
+                case AttributeTypes.Char:
+                    result.StringValue = leftValue.StringValue + rightValue.StringValue;
+                    break;
+                case AttributeTypes.Float:
+                    result.FloatValue = leftValue.FloatValue + rightValue.FloatValue;
+                    break;
+                case AttributeTypes.Int:
+                    result.IntegerValue = leftValue.IntegerValue + rightValue.IntegerValue;
+                    break;
+                case AttributeTypes.Null:
+                    throw new System.NullReferenceException();
+            }
+            return result;
+        }
+
+        public static AtomValue operator -(AtomValue leftValue, AtomValue rightValue)
+        {
+            ThrowErrorIfNotSameType(leftValue, rightValue);
+            AtomValue result = new AtomValue();
+            result.Type = leftValue.Type;
+            switch (leftValue.Type)
+            {
+                case AttributeTypes.Char:
+                    throw new System.InvalidOperationException("String could not Subtract");
+                case AttributeTypes.Float:
+                    result.FloatValue = leftValue.FloatValue - rightValue.FloatValue;
+                    break;
+                case AttributeTypes.Int:
+                    result.IntegerValue = leftValue.IntegerValue - rightValue.IntegerValue;
+                    break;
+                case AttributeTypes.Null:
+                    throw new System.NullReferenceException();
+            }
+            return result;
+        }
+
+        public static AtomValue operator *(AtomValue leftValue, AtomValue rightValue)
+        {
+            ThrowErrorIfNotSameType(leftValue, rightValue);
+            AtomValue result = new AtomValue();
+            result.Type = leftValue.Type;
+            switch (leftValue.Type)
+            {
+                case AttributeTypes.Char:
+                    throw new System.InvalidOperationException("String could not Multiply");
+                case AttributeTypes.Float:
+                    result.FloatValue = leftValue.FloatValue * rightValue.FloatValue;
+                    break;
+                case AttributeTypes.Int:
+                    result.IntegerValue = leftValue.IntegerValue * rightValue.IntegerValue;
+                    break;
+                case AttributeTypes.Null:
+                    throw new System.NullReferenceException();
+            }
+            return result;
+        }
+
+        public static AtomValue operator /(AtomValue leftValue, AtomValue rightValue)
+        {
+            ThrowErrorIfNotSameType(leftValue, rightValue);
+            AtomValue result = new AtomValue();
+            result.Type = leftValue.Type;
+            switch (leftValue.Type)
+            {
+                case AttributeTypes.Char:
+                    throw new System.InvalidOperationException("String could not Divide");
+                case AttributeTypes.Float:
+                    result.FloatValue = leftValue.FloatValue / rightValue.FloatValue;
+                    break;
+                case AttributeTypes.Int:
+                    result.IntegerValue = leftValue.IntegerValue / rightValue.IntegerValue;
+                    break;
+                case AttributeTypes.Null:
+                    throw new System.NullReferenceException();
+            }
+            return result;
+        }
+
+        private static void ThrowErrorIfNotSameType(AtomValue leftValue, AtomValue rightValue)
+        {
+            // make sure the types of children are the same
+            if (leftValue?.Type != rightValue?.Type)
+            {
+                throw new System.Exception("Operants type not matched!");
+            }
+        }
+
+        public override bool Equals(object obj)
+        {
+            return (this == (AtomValue)obj).BooleanValue;
+        }
+
+        public override int GetHashCode()
+        {
+            switch (this.Type)
+            {
+                case AttributeTypes.Char:
+                    return this.StringValue.GetHashCode();
+                case AttributeTypes.Float:
+                    return this.FloatValue.GetHashCode();
+                case AttributeTypes.Int:
+                    return this.IntegerValue.GetHashCode();
+                case AttributeTypes.Null:
+                    return 0;
+                default:
+                    return 0;
             }
         }
     }
