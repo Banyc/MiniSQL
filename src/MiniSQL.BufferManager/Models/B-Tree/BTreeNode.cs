@@ -6,6 +6,7 @@ using MiniSQL.Library.Models;
 
 namespace MiniSQL.BufferManager.Models
 {
+    // TODO: to test the inter-node operations
     // The term "offset" is the same as "address"
     // each node exclusively owns one page
     public class BTreeNode : IEnumerable<BTreeCell>
@@ -37,7 +38,8 @@ namespace MiniSQL.BufferManager.Models
             get { return BitConverter.ToUInt16(_page.Data, 5 + _page.AvaliableOffset); }
             set { Array.Copy(BitConverter.GetBytes(value), 0, _page.Data, 5 + _page.AvaliableOffset, 2); }
         }
-        // internal node only
+        // deprecated: internal node only
+        // WORKAROUND: all types of node have the `RightPage` pointer
         // RightPage pointer is, essentially, the “rightmost pointer” in a B-Tree node
         public UInt32 RightPage
         {
@@ -103,12 +105,18 @@ namespace MiniSQL.BufferManager.Models
         {
             this.PageType = pageType;
             this.CellsOffset = _page.PageSize;
-            // internal pages (nodes) do not have `RightPage` section in header
             if (this.PageType == PageTypes.InternalIndexPage || this.PageType == PageTypes.InternalTablePage)
-                this.FreeOffset = 8;
-            // leaf pages (nodes) do have `RightPage` section in header
+            {
+                // internal pages (nodes) have `RightPage` section in header
+                this.RightPage = 0;
+                this.FreeOffset = (ushort)(_page.AvaliableOffset + 8 + 4);
+            }
             else
             {
+                // deprecated: leaf pages (nodes) do not have `RightPage` section in header
+                // this.FreeOffset = (ushort)(_page.AvaliableOffset + 8);
+
+                // WORKAROUND: leaf pages (nodes) ALSO have `RightPage` section in header
                 this.RightPage = 0;
                 this.FreeOffset = (ushort)(_page.AvaliableOffset + 8 + 4);
             }
