@@ -21,7 +21,7 @@ namespace MiniSQL.Library.Interfaces
         List<SchemaRecord> GetIndicesSchemaRecord(string tableName);
         // according to the index name required, return corresponding schema record
         SchemaRecord GetIndexSchemaRecord(string indexName);
-        // check validation of the create statement
+        // check validation of the statement
         bool IsValid(IStatement statement);
     }
 }

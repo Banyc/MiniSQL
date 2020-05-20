@@ -1,3 +1,5 @@
+using System;
+
 namespace MiniSQL.Library.Models
 {
     public enum SchemaTypes
@@ -6,6 +8,7 @@ namespace MiniSQL.Library.Models
         Index,
     }
 
+    [Serializable] 
     public class SchemaRecord
     {
         public SchemaTypes Type { get; set; }
@@ -13,5 +16,8 @@ namespace MiniSQL.Library.Models
         public string AssociatedTable { get; set; }
         public int RootPage { get; set; }
         public CreateStatement SQL { get; set; }
+
+        // for serialization
+        public SchemaRecord() {}
     }
 }

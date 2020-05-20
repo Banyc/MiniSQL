@@ -1,3 +1,4 @@
+using System;
 using System.Collections.Generic;
 
 namespace MiniSQL.Library.Models
@@ -8,6 +9,7 @@ namespace MiniSQL.Library.Models
         Index,
     }
 
+    [Serializable]  
     public class CreateStatement : IStatement
     {
         public StatementType Type { get; set; } = StatementType.CreateStatement;
@@ -31,5 +33,7 @@ namespace MiniSQL.Library.Models
             }
         }
         public List<AttributeDeclaration> AttributeDeclarations { get; set; }
+        // for serialization
+        public CreateStatement() {}
     }
 }
