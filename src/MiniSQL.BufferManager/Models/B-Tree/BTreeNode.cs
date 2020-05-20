@@ -225,7 +225,13 @@ namespace MiniSQL.BufferManager.Models
 
         // NOTICE: if `isFuzzySearch`, this function will return the first cell that with key equal or larger than that of `cell`'s
         // if no cell matches, the output `cell` field will be `null` and `offset` will be set to 0
+        // WORKAROUND: only the first key is used. The remaining keys will be ignored
         public (BTreeCell cell, UInt16 offset, int indexInOffsetArray) FindBTreeCell(List<AtomValue> keys, bool isFuzzySearch = true)
+        {
+            return FindBTreeCell(keys[0], isFuzzySearch);
+        }
+
+        public (BTreeCell cell, UInt16 offset, int indexInOffsetArray) FindBTreeCell(AtomValue key, bool isFuzzySearch = true)
         {
             // get the list of existing peers to visit
             List<UInt16> offsets = this.CellOffsetArray;
@@ -238,41 +244,41 @@ namespace MiniSQL.BufferManager.Models
             {
                 peer = GetBTreeCell(offsets[i]);
 
-                switch (keys[0].Type)
+                switch (key.Type)
                 {
                     case AttributeTypes.Int:
                         if (isFuzzySearch)
                         {
-                            if (keys[0].IntegerValue <= peer.Key.GetValues()[0].IntegerValue)
+                            if (key.IntegerValue <= peer.Key.GetValues()[0].IntegerValue)
                                 isFound = true;
                         }
                         else
                         {
-                            if (keys[0].IntegerValue == peer.Key.GetValues()[0].IntegerValue)
+                            if (key.IntegerValue == peer.Key.GetValues()[0].IntegerValue)
                                 isFound = true;
                         }
                         break;
                     case AttributeTypes.Float:
                         if (isFuzzySearch)
                         {
-                            if (keys[0].FloatValue <= peer.Key.GetValues()[0].FloatValue)
+                            if (key.FloatValue <= peer.Key.GetValues()[0].FloatValue)
                                 isFound = true;
                         }
                         else
                         {
-                            if (keys[0].FloatValue == peer.Key.GetValues()[0].FloatValue)
+                            if (key.FloatValue == peer.Key.GetValues()[0].FloatValue)
                                 isFound = true;
                         }
                         break;
                     case AttributeTypes.Char:
                         if (isFuzzySearch)
                         {
-                            if (string.Compare(keys[0].StringValue, peer.Key.GetValues()[0].StringValue) <= 0)
+                            if (string.Compare(key.StringValue, peer.Key.GetValues()[0].StringValue) <= 0)
                                 isFound = true;
                         }
                         else
                         {
-                            if (string.Compare(keys[0].StringValue, peer.Key.GetValues()[0].StringValue) == 0)
+                            if (string.Compare(key.StringValue, peer.Key.GetValues()[0].StringValue) == 0)
                                 isFound = true;
                         }
                         break;
