@@ -65,6 +65,24 @@ namespace MiniSQL.Library.Models
             }
         }
 
+        public static AtomValue operator !(AtomValue leftValue)
+        {
+            AtomValue result = new AtomValue();
+            result.Type = AttributeTypes.Int;
+            switch (leftValue.Type)
+            {
+                case AttributeTypes.Char:
+                    throw new System.InvalidOperationException("String could not Not");
+                case AttributeTypes.Float:
+                case AttributeTypes.Int:
+                    result.IntegerValue = leftValue.BooleanValue ? 0 : 1;
+                    break;
+                case AttributeTypes.Null:
+                    throw new System.NullReferenceException();
+            }
+            return result;
+        }
+
         public static AtomValue operator <(AtomValue leftValue, AtomValue rightValue)
         {
             ThrowErrorIfNotSameType(leftValue, rightValue);
@@ -244,6 +262,26 @@ namespace MiniSQL.Library.Models
                     break;
                 case AttributeTypes.Int:
                     result.IntegerValue = leftValue.IntegerValue - rightValue.IntegerValue;
+                    break;
+                case AttributeTypes.Null:
+                    throw new System.NullReferenceException();
+            }
+            return result;
+        }
+
+        public static AtomValue operator -(AtomValue leftValue)
+        {
+            AtomValue result = new AtomValue();
+            result.Type = leftValue.Type;
+            switch (leftValue.Type)
+            {
+                case AttributeTypes.Char:
+                    throw new System.InvalidOperationException("String could not Subtract");
+                case AttributeTypes.Float:
+                    result.FloatValue = -leftValue.FloatValue;
+                    break;
+                case AttributeTypes.Int:
+                    result.IntegerValue = -leftValue.IntegerValue;
                     break;
                 case AttributeTypes.Null:
                     throw new System.NullReferenceException();

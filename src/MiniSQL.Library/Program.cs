@@ -75,14 +75,20 @@ namespace MiniSQL.Library
 
         private static void TestFullCalculate()
         {
+            Expression exp = GetAndsExpression();
+            
             List<AttributeValue> nameValuePairs = new List<AttributeValue>();
             nameValuePairs.Add(new AttributeValue("a", new AtomValue {Type = AttributeTypes.Int, IntegerValue = 33}));
-            nameValuePairs.Add(new AttributeValue("b", new AtomValue {Type = AttributeTypes.Char, StringValue = "stc"}));
+            nameValuePairs.Add(new AttributeValue("b", new AtomValue {Type = AttributeTypes.Char, CharLimit = 5 , StringValue = "stc"}));
             nameValuePairs.Add(new AttributeValue("c", new AtomValue {Type = AttributeTypes.Float, FloatValue = 6.0}));
 
-            Expression exp = GetAndsExpression();
             AtomValue result = exp.Calculate(nameValuePairs);
             Debug.Assert(result.BooleanValue == true);
+
+            nameValuePairs[1].Value.StringValue = "stz";
+
+            result = exp.Calculate(nameValuePairs);
+            Debug.Assert(result.BooleanValue == false);
         }
 
         private static void TestCalculateSingleValue()
