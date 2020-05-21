@@ -9,6 +9,7 @@ namespace MiniSQL.BufferManager.Models
     // TODO: to test the inter-node operations
     // The term "offset" is the same as "address"
     // each node exclusively owns one page
+    // <PageType (1 byte)> <FreeOffset (2 bytes)> <NumCells (2 bytes)> <CellsOffset (2 bytes)> <0 (1 byte)> <RightPage (4 bytes)> <ParentPage (4 bytes)>
     public class BTreeNode : IEnumerable<BTreeCell>
     {
         private readonly MemoryPage _page = null;
@@ -45,6 +46,12 @@ namespace MiniSQL.BufferManager.Models
         {
             get { return BitConverter.ToUInt32(_page.Data, 8 + _page.AvaliableOffset); }
             set { Array.Copy(BitConverter.GetBytes(value), 0, _page.Data, 8 + _page.AvaliableOffset, 4); }
+        }
+        // customized: the page number of parent node
+        public UInt32 ParentPage
+        {
+            get { return BitConverter.ToUInt32(_page.Data, 12 + _page.AvaliableOffset); }
+            set { Array.Copy(BitConverter.GetBytes(value), 0, _page.Data, 12 + _page.AvaliableOffset, 4); }
         }
 
         // if tree node is freed/disabled
@@ -109,7 +116,14 @@ namespace MiniSQL.BufferManager.Models
             {
                 // internal pages (nodes) have `RightPage` section in header
                 this.RightPage = 0;
-                this.FreeOffset = (ushort)(_page.AvaliableOffset + 8 + 4);
+                // customized: added field `ParentPage`
+                this.ParentPage = 0;
+
+                // deprecated:
+                // this.FreeOffset = (ushort)(_page.AvaliableOffset + 8 + 4);
+
+                // customized: added field `ParentPage`
+                this.FreeOffset = (ushort)(_page.AvaliableOffset + 8 + 4 + 4);
             }
             else
             {
@@ -118,7 +132,14 @@ namespace MiniSQL.BufferManager.Models
 
                 // WORKAROUND: leaf pages (nodes) ALSO have `RightPage` section in header
                 this.RightPage = 0;
-                this.FreeOffset = (ushort)(_page.AvaliableOffset + 8 + 4);
+                // customized: added field `ParentPage`
+                this.ParentPage = 0;
+
+                // deprecated:
+                // this.FreeOffset = (ushort)(_page.AvaliableOffset + 8 + 4);
+                
+                // customized: added field `ParentPage`
+                this.FreeOffset = (ushort)(_page.AvaliableOffset + 8 + 4 + 4);
             }
             this.NumCells = 0;
         }
