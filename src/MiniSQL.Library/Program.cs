@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Collections.Generic;
 using System.Diagnostics;
 using MiniSQL.Library.Models;
 
@@ -8,17 +9,86 @@ namespace MiniSQL.Library
     {
         static void Main(string[] args)
         {
-            Console.WriteLine("Start test!");
+            Console.WriteLine("[Library] Start test!");
 
             TestExpression();
 
-            Console.WriteLine("End test!");
+            TestAtomValueOperators();
+
+            Console.WriteLine("[Library] End test!");
+        }
+
+        private static void TestAtomValueOperators()
+        {
+            AtomValue left = new AtomValue();
+            AtomValue right = new AtomValue();
+            left.StringValue = "abedeb";
+            left.IntegerValue = 114;
+            left.FloatValue = 14.14;
+            right.StringValue = "abeceb";
+            right.IntegerValue = 514;
+            right.FloatValue = 14.14;
+
+            left.Type = AttributeTypes.Char;
+            right.Type = AttributeTypes.Char;
+            Debug.Assert((left < right).BooleanValue == false);
+            Debug.Assert((left > right).BooleanValue == true);
+            Debug.Assert((left == right).BooleanValue == false);
+            Debug.Assert((left != right).BooleanValue == true);
+            Debug.Assert((left <= right).BooleanValue == false);
+            Debug.Assert((left >= right).BooleanValue == true);
+            Debug.Assert((left + right).StringValue == "abedebabeceb");
+
+            left.Type = AttributeTypes.Int;
+            right.Type = AttributeTypes.Int;
+            Debug.Assert((left < right).BooleanValue == true);
+            Debug.Assert((left > right).BooleanValue == false);
+            Debug.Assert((left == right).BooleanValue == false);
+            Debug.Assert((left != right).BooleanValue == true);
+            Debug.Assert((left <= right).BooleanValue == true);
+            Debug.Assert((left >= right).BooleanValue == false);
+            Debug.Assert((left + right).IntegerValue == 628);
+            Debug.Assert((left - right).IntegerValue == -400);
+            Debug.Assert((left * right).IntegerValue == 114 * 514);
+            Debug.Assert((left / right).IntegerValue == 114 / 514);
+
+            left.Type = AttributeTypes.Float;
+            right.Type = AttributeTypes.Float;
+            Debug.Assert((left < right).BooleanValue == false);
+            Debug.Assert((left > right).BooleanValue == false);
+            Debug.Assert((left == right).BooleanValue == true);
+            Debug.Assert((left != right).BooleanValue == false);
+            Debug.Assert((left <= right).BooleanValue == true);
+            Debug.Assert((left >= right).BooleanValue == true);
+            Debug.Assert((left + right).FloatValue == 28.28);
+            Debug.Assert((left - right).FloatValue == 0.0);
+            Debug.Assert((left * right).FloatValue == 14.14 * 14.14);
+            Debug.Assert((left / right).FloatValue == 1);
         }
 
         private static void TestExpression()
         {
             TestAndList(); 
             TestCalculateSingleValue();
+            TestFullCalculate();
+        }
+
+        private static void TestFullCalculate()
+        {
+            Expression exp = GetAndsExpression();
+            
+            List<AttributeValue> nameValuePairs = new List<AttributeValue>();
+            nameValuePairs.Add(new AttributeValue("a", new AtomValue {Type = AttributeTypes.Int, IntegerValue = 33}));
+            nameValuePairs.Add(new AttributeValue("b", new AtomValue {Type = AttributeTypes.Char, CharLimit = 5 , StringValue = "stc"}));
+            nameValuePairs.Add(new AttributeValue("c", new AtomValue {Type = AttributeTypes.Float, FloatValue = 6.0}));
+
+            AtomValue result = exp.Calculate(nameValuePairs);
+            Debug.Assert(result.BooleanValue == true);
+
+            nameValuePairs[1].Value.StringValue = "stz";
+
+            result = exp.Calculate(nameValuePairs);
+            Debug.Assert(result.BooleanValue == false);
         }
 
         private static void TestCalculateSingleValue()
