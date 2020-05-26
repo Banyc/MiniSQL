@@ -16,7 +16,8 @@ namespace MiniSQL.BufferManager.Controllers
         // number of blocks in file (not in memory)
         public int PageCount { get; set; }
         // size of each page
-        public UInt16 PageSize { get; set; } = 4 * 1024;
+        // page size is not allowed to be modified after the file is created.
+        public UInt16 PageSize { get; private set; } = 0;
         // all the pages read from the file
         public Dictionary<int, (MemoryPage, DateTime)> Pages { get; set; } = new Dictionary<int, (MemoryPage, DateTime)>();
         public int InMemoryPageCountLimit { get; set; } = 4;
@@ -71,7 +72,7 @@ namespace MiniSQL.BufferManager.Controllers
         private void ReadPageSizeFromFile()
         {
             byte[] header = ReadHeader();
-            int pageSize = BitConverter.ToInt16(header, 0x10);
+            this.PageSize = BitConverter.ToUInt16(header, 0x10);
             this.PageCount = (int)this.Stream.Length / this.PageSize;
         }
 
@@ -179,7 +180,6 @@ namespace MiniSQL.BufferManager.Controllers
         {
             lock (this)
             {
-                WritePageSizeToFirstPage();
                 while (this.Pages.Count > 0)
                     RemovePage(this.Pages.First().Value.Item1);
                 this.Stream.Close();
