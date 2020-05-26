@@ -24,19 +24,35 @@ namespace MiniSQL.BufferManager.Controllers
         public ushort FileHeaderSize { get; private set; } = 100;
 
         // constructor
-        public Pager(string dbPath, UInt16 pageSize = 4 * 1024, int pageCountLimit = 4)
+        public Pager(string dbPath, UInt16 defaultPageSize = 4 * 1024, int pageCountLimit = 4)
         {
             this.InMemoryPageCountLimit = pageCountLimit;
-            Open(dbPath, pageSize);
+            Open(dbPath, defaultPageSize);
         }
 
         // from file
-        public void Open(string dbPath, UInt16 pageSize = 4 * 1024)
+        public void Open(string dbPath, UInt16 defaultPageSize = 4 * 1024)
         {
-            // the statement order is fixed
-            this.PageSize = pageSize;
+            bool isNewFile = false;
+            // check if new file
+            if (!File.Exists(dbPath))
+                isNewFile = true;
+            // open file
             this.Stream = File.Open(dbPath, FileMode.OpenOrCreate, FileAccess.ReadWrite);
-            this.PageCount = (int)this.Stream.Length / this.PageSize;
+            // initialize file format
+            if (isNewFile)
+            {
+                this.PageSize = defaultPageSize;
+                // the first page is resevered for metadata, not available from GetNewPage()
+                this.PageCount = 1;
+                WritePageSizeToFirstPage();
+            }
+            else
+            {
+                ReadPageSizeFromFile();
+                // get number of pages available
+                this.PageCount = (int)this.Stream.Length / this.PageSize;
+            }
         }
 
         // from file
@@ -60,7 +76,6 @@ namespace MiniSQL.BufferManager.Controllers
         }
 
         // write file header to the file
-        // use when the page file is newly created
         private void WritePageSizeToFirstPage()
         {
             lock (this)
@@ -164,6 +179,7 @@ namespace MiniSQL.BufferManager.Controllers
         {
             lock (this)
             {
+                WritePageSizeToFirstPage();
                 while (this.Pages.Count > 0)
                     RemovePage(this.Pages.First().Value.Item1);
                 this.Stream.Close();

@@ -16,7 +16,7 @@ namespace MiniSQL.BufferManager
 
             TestBTreeInsert();
 
-            /*TestDBRecord();
+            TestDBRecord();
 
             TestLeafTableCell();
 
@@ -32,7 +32,7 @@ namespace MiniSQL.BufferManager
 
             TestInsertIntoAndDeletionInsideBTreeNode();
 
-            TestFreeList();*/
+            TestFreeList();
 
             Console.WriteLine("BufferManager Test End");
         }
@@ -53,12 +53,12 @@ namespace MiniSQL.BufferManager
             File.Delete(dbPath);
             Pager pager = new Pager(dbPath);
             FreeList freeList = new FreeList(pager);
-            BTreeController _Controller=new BTreeController(pager,freeList);
+            BTreeController controller = new BTreeController(pager, freeList);
 
-            BTreeNode root=null;
-            root=_Controller.Insert(keyRecord,record,root);
+            BTreeNode root = null;
+            root = controller.Insert(keyRecord, record, root);
 
-
+            pager.Close();
         }
 
         static void TestFreeList()
@@ -69,39 +69,39 @@ namespace MiniSQL.BufferManager
             Pager pager = new Pager(dbPath, 4096, 100);
 
             List<MemoryPage> pageList = new List<MemoryPage>();
-            pageList.Add(pager.GetNewPage());
-            pageList.Add(pager.GetNewPage());
-            pageList.Add(pager.GetNewPage());
-            pageList.Add(pager.GetNewPage());
+            pageList.Add(pager.GetNewPage());  // page #2
+            pageList.Add(pager.GetNewPage());  // page #3
+            pageList.Add(pager.GetNewPage());  // page #4
+            pageList.Add(pager.GetNewPage());  // page #5
 
             FreeList freeList = new FreeList(pager);
 
             // test initialization
             MemoryPage newPage = null;
-            newPage = freeList.AllocatePage();
+            newPage = freeList.AllocatePage();  // freeList is now empty
             Debug.Assert(newPage == null);
 
             // recycle pages
             // MemoryPage tempPage = pager.ReadPage(3);
-            freeList.RecyclePage(pageList[2]);
-            freeList.RecyclePage(pageList[1]);
-            freeList.RecyclePage(pageList[3]);
+            freeList.RecyclePage(pageList[2]);  // freeList->4
+            freeList.RecyclePage(pageList[1]);  // freeList->3->4
+            freeList.RecyclePage(pageList[3]);  // freeList->5->3->4
 
             // fetch page from free list
-            newPage = freeList.AllocatePage();
-            Debug.Assert(newPage.PageNumber == 4);
-            newPage = freeList.AllocatePage();
-            Debug.Assert(newPage.PageNumber == 2);
+            newPage = freeList.AllocatePage();  // freeList->3->4
+            Debug.Assert(newPage.PageNumber == 5);
+            newPage = freeList.AllocatePage();  // freeList->4
+            Debug.Assert(newPage.PageNumber == 3);
 
             // recycle a page
-            freeList.RecyclePage(pageList[3]);
-            
+            freeList.RecyclePage(pageList[3]);  // freeList->5->4
+
             // fetch remaining pages
-            newPage = freeList.AllocatePage();
+            newPage = freeList.AllocatePage();  // freeList->4
+            Debug.Assert(newPage.PageNumber == 5);
+            newPage = freeList.AllocatePage();  // freeList->null
             Debug.Assert(newPage.PageNumber == 4);
-            newPage = freeList.AllocatePage();
-            Debug.Assert(newPage.PageNumber == 3);
-            newPage = freeList.AllocatePage();
+            newPage = freeList.AllocatePage();  // freeList->null
             Debug.Assert(newPage == null);
 
             pager.Close();
@@ -250,7 +250,7 @@ namespace MiniSQL.BufferManager
             pager.ExtendNumberOfPages();
             pager.ExtendNumberOfPages();
             pager.ExtendNumberOfPages();
-            pager.ExtendNumberOfPages();
+            // pager.ExtendNumberOfPages();
 
             MemoryPage page1 = pager.ReadPage(1);
             page1.IsPinned = true;
@@ -309,10 +309,10 @@ namespace MiniSQL.BufferManager
 
             Pager pager = new Pager(dbPath, 4096, 4);
 
-            Debug.Assert(pager.PageCount == 0);
+            Debug.Assert(pager.PageCount == 1);
 
             pager.ExtendNumberOfPages();
-            Debug.Assert(pager.PageCount == 1);
+            Debug.Assert(pager.PageCount == 2);
 
             MemoryPage page = pager.ReadPage(1);
             page.Data[2] = 114;
@@ -455,7 +455,7 @@ namespace MiniSQL.BufferManager
             AssertCell(leafTableCell, leafTableCellClone);
         }
 
-        
+
 
         static void TestDBRecord()
         {
