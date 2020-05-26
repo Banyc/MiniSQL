@@ -14,7 +14,9 @@ namespace MiniSQL.BufferManager
         {
             Console.WriteLine("BufferManager Test Begin");
 
-            TestDBRecord();
+            TestBTreeInsert();
+
+            /*TestDBRecord();
 
             TestLeafTableCell();
 
@@ -30,9 +32,33 @@ namespace MiniSQL.BufferManager
 
             TestInsertIntoAndDeletionInsideBTreeNode();
 
-            TestFreeList();
+            TestFreeList();*/
 
             Console.WriteLine("BufferManager Test End");
+        }
+
+        static void TestBTreeInsert()
+        {
+            // init record
+            DBRecord record = GetTestBRecord();
+
+            // init key
+            List<AtomValue> keyValues = new List<AtomValue>();
+            AtomValue key = new AtomValue() { Type = AttributeTypes.Char, CharLimit = 8, StringValue = "114514" };
+            keyValues.Add(key);
+            DBRecord keyRecord = new DBRecord(keyValues);
+
+
+            string dbPath = "./testdbfile.minidb";
+            File.Delete(dbPath);
+            Pager pager = new Pager(dbPath);
+            FreeList freeList = new FreeList(pager);
+            BTreeController _Controller=new BTreeController(pager,freeList);
+
+            BTreeNode root=null;
+            root=_Controller.Insert(keyRecord,record,root);
+
+
         }
 
         static void TestFreeList()
@@ -428,6 +454,8 @@ namespace MiniSQL.BufferManager
             AssertDBRecords(leafTableCell.DBRecord, leafTableCellClone.DBRecord);
             AssertCell(leafTableCell, leafTableCellClone);
         }
+
+        
 
         static void TestDBRecord()
         {

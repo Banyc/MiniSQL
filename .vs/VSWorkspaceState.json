@@ -3,7 +3,14 @@
     "",
     "\\src",
     "\\src\\MiniSQL.BufferManager",
-    "\\src\\MiniSQL.BufferManager\\Controllers"
+    "\\src\\MiniSQL.BufferManager\\Controllers",
+    "\\src\\MiniSQL.BufferManager\\Models",
+    "\\src\\MiniSQL.BufferManager\\Models\\B-Tree",
+    "\\src\\MiniSQL.Library",
+    "\\src\\MiniSQL.Library\\Models",
+    "\\src\\MiniSQL.Library\\Models\\Statement",
+    "\\src\\MiniSQL.Library\\Utilities"
   ],
+  "SelectedNode": "\\src\\MiniSQL.BufferManager\\Program.cs",
   "PreviewInSolutionExplorer": false
 }
