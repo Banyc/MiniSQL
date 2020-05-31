@@ -11,8 +11,8 @@ namespace MiniSQL.BufferManager.Controllers
     {
         private readonly Pager _pager;
         private readonly FreeList _freeList;
-        private readonly int MaxCell=3;
-        
+        private readonly int MaxCell = 3;
+
 
         // constructor
         public BTreeController(Pager pager, FreeList freeList)
@@ -74,7 +74,7 @@ namespace MiniSQL.BufferManager.Controllers
             {
                 newPage = _pager.GetNewPage();
             }
-            
+
             // initialize node
             BTreeNode node = new BTreeNode(newPage);
             node.InitializeEmptyFormat(nodeType);
@@ -82,77 +82,89 @@ namespace MiniSQL.BufferManager.Controllers
             return node;
         }
 
-        public BTreeNode Insert(DBRecord key,DBRecord dBRecord,BTreeNode Root)
+        public BTreeNode Insert(DBRecord key, DBRecord dBRecord, BTreeNode Root)
         {
-            //The case of insert a leaf Node
-            if(Root==null)
+            //create a new root
+            if (Root == null)
             {
-                BTreeNode root=GetNewNode(PageTypes.LeafTablePage);
-                LeafTableCell NewCell=new LeafTableCell(key,dBRecord);
+                BTreeNode root = GetNewNode(PageTypes.LeafTablePage);
+                LeafTableCell NewCell = new LeafTableCell(key, dBRecord);
                 root.InsertBTreeCell(NewCell);
                 return root;
             }
-            if(Root.NumCells<MaxCell)
+            //no need to split
+            if (Root.NumCells < MaxCell)
             {
-                return InsertNonFull(Root,key,dBRecord);
+                return InsertNonFull(Root, key, dBRecord);
             }
-            BTreeNode newRoot =GetNewNode(PageTypes.InternalTablePage);
-            //Q:how do we connect two root?——Solved
-            SplitChild(Root,newRoot,key);
-            InsertNonFull(newRoot,key,dBRecord);
+
+            //need to split,and return with a new root
+            BTreeNode newRoot = GetNewNode(PageTypes.InternalTablePage);
+            SplitChild(Root, newRoot, key);
+            InsertNonFull(newRoot, key, dBRecord);
             return newRoot;
         }
 
-       
 
-        private void SplitChild(BTreeNode nodeTobeSplit,BTreeNode parantNode,DBRecord newKey)
+
+        private void SplitChild(BTreeNode nodeTobeSplit, BTreeNode parantNode, DBRecord newKey)
         {
             int i;
-            BTreeNode splitNode =GetNewNode(nodeTobeSplit.PageType);
-            List<ushort> offsets = nodeTobeSplit.CellOffsetArray;
+            BTreeNode splitNode = GetNewNode(nodeTobeSplit.PageType);
+            //List<ushort> offsets = nodeTobeSplit.CellOffsetArray;
 
-            DBRecord key=nodeTobeSplit.GetBTreeCell(offsets[nodeTobeSplit.NumCells/2]).Key;
-            for(i=nodeTobeSplit.NumCells/2;i<MaxCell;i++)
+            //key should be the primary key to be inserted in the parent node
+            DBRecord key = nodeTobeSplit.GetBTreeCell(nodeTobeSplit.CellOffsetArray[nodeTobeSplit.NumCells / 2]).Key;
+            int DeleteIndex = nodeTobeSplit.NumCells / 2;
+            for (i = DeleteIndex; i < MaxCell; i++)
             {
-                splitNode.InsertBTreeCell(nodeTobeSplit.GetBTreeCell(offsets[i]));
-                nodeTobeSplit.DeleteBTreeCell(offsets[i]);
+                splitNode.InsertBTreeCell(nodeTobeSplit.GetBTreeCell(nodeTobeSplit.CellOffsetArray[DeleteIndex]));
+                nodeTobeSplit.DeleteBTreeCell(nodeTobeSplit.CellOffsetArray[DeleteIndex]);
             }
             //If the parentNode need to spilt,this will be wrong
-            InternalTableCell newCell=new InternalTableCell(key,(uint)nodeTobeSplit.GetRawPage().PageNumber);
+            InternalTableCell newCell = new InternalTableCell(key, (uint)nodeTobeSplit.GetRawPage().PageNumber);
 
-            //connnect two page by rightpage
+            //connnect two child node by rightpage
             splitNode.RightPage = nodeTobeSplit.RightPage;
             nodeTobeSplit.RightPage = (uint)splitNode.GetRawPage().PageNumber;
-            splitNode.ParentPage=(uint)parantNode.GetRawPage().PageNumber;
+            splitNode.ParentPage = (uint)parantNode.GetRawPage().PageNumber;
 
-            if(parantNode.NumCells==1)
+            //reconnect the particular cell(or right) in the parent node because of the change of the child node
+            //This is a new empty root
+            if (parantNode.NumCells == 0)
             {
-                parantNode.RightPage=(uint)splitNode.GetRawPage().PageNumber;
+                parantNode.RightPage = (uint)splitNode.GetRawPage().PageNumber;
             }
+            //There are some cell in the parents node
             else
             {
                 BTreeCell cell;
                 UInt16 offset;
                 int indexInOffsetArray;
-                (cell, offset, indexInOffsetArray) = parantNode.FindBTreeCell(newKey);
-                InternalTableCell tmp_cell=(InternalTableCell)cell;
-                tmp_cell.ChildPage=(uint)splitNode.GetRawPage().PageNumber;
+                (cell, offset, indexInOffsetArray) = parantNode.FindBTreeCell(key);
+                //The case when the node to be inserted into parent node is in the rightest position
+                if (cell == null)
+                {
+                    parantNode.RightPage = (uint)splitNode.GetRawPage().PageNumber;
+                }
+                //The normal case
+                else
+                {
+                    InternalTableCell tmp_cell = (InternalTableCell)cell;
+                    tmp_cell.ChildPage = (uint)splitNode.GetRawPage().PageNumber;
+                }
             }
             //This must be done after we reconnect the treeNode
             parantNode.InsertBTreeCell(newCell);
 
-            if(nodeTobeSplit.PageType==PageTypes.LeafTablePage)
-            {
-                //maybe different from another code?
-            }
 
         }
 
-        private BTreeNode InsertNonFull(BTreeNode node,DBRecord newKey,DBRecord dBRecord)
+        private BTreeNode InsertNonFull(BTreeNode node, DBRecord newKey, DBRecord dBRecord)
         {
-            if(node.PageType==PageTypes.LeafTablePage)
+            if (node.PageType == PageTypes.LeafTablePage)
             {
-                LeafTableCell newCell=new LeafTableCell(newKey,dBRecord);
+                LeafTableCell newCell = new LeafTableCell(newKey, dBRecord);
                 node.InsertBTreeCell(newCell);
                 return node;
             }
@@ -165,8 +177,8 @@ namespace MiniSQL.BufferManager.Controllers
             (cell, offset, indexInOffsetArray) = node.FindBTreeCell(newKey);
             if (offset == 0)  //rightpage
             {
-               Nextpage = _pager.ReadPage((int)node.RightPage);
-               child = new BTreeNode(Nextpage);
+                Nextpage = _pager.ReadPage((int)node.RightPage);
+                child = new BTreeNode(Nextpage);
             }
             else
             {
@@ -174,13 +186,48 @@ namespace MiniSQL.BufferManager.Controllers
                 Nextpage = _pager.ReadPage((int)internalTableCell.ChildPage);
                 child = new BTreeNode(Nextpage);
             }
-            if(child.NumCells>=MaxCell)
+            if (child.NumCells >= MaxCell)
             {
-                SplitChild(child,node,newKey);
+                SplitChild(child, node, newKey);
 
             }
-            return InsertNonFull(child,newKey,dBRecord);
+            return InsertNonFull(child, newKey, dBRecord);
 
+        }
+
+        public BTreeCell Find(DBRecord key, BTreeNode root)
+        {
+            return InternalFind(key, root);
+        }
+
+        private BTreeCell InternalFind(DBRecord key, BTreeNode root)
+        {
+            BTreeNode child;
+            MemoryPage Nextpage = null;
+            BTreeCell cell;
+            UInt16 offset;
+            int indexInOffsetArray;
+
+            if (root.PageType == PageTypes.LeafTablePage)
+            {
+                (cell, offset, indexInOffsetArray) = root.FindBTreeCell(key);
+                return cell;
+            }
+
+            //If it's internal node
+            (cell, offset, indexInOffsetArray) = root.FindBTreeCell(key);
+            if (offset == 0)  //rightpage
+            {
+                Nextpage = _pager.ReadPage((int)root.RightPage);
+                child = new BTreeNode(Nextpage);
+            }
+            else
+            {
+                InternalTableCell internalTableCell = (InternalTableCell)cell;
+                Nextpage = _pager.ReadPage((int)internalTableCell.ChildPage);
+                child = new BTreeNode(Nextpage);
+            }
+            return InternalFind(key, child);
         }
 
 
@@ -336,84 +383,84 @@ namespace MiniSQL.BufferManager.Controllers
 
             */
 
-           /* BTreeNode result = root;
-            MemoryPage Nextpage = null;
-            BTreeCell cell;
-            UInt16 offset;
-            int indexInOffsetArray;
+        /* BTreeNode result = root;
+         MemoryPage Nextpage = null;
+         BTreeCell cell;
+         UInt16 offset;
+         int indexInOffsetArray;
 
-            //sovle the problem recursively,find the node until it get to the leaves,then split and connected the node one by one
-            if (root.PageType == PageTypes.InternalIndexPage || root.PageType == PageTypes.InternalTablePage)
-            {
-                 (cell, offset, indexInOffsetArray) = root.FindBTreeCell(key);
-                 if (offset == 0)  //rightpage
+         //sovle the problem recursively,find the node until it get to the leaves,then split and connected the node one by one
+         if (root.PageType == PageTypes.InternalIndexPage || root.PageType == PageTypes.InternalTablePage)
+         {
+              (cell, offset, indexInOffsetArray) = root.FindBTreeCell(key);
+              if (offset == 0)  //rightpage
+              {
+                 Nextpage = _pager.ReadPage((int)root.RightPage);
+                 result = new BTreeNode(Nextpage);
+              }
+              else             //child page in cell
+              {
+                 if (cell.Types == CellTypes.InternalIndexCell)   //these code is useless because we has ignore the index tree
                  {
-                    Nextpage = _pager.ReadPage((int)root.RightPage);
-                    result = new BTreeNode(Nextpage);
+                     InternalIndexCell internalIndexCell = (InternalIndexCell)cell;
+                     Nextpage = _pager.ReadPage((int)internalIndexCell.ChildPage);
+                     result = new BTreeNode(Nextpage);
                  }
-                 else             //child page in cell
+                 else
                  {
-                    if (cell.Types == CellTypes.InternalIndexCell)   //these code is useless because we has ignore the index tree
-                    {
-                        InternalIndexCell internalIndexCell = (InternalIndexCell)cell;
-                        Nextpage = _pager.ReadPage((int)internalIndexCell.ChildPage);
-                        result = new BTreeNode(Nextpage);
-                    }
-                    else
-                    {
-                        InternalTableCell internalTableCell = (InternalTableCell)cell;
-                        Nextpage = _pager.ReadPage((int)internalTableCell.ChildPage);
-                        result = new BTreeNode(Nextpage);
-                     }
-                 }
-                BTreeNode curNode = InsertParentsNode(child_left, child_right, key, result);
-                //no need to split
-                if(curNode.NumCells < MaxCell)   
-                {
-                    InternalTableCell insertCell=new InternalTableCell(key,child_left.GetRawPage().PageNumber);
-                    curNode.InsertBTreeCell(insertCell);
-                    return curNode;    //WARINING!Should I return the curNode or someting else?????
-                }
+                     InternalTableCell internalTableCell = (InternalTableCell)cell;
+                     Nextpage = _pager.ReadPage((int)internalTableCell.ChildPage);
+                     result = new BTreeNode(Nextpage);
+                  }
+              }
+             BTreeNode curNode = InsertParentsNode(child_left, child_right, key, result);
+             //no need to split
+             if(curNode.NumCells < MaxCell)   
+             {
+                 InternalTableCell insertCell=new InternalTableCell(key,child_left.GetRawPage().PageNumber);
+                 curNode.InsertBTreeCell(insertCell);
+                 return curNode;    //WARINING!Should I return the curNode or someting else?????
+             }
 
 
-            }
-            //when comes to the leaves node,return to the last recursion
-            //but return with what??????
-            else
-            {
+         }
+         //when comes to the leaves node,return to the last recursion
+         //but return with what??????
+         else
+         {
 
-            }
-        }
+         }
+     }
 
-        //Same as InsertNode
-        public BTreeNode DeleteNode(BTreeCell cell)
-        {
+     //Same as InsertNode
+     public BTreeNode DeleteNode(BTreeCell cell)
+     {
 
-        }
+     }
 
-        public BTreeNode DeleteWithoutMerge(BTreeCell cell, BTreeNode T)
-        {
-            BTreeNode targer = null;
-            bool flag;
-            (targer, flag) = Recur_FindNode(cell.Key, T);
-            if (flag == false)
-                throw new Exception("Cannot find the cell!");
-            else
-            {
-                T.DeleteBTreeCell(cell);
-            }
-        }
+     public BTreeNode DeleteWithoutMerge(BTreeCell cell, BTreeNode T)
+     {
+         BTreeNode targer = null;
+         bool flag;
+         (targer, flag) = Recur_FindNode(cell.Key, T);
+         if (flag == false)
+             throw new Exception("Cannot find the cell!");
+         else
+         {
+             T.DeleteBTreeCell(cell);
+         }
+     }
 
-        public BTreeNode DeleteWithMerge(BTreeCell cell)
-        {
+     public BTreeNode DeleteWithMerge(BTreeCell cell)
+     {
 
-        }
+     }
 
-        //The real Find operation
-        public List<BTreeCell> FindCells(Expression expression)
-        {
-        }
-        */
+     //The real Find operation
+     public List<BTreeCell> FindCells(Expression expression)
+     {
+     }
+     */
 
 
 

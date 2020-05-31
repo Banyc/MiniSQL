@@ -16,7 +16,7 @@ namespace MiniSQL.BufferManager
 
             TestBTreeInsert();
 
-            TestDBRecord();
+            /*TestDBRecord();
 
             TestLeafTableCell();
 
@@ -32,7 +32,7 @@ namespace MiniSQL.BufferManager
 
             TestInsertIntoAndDeletionInsideBTreeNode();
 
-            TestFreeList();
+            TestFreeList();*/
 
             Console.WriteLine("BufferManager Test End");
         }
@@ -40,13 +40,20 @@ namespace MiniSQL.BufferManager
         static void TestBTreeInsert()
         {
             // init record
-            DBRecord record = GetTestBRecord();
+            DBRecord record_0 = GetTestBRecord(100);
+            DBRecord record_1 = GetTestBRecord(101);
+            DBRecord record_2 = GetTestBRecord(102);
+            DBRecord record_3 = GetTestBRecord(103);
+            DBRecord record_4 = GetTestBRecord(104);
+            DBRecord record_5 = GetTestBRecord(105);
+            DBRecord record_6 = GetTestBRecord(106);
+            DBRecord record_7 = GetTestBRecord(107);
 
             // init key
-            List<AtomValue> keyValues = new List<AtomValue>();
-            AtomValue key = new AtomValue() { Type = AttributeTypes.Char, CharLimit = 8, StringValue = "114514" };
-            keyValues.Add(key);
-            DBRecord keyRecord = new DBRecord(keyValues);
+            List<AtomValue> keyValues_0 = new List<AtomValue>();
+            AtomValue key_0 = new AtomValue() { Type = AttributeTypes.Char, CharLimit = 3, StringValue = "1" };
+            keyValues_0.Add(key_0);
+            DBRecord keyRecord_0 = new DBRecord(keyValues_0);
 
 
             string dbPath = "./testdbfile.minidb";
@@ -56,7 +63,64 @@ namespace MiniSQL.BufferManager
             BTreeController controller = new BTreeController(pager, freeList);
 
             BTreeNode root = null;
-            root = controller.Insert(keyRecord, record, root);
+            root = controller.Insert(keyRecord_0, record_0, root);
+
+            //1
+            List<AtomValue> keyValues_1 = new List<AtomValue>();
+            AtomValue key_1 = new AtomValue() { Type = AttributeTypes.Char, CharLimit = 3, StringValue = "2" };
+            keyValues_1.Add(key_1);
+            DBRecord keyRecord_1 = new DBRecord(keyValues_1);
+            root = controller.Insert(keyRecord_1, record_1, root);
+            //2
+            List<AtomValue> keyValues_2 = new List<AtomValue>();
+            AtomValue key_2 = new AtomValue() { Type = AttributeTypes.Char, CharLimit = 3, StringValue = "3" };
+            keyValues_2.Add(key_2);
+            DBRecord keyRecord_2 = new DBRecord(keyValues_2);
+            root = controller.Insert(keyRecord_2, record_2, root);
+            //3
+            List<AtomValue> keyValues_3 = new List<AtomValue>();
+            AtomValue key_3 = new AtomValue() { Type = AttributeTypes.Char, CharLimit = 3, StringValue = "4" };
+            keyValues_3.Add(key_1);
+            DBRecord keyRecord_3 = new DBRecord(keyValues_3);
+            root = controller.Insert(keyRecord_3, record_3, root);
+            //4
+            List<AtomValue> keyValues_4 = new List<AtomValue>();
+            AtomValue key_4 = new AtomValue() { Type = AttributeTypes.Char, CharLimit = 3, StringValue = "5" };
+            keyValues_4.Add(key_4);
+            DBRecord keyRecord_4 = new DBRecord(keyValues_4);
+            root = controller.Insert(keyRecord_4, record_4, root);
+            //5
+            List<AtomValue> keyValues_5 = new List<AtomValue>();
+            AtomValue key_5 = new AtomValue() { Type = AttributeTypes.Char, CharLimit = 3, StringValue = "6" };
+            keyValues_5.Add(key_5);
+            DBRecord keyRecord_5 = new DBRecord(keyValues_5);
+            root = controller.Insert(keyRecord_5, record_5, root);
+            //6
+            List<AtomValue> keyValues_6 = new List<AtomValue>();
+            AtomValue key_6 = new AtomValue() { Type = AttributeTypes.Char, CharLimit = 3, StringValue = "7" };
+            keyValues_6.Add(key_6);
+            DBRecord keyRecord_6 = new DBRecord(keyValues_6);
+            root = controller.Insert(keyRecord_6, record_6, root);
+
+
+            //Find
+            LeafTableCell result = null;
+            result = (LeafTableCell)controller.Find(keyRecord_0, root);
+            //Debug.Assert(result.DBRecord==record_0);
+            result = (LeafTableCell)controller.Find(keyRecord_1, root);
+            //Debug.Assert(result.DBRecord==record_1);
+            result = (LeafTableCell)controller.Find(keyRecord_2, root);
+            //Debug.Assert(result.DBRecord==record_2);
+            result = (LeafTableCell)controller.Find(keyRecord_3, root);
+            //Debug.Assert(result.DBRecord==record_3);
+            result = (LeafTableCell)controller.Find(keyRecord_4, root);
+            //Debug.Assert(result.DBRecord==record_4);
+            result = (LeafTableCell)controller.Find(keyRecord_5, root);
+            //Debug.Assert(result.DBRecord==record_5);
+            result = (LeafTableCell)controller.Find(keyRecord_6, root);
+            //Debug.Assert(result.DBRecord==record_6);
+
+
 
             pager.Close();
         }
