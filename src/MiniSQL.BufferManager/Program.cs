@@ -14,16 +14,12 @@ namespace MiniSQL.BufferManager
         {
             Console.WriteLine("BufferManager Test Begin");
 
-            // not passing
-            // TestBTreeInsert();
+            
+            TestBTreeInsert();
 
-<<<<<<< HEAD
             TestForSimpleNode();
 
-            /*TestDBRecord();
-=======
             // TestDBRecord();
->>>>>>> e39cb89a88d6b9897b80bb787855ec9c8cc0e2ad
 
             // TestLeafTableCell();
 
@@ -43,6 +39,8 @@ namespace MiniSQL.BufferManager
 
             Console.WriteLine("BufferManager Test End");
         }
+
+
 
         static void TestForSimpleNode()
         {
@@ -169,13 +167,10 @@ namespace MiniSQL.BufferManager
             Debug.Assert(result != null);
             Debug.Assert(result.Key.GetValues()[0].IntegerValue == 2);
 
-
-
-
-
             pager.Close();
 
         }
+
 
         static void TestBTreeInsert()
         {
@@ -245,7 +240,6 @@ namespace MiniSQL.BufferManager
             //Find
 
             result = (LeafTableCell)controller.Find(keyRecord_0, root);
-<<<<<<< HEAD
             Debug.Assert(result != null);
             Debug.Assert(result.Key.GetValues()[0].IntegerValue == 1);
 
@@ -273,7 +267,6 @@ namespace MiniSQL.BufferManager
             Debug.Assert(result != null);
             Debug.Assert(result.Key.GetValues()[0].IntegerValue == 7);
 
-=======
             AssertDBRecords(result.DBRecord, record_0);
             result = (LeafTableCell)controller.Find(keyRecord_1, root);
             AssertDBRecords(result.DBRecord, record_1);
@@ -287,11 +280,11 @@ namespace MiniSQL.BufferManager
             AssertDBRecords(result.DBRecord, record_5);
             result = (LeafTableCell)controller.Find(keyRecord_6, root);
             AssertDBRecords(result.DBRecord, record_6);
->>>>>>> e39cb89a88d6b9897b80bb787855ec9c8cc0e2ad
 
 
             pager.Close();
         }
+
 
         static void TestFreeList()
         {
