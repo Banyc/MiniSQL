@@ -267,21 +267,6 @@ namespace MiniSQL.BufferManager
             Debug.Assert(result != null);
             Debug.Assert(result.Key.GetValues()[0].IntegerValue == 7);
 
-            AssertDBRecords(result.DBRecord, record_0);
-            result = (LeafTableCell)controller.Find(keyRecord_1, root);
-            AssertDBRecords(result.DBRecord, record_1);
-            result = (LeafTableCell)controller.Find(keyRecord_2, root);
-            AssertDBRecords(result.DBRecord, record_2);
-            result = (LeafTableCell)controller.Find(keyRecord_3, root);
-            AssertDBRecords(result.DBRecord, record_3);
-            result = (LeafTableCell)controller.Find(keyRecord_4, root);
-            AssertDBRecords(result.DBRecord, record_4);
-            result = (LeafTableCell)controller.Find(keyRecord_5, root);
-            AssertDBRecords(result.DBRecord, record_5);
-            result = (LeafTableCell)controller.Find(keyRecord_6, root);
-            AssertDBRecords(result.DBRecord, record_6);
-
-
             pager.Close();
         }
 
