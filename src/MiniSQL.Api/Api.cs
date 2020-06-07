@@ -76,9 +76,35 @@ namespace MiniSQL.Api
             }
         }
 
+        // TODO: review
+        private void HandleStatement(DropStatement statement)
+        {
+            if (!_catalogManager.IsValid(statement))
+                throw new InvalidOperationException("invalid drop statement");
+            SchemaRecord schema;
+            switch (statement.TargetType)
+            {
+                case DropTarget.Table:
+                    schema = _catalogManager.GetTableSchemaRecord(statement.TableName);
+                    // drop index trees first
+                    // TODO
+                    // drop table
+                    if (_catalogManager.TryDropStatement(statement))
+                        _recordManager.DropTable(schema.RootPage);
+                    break;
+                case DropTarget.Index:
+                    schema = _catalogManager.GetIndexSchemaRecord(statement.IndexName);
+                    if (_catalogManager.TryDropStatement(statement))
+                        _indexManager.DropIndex(schema.RootPage);
+                    break;
+            }
+
+        }
+
         // TODO
         private void HandleStatement(DeleteStatement statement)
         {
+            // get table and indices
             if (!_catalogManager.IsValid(statement))
                 throw new InvalidOperationException("invalid delete statement");
             SchemaRecord tableSchema = _catalogManager.GetTableSchemaRecord(statement.TableName);
@@ -101,9 +127,9 @@ namespace MiniSQL.Api
             // fun facts: b and c both have index trees
             // issue: to delete the records satisfying the condition above
 
-
-            // delete
-
+            // delete record from table tree
+            int newTableRootPage = _recordManager.DeleteRecords(statement, tableSchema.SQL.PrimaryKey, tableSchema.SQL.AttributeDeclarations, tableSchema.RootPage);
+            _catalogManager.TryUpdateSchemaRecord(statement.TableName, newTableRootPage);
         }
 
         // TODO
@@ -111,7 +137,14 @@ namespace MiniSQL.Api
         {
             if (!_catalogManager.IsValid(statement))
                 throw new InvalidOperationException("invalid create statement");
-
+            // insert into index trees
+            // TODO
+            // insert into table tree
+            SchemaRecord schema = _catalogManager.GetTableSchemaRecord(statement.TableName);
+            AtomValue primaryKey = 
+                statement.Values[schema.SQL.AttributeDeclarations.FindIndex(x => 
+                    x.AttributeName == schema.SQL.PrimaryKey)];
+            _recordManager.InsertRecord(statement, primaryKey, schema.RootPage);
         }
 
         private Query Parse(string sql)
