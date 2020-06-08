@@ -20,7 +20,7 @@ namespace MiniSQL.RecordManager
 
         public int CreateTable(CreateStatement createStatement)
         {
-            throw new System.NotImplementedException();
+            return _bTree.OccupyNewTableNode();
         }
 
         public int DeleteRecords(DeleteStatement deleteStatement, string primaryKeyName, List<AttributeDeclaration> attributeDeclarations, int rootPage)
@@ -36,7 +36,9 @@ namespace MiniSQL.RecordManager
 
         public void DropTable(int rootPage)
         {
-            throw new System.NotImplementedException();
+            MemoryPage page = _pager.ReadPage(rootPage);
+            BTreeNode node = new BTreeNode(page);
+            _bTree.RemoveTree(node);
         }
 
         // return new root page number
@@ -45,8 +47,7 @@ namespace MiniSQL.RecordManager
             BTreeNode node = GetBTreeNode(rootPage);
             DBRecord wrappedKey = new DBRecord(new List<AtomValue>() { key });
             DBRecord values = new DBRecord(insertStatement.Values);
-            BTreeCell cell = new LeafTableCell(wrappedKey, values);
-            return _bTree.InsertCell(node, cell);
+            return _bTree.InsertCell(node, wrappedKey, values);
         }
 
         public List<List<AtomValue>> SelectRecords(SelectStatement selectStatement, string primaryKeyName, List<AttributeDeclaration> attributeDeclarations, int rootPage)

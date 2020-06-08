@@ -21,35 +21,45 @@ namespace MiniSQL.BufferManager.Controllers
             this._freeList = freeList;
         }
 
-        /*public void InsertCell(BTreeNode root, BTreeCell cell)
+        // TODO: test
+        public int OccupyNewTableNode()
         {
-            throw new NotImplementedException();
+            BTreeNode newNode = GetNewNode(PageTypes.LeafTablePage);
+            return newNode.GetRawPage().PageNumber;
         }
 
-        public BTreeCell FindCell(DBRecord key)
+        // TODO: test
+        public void RemoveTree(BTreeNode root)
         {
-            throw new NotImplementedException();
+            if (root.PageType == PageTypes.LeafIndexPage || root.PageType == PageTypes.LeafTablePage)
+            {
+                DeleteNode(root);
+                return;
+            }
+            if (root.PageType == PageTypes.InternalIndexPage)
+            {
+                foreach (BTreeCell cell in root)
+                {
+                    MemoryPage page = _pager.ReadPage((int)((InternalIndexCell)cell).ChildPage);
+                    BTreeNode node = new BTreeNode(page);
+                    RemoveTree(node);
+                }
+            }
+            else
+            {
+                foreach (BTreeCell cell in root)
+                {
+                    MemoryPage page = _pager.ReadPage((int)((InternalTableCell)cell).ChildPage);
+                    BTreeNode node = new BTreeNode(page);
+                    RemoveTree(node);
+                }
+            }
+            MemoryPage rightPage = _pager.ReadPage((int)root.RightPage);
+            BTreeNode rightNode = new BTreeNode(rightPage);
+            RemoveTree(rightNode);
+            // post-order traversal
+            DeleteNode(root);
         }
-
-        public List<BTreeCell> FindCells(Expression expression)
-        {
-            throw new NotImplementedException();
-        }
-
-        public void DeleteCells(BTreeNode root, Expression expression)
-        {
-            throw new NotImplementedException();
-        }
-
-        public void DeleteCell(BTreeNode root, DBRecord key)
-        {
-            throw new NotImplementedException();
-        }
-
-        private void SplitNode(BTreeNode node)
-        {
-            throw new NotImplementedException();
-        }*/
 
         // This functionality might no required
         private void MergeNode(BTreeNode leftNode, BTreeNode rightNode)
