@@ -7,7 +7,7 @@ using MiniSQL.Library.Models;
 
 namespace MiniSQL.BufferManager.Controllers
 {
-    public class BTreeController //: IBufferManager
+    public class BTreeController : IBufferManager
     {
         private readonly Pager _pager;
         private readonly FreeList _freeList;
@@ -59,6 +59,23 @@ namespace MiniSQL.BufferManager.Controllers
             RemoveTree(rightNode);
             // post-order traversal
             DeleteNode(root);
+        }
+
+        // insert cell
+        public int InsertCell(BTreeNode root, DBRecord key, DBRecord dBRecord)
+        {
+            BTreeNode newRoot = Insert(key, dBRecord, root);
+            return newRoot.GetRawPage().PageNumber;
+        }
+        // delete cell(s) that satisfy `expression`
+        public int DeleteCells(BTreeNode root, Expression expression, string keyName, List<AttributeDeclaration> attributeDeclarations)
+        {
+            throw new NotImplementedException();
+        }
+        // return matches that satisfy `expression`
+        public List<BTreeCell> FindCells(BTreeNode root, Expression expression, string keyName, List<AttributeDeclaration> attributeDeclarations)
+        {
+            throw new NotImplementedException();
         }
 
         // This functionality might no required
