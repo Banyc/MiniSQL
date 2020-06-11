@@ -10,18 +10,18 @@ namespace MiniSQL.Library.Interfaces
         int CreateTable(CreateStatement createStatement);
         void DropTable(int rootPage);
         // insert a cell
-        int InsertRecord(InsertStatement insertStatement, string primaryKeyName, int rootPage);
+        int InsertRecord(InsertStatement insertStatement, AtomValue key, int rootPage);
         // delete some records
         // return the root page number
-        int DeleteRecords(DeleteStatement deleteStatement, string primaryKeyName, int rootPage);
+        int DeleteRecords(DeleteStatement deleteStatement, string primaryKeyName, List<AttributeDeclaration> attributeDeclarations, int rootPage);
         // delete some records
         // return the root page number
         // each primary key corresponds to one record/row
         int DeleteRecords(List<AtomValue> primaryKeys, int rootPage);
         // select some records
-        List<AtomValue> SelectRecords(SelectStatement selectStatement, int rootPage);
+        List<List<AtomValue>> SelectRecords(SelectStatement selectStatement, string primaryKeyName, List<AttributeDeclaration> attributeDeclarations, int rootPage);
         // select some records
         // each primary key corresponds to one record/row
-        List<AtomValue> SelectRecords(List<AtomValue> primaryKeys, int rootPage);
+        List<List<AtomValue>> SelectRecords(List<AtomValue> primaryKeys, int rootPage);
     }
 }

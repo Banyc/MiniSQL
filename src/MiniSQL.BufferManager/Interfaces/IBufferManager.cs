@@ -6,14 +6,15 @@ namespace MiniSQL.BufferManager.Interfaces
 {
     public interface IBufferManager
     {
-        void InsertCell(BTreeNode root, BTreeCell cell);
-
-        void DeleteCell(BTreeNode root, DBRecord key);
-        
-        void DeleteCells(BTreeNode root, Expression expression);
-
-        BTreeCell FindCell(DBRecord key);
-
-        List<BTreeCell> FindCells(Expression expression);
+        // when create table
+        int OccupyNewTableNode();
+        // when drop table
+        void RemoveTree(BTreeNode root);
+        // insert cell
+        int InsertCell(BTreeNode root, DBRecord key, DBRecord dBRecord);
+        // delete cell(s) that satisfy `expression`
+        int DeleteCells(BTreeNode root, Expression expression, string keyName, List<AttributeDeclaration> attributeDeclarations);
+        // return matches that satisfy `expression`
+        List<BTreeCell> FindCells(BTreeNode root, Expression expression, string keyName, List<AttributeDeclaration> attributeDeclarations);
     }
 }

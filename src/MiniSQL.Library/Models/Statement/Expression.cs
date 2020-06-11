@@ -1,5 +1,6 @@
 using System.Collections.Generic;
 using System.Linq;
+using MiniSQL.Library.Utilities;
 
 namespace MiniSQL.Library.Models
 {
@@ -138,6 +139,12 @@ namespace MiniSQL.Library.Models
             {
                 return true;
             }
+        }
+
+        // get the value of this Expression
+        public AtomValue Calculate(List<AttributeDeclaration> declarations, List<AtomValue> values)
+        {
+            return Calculate(AttributeHelper.GetAttributeValues(declarations, values));
         }
 
         // get the value of this Expression

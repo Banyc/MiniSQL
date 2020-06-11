@@ -21,7 +21,7 @@ namespace MiniSQL.Library.Models
         public string AttributeName { get; set; }
         // create table only
         // it is assigned to "" if PrimaryKey does not exist
-        public string primaryKey = "";
+        private string primaryKey = "";
         public string PrimaryKey
         {
             get { return primaryKey; }

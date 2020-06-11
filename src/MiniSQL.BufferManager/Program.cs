@@ -14,26 +14,262 @@ namespace MiniSQL.BufferManager
         {
             Console.WriteLine("BufferManager Test Begin");
 
-            TestDBRecord();
+            
+            TestBTreeInsert();
 
-            TestLeafTableCell();
+            TestForSimpleNode();
 
-            TestInternalTableCell();
+            // TestDBRecord();
 
-            TestInternalIndexCell();
+            // TestLeafTableCell();
 
-            TestLeafIndexCell();
+            // TestInternalTableCell();
 
-            TestPager();
+            // TestInternalIndexCell();
 
-            TestPagerSwapping();
+            // TestLeafIndexCell();
+
+            // TestPager();
+
+            // TestPagerSwapping();
 
             TestInsertIntoAndDeletionInsideBTreeNode();
 
-            TestFreeList();
+            // TestFreeList();
 
             Console.WriteLine("BufferManager Test End");
         }
+
+
+
+        static void TestForSimpleNode()
+        {
+            string dbPath = "./testdbfile.minidb";
+            File.Delete(dbPath);
+            Pager pager = new Pager(dbPath);
+            FreeList freeList = new FreeList(pager);
+            BTreeController controller = new BTreeController(pager, freeList);
+
+            LeafTableCell result = null;
+            // init record
+            DBRecord record_0 = GetTestBRecord(100);
+            DBRecord record_1 = GetTestBRecord(101);
+            DBRecord record_2 = GetTestBRecord(102);
+            DBRecord record_3 = GetTestBRecord(103);
+            DBRecord record_4 = GetTestBRecord(104);
+            DBRecord record_5 = GetTestBRecord(105);
+            DBRecord record_6 = GetTestBRecord(106);
+            DBRecord record_7 = GetTestBRecord(107);
+
+            DBRecord keyRecord_0 = GetTestBRecord(1);
+            DBRecord keyRecord_1 = GetTestBRecord(2);
+            DBRecord keyRecord_2 = GetTestBRecord(3);
+            DBRecord keyRecord_3 = GetTestBRecord(4);
+            DBRecord keyRecord_4 = GetTestBRecord(5);
+            DBRecord keyRecord_5 = GetTestBRecord(6);
+            DBRecord keyRecord_6 = GetTestBRecord(7);
+            DBRecord keyRecord_7 = GetTestBRecord(8);
+
+
+            BTreeNode root = null;
+            root = controller.Insert(keyRecord_0, record_0, root);
+            result = (LeafTableCell)controller.Find(keyRecord_0, root);
+            Debug.Assert(result != null);
+            Debug.Assert(result.Key.GetValues()[0].IntegerValue == 1);
+            //1
+            root = controller.Insert(keyRecord_1, record_1, root);
+            result = (LeafTableCell)controller.Find(keyRecord_1, root);
+            Debug.Assert(result != null);
+            Debug.Assert(result.Key.GetValues()[0].IntegerValue == 2);
+            //2
+            root = controller.Insert(keyRecord_2, record_2, root);
+            result = (LeafTableCell)controller.Find(keyRecord_2, root);
+            Debug.Assert(result != null);
+            Debug.Assert(result.Key.GetValues()[0].IntegerValue == 3);
+            //3
+            root = controller.Insert(keyRecord_3, record_3, root);
+            result = (LeafTableCell)controller.Find(keyRecord_3, root);
+            Debug.Assert(result != null);
+            Debug.Assert(result.Key.GetValues()[0].IntegerValue == 4);
+            //4
+            root = controller.Insert(keyRecord_4, record_4, root);
+            result = (LeafTableCell)controller.Find(keyRecord_4, root);
+            Debug.Assert(result != null);
+            Debug.Assert(result.Key.GetValues()[0].IntegerValue == 5);
+            //5
+            root = controller.Insert(keyRecord_5, record_5, root);
+            result = (LeafTableCell)controller.Find(keyRecord_5, root);
+            Debug.Assert(result != null);
+            Debug.Assert(result.Key.GetValues()[0].IntegerValue == 6);
+            //6
+            root = controller.Insert(keyRecord_6, record_6, root);
+            result = (LeafTableCell)controller.Find(keyRecord_6, root);
+            Debug.Assert(result != null);
+            Debug.Assert(result.Key.GetValues()[0].IntegerValue == 7);
+            //7
+            root = controller.Insert(keyRecord_7, record_7, root);
+            result = (LeafTableCell)controller.Find(keyRecord_7, root);
+            Debug.Assert(result != null);
+            Debug.Assert(result.Key.GetValues()[0].IntegerValue == 8);
+
+
+
+            //Find
+            result = (LeafTableCell)controller.Find(keyRecord_0, root);
+            Debug.Assert(result != null);
+            Debug.Assert(result.Key.GetValues()[0].IntegerValue == 1);
+
+            result = (LeafTableCell)controller.Find(keyRecord_1, root);
+            Debug.Assert(result != null);
+            Debug.Assert(result.Key.GetValues()[0].IntegerValue == 2);
+
+            result = (LeafTableCell)controller.Find(keyRecord_2, root);
+            Debug.Assert(result != null);
+            Debug.Assert(result.Key.GetValues()[0].IntegerValue == 3);
+
+            result = (LeafTableCell)controller.Find(keyRecord_3, root);
+            Debug.Assert(result != null);
+            Debug.Assert(result.Key.GetValues()[0].IntegerValue == 4);
+
+            result = (LeafTableCell)controller.Find(keyRecord_4, root);
+            Debug.Assert(result != null);
+            Debug.Assert(result.Key.GetValues()[0].IntegerValue == 5);
+
+            result = (LeafTableCell)controller.Find(keyRecord_5, root);
+            Debug.Assert(result != null);
+            Debug.Assert(result.Key.GetValues()[0].IntegerValue == 6);
+
+            result = (LeafTableCell)controller.Find(keyRecord_6, root);
+            Debug.Assert(result != null);
+            Debug.Assert(result.Key.GetValues()[0].IntegerValue == 7);
+
+            result = (LeafTableCell)controller.Find(keyRecord_7, root);
+            Debug.Assert(result != null);
+            Debug.Assert(result.Key.GetValues()[0].IntegerValue == 8);
+
+            //Delete
+            controller.Delete(keyRecord_0,root);
+            result = (LeafTableCell)controller.Find(keyRecord_0, root);
+            Debug.Assert(result == null);
+
+            controller.Delete(keyRecord_1,root);
+            result = (LeafTableCell)controller.Find(keyRecord_1, root);
+            Debug.Assert(result == null);
+
+            //insert after delete
+            root = controller.Insert(keyRecord_0, record_0, root);
+            result = (LeafTableCell)controller.Find(keyRecord_0, root);
+            Debug.Assert(result != null);
+            Debug.Assert(result.Key.GetValues()[0].IntegerValue == 1);
+            //1
+            root = controller.Insert(keyRecord_1, record_1, root);
+            result = (LeafTableCell)controller.Find(keyRecord_1, root);
+            Debug.Assert(result != null);
+            Debug.Assert(result.Key.GetValues()[0].IntegerValue == 2);
+
+            pager.Close();
+
+        }
+
+
+        static void TestBTreeInsert()
+        {
+            LeafTableCell result = null;
+            // init record
+            DBRecord record_0 = GetTestBRecord(100);
+            DBRecord record_1 = GetTestBRecord(101);
+            DBRecord record_2 = GetTestBRecord(102);
+            DBRecord record_3 = GetTestBRecord(103);
+            DBRecord record_4 = GetTestBRecord(104);
+            DBRecord record_5 = GetTestBRecord(105);
+            DBRecord record_6 = GetTestBRecord(106);
+            DBRecord record_7 = GetTestBRecord(107);
+
+            DBRecord keyRecord_0 = GetTestBRecord(1);
+            DBRecord keyRecord_1 = GetTestBRecord(2);
+            DBRecord keyRecord_2 = GetTestBRecord(3);
+            DBRecord keyRecord_3 = GetTestBRecord(4);
+            DBRecord keyRecord_4 = GetTestBRecord(5);
+            DBRecord keyRecord_5 = GetTestBRecord(6);
+            DBRecord keyRecord_6 = GetTestBRecord(7);
+
+
+            // init key
+            string dbPath = "./testdbfile.minidb";
+            File.Delete(dbPath);
+            Pager pager = new Pager(dbPath);
+            FreeList freeList = new FreeList(pager);
+            BTreeController controller = new BTreeController(pager, freeList);
+
+            BTreeNode root = null;
+            root = controller.Insert(keyRecord_0, record_0, root);
+            result = (LeafTableCell)controller.Find(keyRecord_0, root);
+            Debug.Assert(result != null);
+            Debug.Assert(result.Key.GetValues()[0].IntegerValue == 1);
+            //1
+            root = controller.Insert(keyRecord_1, record_1, root);
+            result = (LeafTableCell)controller.Find(keyRecord_1, root);
+            Debug.Assert(result != null);
+            Debug.Assert(result.Key.GetValues()[0].IntegerValue == 2);
+            //2
+            root = controller.Insert(keyRecord_2, record_2, root);
+            result = (LeafTableCell)controller.Find(keyRecord_2, root);
+            Debug.Assert(result != null);
+            Debug.Assert(result.Key.GetValues()[0].IntegerValue == 3);
+            //3
+            root = controller.Insert(keyRecord_3, record_3, root);
+            result = (LeafTableCell)controller.Find(keyRecord_3, root);
+            Debug.Assert(result != null);
+            Debug.Assert(result.Key.GetValues()[0].IntegerValue == 4);
+            //4
+            root = controller.Insert(keyRecord_4, record_4, root);
+            result = (LeafTableCell)controller.Find(keyRecord_4, root);
+            Debug.Assert(result != null);
+            Debug.Assert(result.Key.GetValues()[0].IntegerValue == 5);
+            //5
+            root = controller.Insert(keyRecord_5, record_5, root);
+            result = (LeafTableCell)controller.Find(keyRecord_5, root);
+            Debug.Assert(result != null);
+            Debug.Assert(result.Key.GetValues()[0].IntegerValue == 6);
+
+            //6
+            root = controller.Insert(keyRecord_6, record_6, root);
+            result = (LeafTableCell)controller.Find(keyRecord_6, root);
+            Debug.Assert(result != null);
+            Debug.Assert(result.Key.GetValues()[0].IntegerValue == 7);
+            //Find
+
+            result = (LeafTableCell)controller.Find(keyRecord_0, root);
+            Debug.Assert(result != null);
+            Debug.Assert(result.Key.GetValues()[0].IntegerValue == 1);
+
+            result = (LeafTableCell)controller.Find(keyRecord_1, root);
+            Debug.Assert(result != null);
+            Debug.Assert(result.Key.GetValues()[0].IntegerValue == 2);
+
+            result = (LeafTableCell)controller.Find(keyRecord_2, root);
+            Debug.Assert(result != null);
+            Debug.Assert(result.Key.GetValues()[0].IntegerValue == 3);
+
+            result = (LeafTableCell)controller.Find(keyRecord_3, root);
+            Debug.Assert(result != null);
+            Debug.Assert(result.Key.GetValues()[0].IntegerValue == 4);
+
+            result = (LeafTableCell)controller.Find(keyRecord_4, root);
+            Debug.Assert(result != null);
+            Debug.Assert(result.Key.GetValues()[0].IntegerValue == 5);
+
+            result = (LeafTableCell)controller.Find(keyRecord_5, root);
+            Debug.Assert(result != null);
+            Debug.Assert(result.Key.GetValues()[0].IntegerValue == 6);
+
+            result = (LeafTableCell)controller.Find(keyRecord_6, root);
+            Debug.Assert(result != null);
+            Debug.Assert(result.Key.GetValues()[0].IntegerValue == 7);
+
+            pager.Close();
+        }
+
 
         static void TestFreeList()
         {
@@ -43,39 +279,39 @@ namespace MiniSQL.BufferManager
             Pager pager = new Pager(dbPath, 4096, 100);
 
             List<MemoryPage> pageList = new List<MemoryPage>();
-            pageList.Add(pager.GetNewPage());
-            pageList.Add(pager.GetNewPage());
-            pageList.Add(pager.GetNewPage());
-            pageList.Add(pager.GetNewPage());
+            pageList.Add(pager.GetNewPage());  // page #2
+            pageList.Add(pager.GetNewPage());  // page #3
+            pageList.Add(pager.GetNewPage());  // page #4
+            pageList.Add(pager.GetNewPage());  // page #5
 
             FreeList freeList = new FreeList(pager);
 
             // test initialization
             MemoryPage newPage = null;
-            newPage = freeList.AllocatePage();
+            newPage = freeList.AllocatePage();  // freeList is now empty
             Debug.Assert(newPage == null);
 
             // recycle pages
             // MemoryPage tempPage = pager.ReadPage(3);
-            freeList.RecyclePage(pageList[2]);
-            freeList.RecyclePage(pageList[1]);
-            freeList.RecyclePage(pageList[3]);
+            freeList.RecyclePage(pageList[2]);  // freeList->4
+            freeList.RecyclePage(pageList[1]);  // freeList->3->4
+            freeList.RecyclePage(pageList[3]);  // freeList->5->3->4
 
             // fetch page from free list
-            newPage = freeList.AllocatePage();
-            Debug.Assert(newPage.PageNumber == 4);
-            newPage = freeList.AllocatePage();
-            Debug.Assert(newPage.PageNumber == 2);
+            newPage = freeList.AllocatePage();  // freeList->3->4
+            Debug.Assert(newPage.PageNumber == 5);
+            newPage = freeList.AllocatePage();  // freeList->4
+            Debug.Assert(newPage.PageNumber == 3);
 
             // recycle a page
-            freeList.RecyclePage(pageList[3]);
-            
+            freeList.RecyclePage(pageList[3]);  // freeList->5->4
+
             // fetch remaining pages
-            newPage = freeList.AllocatePage();
+            newPage = freeList.AllocatePage();  // freeList->4
+            Debug.Assert(newPage.PageNumber == 5);
+            newPage = freeList.AllocatePage();  // freeList->null
             Debug.Assert(newPage.PageNumber == 4);
-            newPage = freeList.AllocatePage();
-            Debug.Assert(newPage.PageNumber == 3);
-            newPage = freeList.AllocatePage();
+            newPage = freeList.AllocatePage();  // freeList->null
             Debug.Assert(newPage == null);
 
             pager.Close();
@@ -96,7 +332,7 @@ namespace MiniSQL.BufferManager
             node.InitializeEmptyFormat(PageTypes.InternalIndexPage);
 
 
-
+            // `keys` := (1, 6, 2, 5, 3, 4)
             List<DBRecord> keys = new List<DBRecord>();
             keys.Add(GetTestBRecord(1));
             keys.Add(GetTestBRecord(6));
@@ -105,6 +341,7 @@ namespace MiniSQL.BufferManager
             keys.Add(GetTestBRecord(3));
             keys.Add(GetTestBRecord(4));
 
+            // `cells` := ((1, 0), (6, 1), (2, 2), (5, 3), (3, 4), (4, 5))
             List<InternalIndexCell> cells = new List<InternalIndexCell>();
             cells.Add(new InternalIndexCell(keys[0], 114, GetTestBRecord(0)));
             cells.Add(new InternalIndexCell(keys[1], 114, GetTestBRecord(1)));
@@ -134,6 +371,11 @@ namespace MiniSQL.BufferManager
 
             List<AtomValue> cloneCellKey = clonecells[0].Key.GetValues();
 
+            // all cells (not the list `cells`) inside `node`:
+            // ((1, 0), (2, 2), (3, 4), (4, 5), (5, 3), (6, 1))
+            // they are all pointing to page #114
+
+            // check if the keys are stored in ascending order
             Debug.Assert(node.GetBTreeCell(offsets[0]).Key.GetValues()[0].IntegerValue == 1);
             Debug.Assert(node.GetBTreeCell(offsets[1]).Key.GetValues()[0].IntegerValue == 2);
             Debug.Assert(node.GetBTreeCell(offsets[2]).Key.GetValues()[0].IntegerValue == 3);
@@ -143,7 +385,7 @@ namespace MiniSQL.BufferManager
 
             List<AtomValue> tmpAtomList = null;
 
-            // iterate
+            // check if `node` could be iterated by "foreach" statement
             int i = 1;
             foreach (var iteratedCell in node)
             {
@@ -152,16 +394,35 @@ namespace MiniSQL.BufferManager
                 i++;
             }
 
-            // node indexing
+            // check node indexing
             AssertCell(node[0], cells[0]);
             AssertCell(node[1], cells[2]);
 
-            // find
-            (BTreeCell cell, ushort offset, int indexInOffsetArray) = node.FindBTreeCell(keys[2]);
+            BTreeCell cell;
+            ushort offset;
+            int indexInOffsetArray;
+
+            // find by the keys below and check if it returns currect cells
+            // key 6: value 1
+            (cell, offset, indexInOffsetArray) = node.FindBTreeCell(keys[1]);
+            tmpAtomList = ((InternalIndexCell)cell).Key.GetValues();
+            Debug.Assert(tmpAtomList[0].IntegerValue == 6);
+            tmpAtomList = ((InternalIndexCell)cell).PrimaryKey.GetValues();
+            Debug.Assert(tmpAtomList[0].IntegerValue == 1);
+            // key 5: value 3
+            (cell, offset, indexInOffsetArray) = node.FindBTreeCell(keys[3]);
+            tmpAtomList = ((InternalIndexCell)cell).Key.GetValues();
+            Debug.Assert(tmpAtomList[0].IntegerValue == 5);
+            tmpAtomList = ((InternalIndexCell)cell).PrimaryKey.GetValues();
+            Debug.Assert(tmpAtomList[0].IntegerValue == 3);
+            // key 2: value 2
+            (cell, offset, indexInOffsetArray) = node.FindBTreeCell(keys[2]);
             tmpAtomList = cell.Key.GetValues();
             Debug.Assert(tmpAtomList[0].IntegerValue == 2);
+            tmpAtomList = ((InternalIndexCell)cell).PrimaryKey.GetValues();
+            Debug.Assert(tmpAtomList[0].IntegerValue == 2);
 
-            // delete
+            // delete cell with key == 2
             node.DeleteBTreeCell(offset);
 
             // check deletion
@@ -177,7 +438,7 @@ namespace MiniSQL.BufferManager
             tmpAtomList = node.GetBTreeCell(offsets[4]).Key.GetValues();
             Debug.Assert(tmpAtomList[0].IntegerValue == 6);
 
-            // delete
+            // delete cell with key == 4
             node.DeleteBTreeCell(offsets[2]);
 
             // check deletion
@@ -191,7 +452,7 @@ namespace MiniSQL.BufferManager
             tmpAtomList = node.GetBTreeCell(offsets[3]).Key.GetValues();
             Debug.Assert(tmpAtomList[0].IntegerValue == 6);
 
-            // delete by index
+            // delete by index 0 (cell with key == 1)
             node.DeleteBTreeCell(node[0]);
             tmpAtomList = node[0].Key.GetValues();
             Debug.Assert(tmpAtomList[0].IntegerValue == 3);
@@ -200,7 +461,7 @@ namespace MiniSQL.BufferManager
             tmpAtomList = node[2].Key.GetValues();
             Debug.Assert(tmpAtomList[0].IntegerValue == 6);
 
-            // delete all
+            // delete remaining cells
             node.DeleteBTreeCell(offsets[0]);
             offsets = node.CellOffsetArray;
             node.DeleteBTreeCell(offsets[0]);
@@ -224,7 +485,7 @@ namespace MiniSQL.BufferManager
             pager.ExtendNumberOfPages();
             pager.ExtendNumberOfPages();
             pager.ExtendNumberOfPages();
-            pager.ExtendNumberOfPages();
+            // pager.ExtendNumberOfPages();
 
             MemoryPage page1 = pager.ReadPage(1);
             page1.IsPinned = true;
@@ -283,10 +544,10 @@ namespace MiniSQL.BufferManager
 
             Pager pager = new Pager(dbPath, 4096, 4);
 
-            Debug.Assert(pager.PageCount == 0);
+            Debug.Assert(pager.PageCount == 1);
 
             pager.ExtendNumberOfPages();
-            Debug.Assert(pager.PageCount == 1);
+            Debug.Assert(pager.PageCount == 2);
 
             MemoryPage page = pager.ReadPage(1);
             page.Data[2] = 114;
@@ -428,6 +689,8 @@ namespace MiniSQL.BufferManager
             AssertDBRecords(leafTableCell.DBRecord, leafTableCellClone.DBRecord);
             AssertCell(leafTableCell, leafTableCellClone);
         }
+
+
 
         static void TestDBRecord()
         {

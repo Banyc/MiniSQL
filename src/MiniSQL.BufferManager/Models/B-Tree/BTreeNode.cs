@@ -79,7 +79,7 @@ namespace MiniSQL.BufferManager.Models
                 }
                 return offsets;
             }
-            set
+            private set
             {
                 // locates the first item in the offset array
                 int startAddress = this.FreeOffset - this.NumCells * 2;
