@@ -77,6 +77,7 @@ namespace MiniSQL.Api
         }
 
         // TODO: review
+        // drop statement
         private void HandleStatement(DropStatement statement)
         {
             if (!_catalogManager.IsValid(statement))
@@ -102,6 +103,7 @@ namespace MiniSQL.Api
         }
 
         // TODO
+        // delete statement
         private void HandleStatement(DeleteStatement statement)
         {
             // get table and indices
