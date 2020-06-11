@@ -41,6 +41,7 @@ namespace MiniSQL.Library.Models
         // {attribute name: expression with only the variable/attribute}
         private Dictionary<string, Expression> ands = null;
         // to help B-Tree's single key searching
+        // NOTICE: never try to modify it by yourself
         public Dictionary<string, Expression> Ands
         {
             get
