@@ -220,6 +220,11 @@ namespace MiniSQL.BufferManager.Models
 
             // handle the part in higher address
             int startAddress = this.CellsOffset - raw.Length;
+            if (startAddress <= this.FreeOffset + 4)
+            {
+                // BTreeNode is too full to contain the new cell
+                throw new Exception("BTreeNode is full");
+            }
             Array.Copy(raw, 0, this._page.Data, startAddress, raw.Length);
             this.CellsOffset = (ushort)startAddress;
 

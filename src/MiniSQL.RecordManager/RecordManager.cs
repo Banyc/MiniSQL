@@ -2,6 +2,7 @@ using System.Collections.Generic;
 using MiniSQL.BufferManager.Controllers;
 using MiniSQL.BufferManager.Interfaces;
 using MiniSQL.BufferManager.Models;
+using MiniSQL.BufferManager.Utilities;
 using MiniSQL.Library.Interfaces;
 using MiniSQL.Library.Models;
 
@@ -13,8 +14,9 @@ namespace MiniSQL.RecordManager
         private readonly IBufferManager _bTree;
         private readonly Pager _pager;
 
-        public RecordManager(IBufferManager bTreeController)
+        public RecordManager(Pager pager, IBufferManager bTreeController)
         {
+            _pager = pager;
             _bTree = bTreeController;
         }
 
@@ -25,7 +27,7 @@ namespace MiniSQL.RecordManager
 
         public int DeleteRecords(DeleteStatement deleteStatement, string primaryKeyName, List<AttributeDeclaration> attributeDeclarations, int rootPage)
         {
-            BTreeNode node = GetBTreeNode(rootPage);
+            BTreeNode node = BTreeNodeHelper.GetBTreeNode(_pager, rootPage);
             return _bTree.DeleteCells(node, deleteStatement.Condition, primaryKeyName, attributeDeclarations);
         }
 
@@ -44,7 +46,7 @@ namespace MiniSQL.RecordManager
         // return new root page number
         public int InsertRecord(InsertStatement insertStatement, AtomValue key, int rootPage)
         {
-            BTreeNode node = GetBTreeNode(rootPage);
+            BTreeNode node = BTreeNodeHelper.GetBTreeNode(_pager, rootPage);
             DBRecord wrappedKey = new DBRecord(new List<AtomValue>() { key });
             DBRecord values = new DBRecord(insertStatement.Values);
             return _bTree.InsertCell(node, wrappedKey, values);
@@ -52,7 +54,7 @@ namespace MiniSQL.RecordManager
 
         public List<List<AtomValue>> SelectRecords(SelectStatement selectStatement, string primaryKeyName, List<AttributeDeclaration> attributeDeclarations, int rootPage)
         {
-            BTreeNode node = GetBTreeNode(rootPage);
+            BTreeNode node = BTreeNodeHelper.GetBTreeNode(_pager, rootPage);
             List<BTreeCell> cells = _bTree.FindCells(node, selectStatement.Condition, primaryKeyName, attributeDeclarations);
             List<List<AtomValue>> rows = new List<List<AtomValue>>();
             foreach (BTreeCell cell in cells)
@@ -66,13 +68,6 @@ namespace MiniSQL.RecordManager
         public List<List<AtomValue>> SelectRecords(List<AtomValue> primaryKeys, int rootPage)
         {
             throw new System.NotImplementedException();
-        }
-
-        private BTreeNode GetBTreeNode(int rootPage)
-        {
-            MemoryPage page = _pager.ReadPage(rootPage);
-            BTreeNode node = new BTreeNode(page);
-            return node;
         }
     }
 }

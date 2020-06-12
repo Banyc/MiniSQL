@@ -1,6 +1,9 @@
 ﻿using System;
+using System.Collections.Generic;
+using System.Diagnostics;
 using System.IO;
 using MiniSQL.BufferManager.Controllers;
+using MiniSQL.Library.Models;
 
 namespace MiniSQL.RecordManager
 {
@@ -8,11 +11,15 @@ namespace MiniSQL.RecordManager
     {
         static void Main(string[] args)
         {
-            Console.WriteLine("Hello World!");
+            Console.WriteLine("[RecordManager] Test start!");
 
+            // BTreeNode might be full
+            // TestInsertRecord(10);
+
+            Console.WriteLine("[RecordManager] Test end!");
         }
 
-        private static void TestInsertRecord()
+        private static void TestInsertRecord(int maxCell)
         {
             string dbPath = "./testdbfile.minidb";
             File.Delete(dbPath);
@@ -20,10 +27,86 @@ namespace MiniSQL.RecordManager
             FreeList freeList = new FreeList(pager);
             BTreeController controller = new BTreeController(pager, freeList);
 
-            // RecordManager manager = new RecordManager(controller);
+            RecordManager recordManager = new RecordManager(pager, controller);
 
-            // TODO
+            // create new table
+            CreateStatement createStatement = GetCreateStatement();
+            int newRoot = recordManager.CreateTable(createStatement);
 
+            // insert
+            InsertStatement insertStatement;
+            int key;
+            int newRootAfterInsert;
+            int i;
+
+            for (i = 0; i < maxCell; i++)
+            {
+                (insertStatement, key) = GetInsertStatement(1);
+                AtomValue atomValue = GetAtomValue(key);
+                newRootAfterInsert = recordManager.InsertRecord(insertStatement, atomValue, newRoot);
+                Debug.Assert(newRoot == newRootAfterInsert);
+            }
+
+            for (i = 0; i < maxCell; i++)
+            {
+                (insertStatement, key) = GetInsertStatement(1);
+                AtomValue atomValue = GetAtomValue(key);
+                newRootAfterInsert = recordManager.InsertRecord(insertStatement, atomValue, newRoot);
+                Debug.Assert(newRoot != newRootAfterInsert);
+            }
+
+            pager.Close();
+        }
+
+        private static CreateStatement GetCreateStatement()
+        {
+            CreateStatement createStatement = new CreateStatement();
+            createStatement.CreateType = CreateType.Table;
+            createStatement.TableName = "randomTable";
+            createStatement.AttributeDeclarations = new List<AttributeDeclaration>()
+            {
+                GetAttributeDeclaration("a"),
+                GetAttributeDeclaration("id"),
+                GetAttributeDeclaration("b"),
+            };
+            createStatement.PrimaryKey = "id";
+            return createStatement;
+        }
+
+        private static (InsertStatement, int) GetInsertStatement(int returnIndex)
+        {
+            Random rnd = new Random();
+            List<int> list = new List<int>()
+            {
+                rnd.Next(),
+                rnd.Next(),
+                rnd.Next(),
+            };
+            InsertStatement insertStatement = new InsertStatement();
+            insertStatement.TableName = "randomTable";
+            insertStatement.Values = new List<AtomValue>()
+            {
+                GetAtomValue(list[0]),
+                GetAtomValue(list[1]),
+                GetAtomValue(list[2]),
+            };
+            return (insertStatement, list[returnIndex]);
+        }
+
+        private static AtomValue GetAtomValue(int key)
+        {
+            AtomValue value = new AtomValue();
+            value.Type = AttributeTypes.Int;
+            value.IntegerValue = key;
+            return value;
+        }
+
+        private static AttributeDeclaration GetAttributeDeclaration(string name)
+        {
+            AttributeDeclaration attribute = new AttributeDeclaration();
+            attribute.AttributeName = name;
+            attribute.Type = AttributeTypes.Int;
+            return attribute;
         }
     }
 }

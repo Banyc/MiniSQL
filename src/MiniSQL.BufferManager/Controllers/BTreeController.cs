@@ -7,7 +7,7 @@ using MiniSQL.Library.Models;
 
 namespace MiniSQL.BufferManager.Controllers
 {
-    public class BTreeController //: IBufferManager
+    public class BTreeController : IBufferManager
     {
         private readonly Pager _pager;
         private readonly FreeList _freeList;

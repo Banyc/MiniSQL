@@ -4,6 +4,7 @@ using System.Diagnostics;
 using System.IO;
 using MiniSQL.BufferManager.Controllers;
 using MiniSQL.BufferManager.Models;
+using MiniSQL.BufferManager.Utilities;
 using MiniSQL.Library.Models;
 
 namespace MiniSQL.BufferManager
@@ -12,8 +13,11 @@ namespace MiniSQL.BufferManager
     {
         static void Main(string[] args)
         {
-            Console.WriteLine("BufferManager Test Begin");
+            Console.WriteLine("[BufferManager] Test Begin");
 
+            TestInsertSplit(200);
+            
+            TestBTreeInsert();
 
             //TestBTreeInsert();
 
@@ -41,9 +45,17 @@ namespace MiniSQL.BufferManager
 
             // TestFreeList();
 
-            Console.WriteLine("BufferManager Test End");
+            Console.WriteLine("[BufferManager] Test End");
         }
 
+        static void TestInsertSplit(int maxCell)
+        {
+            string dbPath = "./testdbfile.minidb";
+            File.Delete(dbPath);
+            Pager pager = new Pager(dbPath);
+            FreeList freeList = new FreeList(pager);
+            BTreeController controller = new BTreeController(pager, freeList);
+        }
 
         static void TestBTreeDelete()
         {
@@ -319,7 +331,8 @@ namespace MiniSQL.BufferManager
             Debug.Assert(result != null);
             Debug.Assert(result.Key.GetValues()[0].IntegerValue == 8);
 
-
+            // visualize tree
+            BTreeNodeHelper.VisualizeIntegerTree(pager, root);
 
             //Find
             result = (LeafTableCell)controller.FindCell(keyRecord_0, root);

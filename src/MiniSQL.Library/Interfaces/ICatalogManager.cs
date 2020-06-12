@@ -1,8 +1,16 @@
 using System.Collections.Generic;
 using MiniSQL.Library.Models;
+using System;
+using System.ComponentModel;
+using System.IO;
+using System.Runtime.InteropServices.ComTypes;
+using System.Runtime.Serialization.Formatters.Binary;
+using System.Text;
+using System.Diagnostics;
 
 namespace MiniSQL.Library.Interfaces
 {
+
     // TODO: review
     public interface ICatalogManager
     {
