@@ -11,7 +11,7 @@ namespace MiniSQL.BufferManager.Controllers
     {
         private readonly Pager _pager;
         private readonly FreeList _freeList;
-        private readonly int MaxCell = 200;   //At least 4
+        private readonly int MaxCell = 4;   //At least 4
 
 
         // constructor
@@ -61,12 +61,6 @@ namespace MiniSQL.BufferManager.Controllers
             DeleteNode(root);
         }
 
-        // This functionality might no required
-        private void MergeNode(BTreeNode leftNode, BTreeNode rightNode)
-        {
-            throw new NotImplementedException();
-        }
-
         // recycle page to free list
         private void DeleteNode(BTreeNode node)
         {
@@ -91,6 +85,7 @@ namespace MiniSQL.BufferManager.Controllers
 
             return node;
         }
+
 
         public BTreeNode Insert(DBRecord key, DBRecord dBRecord, BTreeNode Root)
         {
@@ -117,26 +112,38 @@ namespace MiniSQL.BufferManager.Controllers
             return newRoot;
         }
 
-
-
         private void SplitChild(BTreeNode nodeTobeSplit, BTreeNode parantNode, DBRecord newKey)
         {
             int i;
             BTreeNode splitNode = GetNewNode(nodeTobeSplit.PageType);
-            //List<ushort> offsets = nodeTobeSplit.CellOffsetArray;
+            //tmp is used for the change of parentPage
+            InternalTableCell tmpCell;
+            MemoryPage tmpPage;
+            BTreeNode tmpNode;
 
             //key should be the primary key to be inserted in the parent node
             int DeleteIndex = nodeTobeSplit.NumCells / 2;
             DBRecord key = nodeTobeSplit.GetBTreeCell(nodeTobeSplit.CellOffsetArray[DeleteIndex]).Key;
-            if ((newKey.GetValues()[0] >= key.GetValues()[0]).BooleanValue)  
+            if ((newKey.GetValues()[0] >= key.GetValues()[0]).BooleanValue)
             {
                 DeleteIndex += 1;
             }
 
             for (i = DeleteIndex; i < MaxCell; i++)
             {
-                splitNode.InsertBTreeCell(nodeTobeSplit.GetBTreeCell(nodeTobeSplit.CellOffsetArray[DeleteIndex]));
-                nodeTobeSplit.DeleteBTreeCell(nodeTobeSplit.CellOffsetArray[DeleteIndex]);
+                ushort DeleteOffSet = nodeTobeSplit.CellOffsetArray[DeleteIndex];
+                //change the parent Page
+                if (nodeTobeSplit.PageType == PageTypes.InternalTablePage)
+                {
+                    tmpCell = (InternalTableCell)nodeTobeSplit.GetBTreeCell(DeleteOffSet);
+                    tmpPage = _pager.ReadPage((int)tmpCell.ChildPage);
+                    tmpNode = new BTreeNode(tmpPage);
+                    tmpNode.ParentPage = (uint)splitNode.GetRawPage().PageNumber;
+                }
+
+                splitNode.InsertBTreeCell(nodeTobeSplit.GetBTreeCell(DeleteOffSet));
+                nodeTobeSplit.DeleteBTreeCell(DeleteOffSet);
+
             }
             //If the parentNode need to spilt,this will be wrong
             InternalTableCell newCell = new InternalTableCell(key, (uint)nodeTobeSplit.GetRawPage().PageNumber);
@@ -150,9 +157,19 @@ namespace MiniSQL.BufferManager.Controllers
             //for a internal node,a cell in nodeTobeSplit has to be deleted
             else if (nodeTobeSplit.PageType == PageTypes.InternalTablePage)
             {
+                //for internal node,the parent Page of child page need to be changed
+                tmpPage = _pager.ReadPage((int)nodeTobeSplit.RightPage);
+                tmpNode = new BTreeNode(tmpPage);
+                tmpNode.ParentPage = (uint)splitNode.GetRawPage().PageNumber;
+
+
                 InternalTableCell tmp_cell = (InternalTableCell)nodeTobeSplit.GetBTreeCell(nodeTobeSplit.CellOffsetArray[DeleteIndex - 1]);
                 nodeTobeSplit.RightPage = tmp_cell.ChildPage;
                 nodeTobeSplit.DeleteBTreeCell(nodeTobeSplit.CellOffsetArray[DeleteIndex - 1]);
+
+                tmpPage = _pager.ReadPage((int)tmp_cell.ChildPage);
+                tmpNode = new BTreeNode(tmpPage);
+                tmpNode.ParentPage = (uint)nodeTobeSplit.GetRawPage().PageNumber;
             }
 
             splitNode.ParentPage = (uint)parantNode.GetRawPage().PageNumber;
@@ -183,7 +200,6 @@ namespace MiniSQL.BufferManager.Controllers
                 }
             }
             //This must be done after we reconnect the treeNode
-            
             parantNode.InsertBTreeCell(newCell);
 
         }
@@ -217,13 +233,14 @@ namespace MiniSQL.BufferManager.Controllers
             if (child.NumCells >= MaxCell)
             {
                 SplitChild(child, node, newKey);
+                return InsertNonFull(node, newKey, dBRecord);
 
             }
             return InsertNonFull(child, newKey, dBRecord);
 
         }
 
-        public BTreeCell Find(DBRecord key, BTreeNode root)
+        public BTreeCell FindCell(DBRecord key, BTreeNode root)
         {
             return InternalFind(key, root);
         }
@@ -258,21 +275,18 @@ namespace MiniSQL.BufferManager.Controllers
             return InternalFind(key, child);
         }
 
-
         public BTreeNode Delete(DBRecord key, BTreeNode Root)
         {
-            BTreeNode NodeTobeDeleted = Find_for_Delete(key, Root);
+            BTreeNode NodeTobeDeleted = FindNode(key, Root);
             if (NodeTobeDeleted == null)
             {
                 throw new Exception("Cannot find the key!");
             }
-            Delete_entry(NodeTobeDeleted, key);
-            return Root;
+            return Delete_entry(NodeTobeDeleted, key, Root);
 
         }
 
-
-        private BTreeNode Find_for_Delete(DBRecord key, BTreeNode root)
+        private BTreeNode FindNode(DBRecord key, BTreeNode root)
         {
             BTreeNode child;
             MemoryPage Nextpage = null;
@@ -287,7 +301,6 @@ namespace MiniSQL.BufferManager.Controllers
                     return root;
                 else
                     return null;
-
             }
 
             //If it's internal node
@@ -303,10 +316,272 @@ namespace MiniSQL.BufferManager.Controllers
                 Nextpage = _pager.ReadPage((int)internalTableCell.ChildPage);
                 child = new BTreeNode(Nextpage);
             }
-            return Find_for_Delete(key, child);
+            return FindNode(key, child);
         }
 
-        private void Delete_entry(BTreeNode NodetobeDeleted, DBRecord key)
+        private BTreeNode Delete_leaf_redistri(BTreeNode NodetobeDeleted, DBRecord key, BTreeNode Root)
+        {
+            BTreeCell cell;
+            UInt16 offset;
+            int indexInOffsetArray;
+
+            MemoryPage parentPage = _pager.ReadPage((int)NodetobeDeleted.ParentPage);
+            BTreeNode parentNode = new BTreeNode(parentPage);
+
+            (cell, offset, indexInOffsetArray) = parentNode.FindBTreeCell(key);
+            //the deleted node is not on the right page of parentNode
+            if (cell != null)
+            {
+                MemoryPage brotherPage = _pager.ReadPage((int)NodetobeDeleted.RightPage);
+                BTreeNode brotherNode = new BTreeNode(brotherPage);
+                //If there is a node on the left of the deleted node,it need to be connected to the brother node.
+                if (indexInOffsetArray >= 1)
+                {
+                    InternalTableCell leftNodeCell = (InternalTableCell)parentNode.GetBTreeCell(parentNode.CellOffsetArray[indexInOffsetArray - 1]);
+                    MemoryPage leftPage = _pager.ReadPage((int)leftNodeCell.ChildPage);
+                    BTreeNode leftNode = new BTreeNode(leftPage);
+                    leftNode.RightPage = (uint)brotherNode.GetRawPage().PageNumber;
+                }
+
+                if (brotherNode.NumCells + NodetobeDeleted.NumCells <= MaxCell)  //merge
+                {
+                    //After the merge,one cell in the parentNode will be deleted
+                    parentNode.DeleteBTreeCell(cell);
+                    //merge two node
+                    for (int i = 0; i < NodetobeDeleted.NumCells; i++)
+                    {
+                        brotherNode.InsertBTreeCell(NodetobeDeleted.GetBTreeCell(NodetobeDeleted.CellOffsetArray[i]));
+                    }
+                    DeleteNode(NodetobeDeleted);
+
+                }
+                else    //redistribute
+                {
+                    BTreeCell movedCell = brotherNode.GetBTreeCell(brotherNode.CellOffsetArray[0]);
+                    DBRecord newKey = brotherNode.GetBTreeCell(brotherNode.CellOffsetArray[1]).Key;
+
+                    NodetobeDeleted.InsertBTreeCell(movedCell);
+                    brotherNode.DeleteBTreeCell(movedCell);
+
+                    BTreeCell parent_Cell;
+                    UInt16 parent_offset;
+                    int parent_indexInOffsetArray;
+                    (parent_Cell, parent_offset, parent_indexInOffsetArray) = parentNode.FindBTreeCell(key);
+
+                    InternalTableCell newCell = new InternalTableCell(newKey, (uint)NodetobeDeleted.GetRawPage().PageNumber);
+                    parentNode.DeleteBTreeCell(parent_Cell);
+                    parentNode.InsertBTreeCell(newCell);
+
+                }
+            }
+            //The node to be deleted is on the rightpage,the brother node is on the left
+            else
+            {
+                InternalTableCell brotherCell = (InternalTableCell)parentNode.GetBTreeCell(parentNode.CellOffsetArray[parentNode.NumCells - 1]);
+                MemoryPage brotherPage = _pager.ReadPage((int)brotherCell.ChildPage);
+                BTreeNode brotherNode = new BTreeNode(brotherPage);
+
+                //The right page of brother node should be 0
+
+                brotherNode.RightPage = NodetobeDeleted.RightPage;
+
+                if (brotherNode.NumCells + NodetobeDeleted.NumCells <= MaxCell)  //merge
+                {
+                    //After the merge,one cell in the parentNode will be deleted
+                    parentNode.DeleteBTreeCell(brotherCell);
+                    //merge two node
+                    for (int i = 0; i < NodetobeDeleted.NumCells; i++)
+                    {
+                        brotherNode.InsertBTreeCell(NodetobeDeleted.GetBTreeCell(NodetobeDeleted.CellOffsetArray[i]));
+                    }
+                    DeleteNode(NodetobeDeleted);
+                    parentNode.RightPage = (uint)brotherNode.GetRawPage().PageNumber;
+
+                }
+                else    //redistribute
+                {
+                    BTreeCell movedCell = brotherNode.GetBTreeCell(brotherNode.CellOffsetArray[brotherNode.NumCells - 1]);
+                    DBRecord newKey = movedCell.Key;
+
+                    NodetobeDeleted.InsertBTreeCell(movedCell);
+                    brotherNode.DeleteBTreeCell(movedCell);
+
+                    BTreeCell parent_Cell;
+                    UInt16 parent_offset;
+                    int parent_indexInOffsetArray;
+                    (parent_Cell, parent_offset, parent_indexInOffsetArray) = parentNode.FindBTreeCell(key);
+
+                    InternalTableCell newCell = new InternalTableCell(newKey, (uint)NodetobeDeleted.GetRawPage().PageNumber);
+                    parentNode.DeleteBTreeCell(parent_Cell);
+                    parentNode.InsertBTreeCell(newCell);
+
+                }
+
+            }
+
+
+            NodetobeDeleted = parentNode;
+            //deal with parent Nodes
+            return Delete_internal_redistri(NodetobeDeleted, key, Root);
+        }
+
+        private BTreeNode Delete_internal_redistri(BTreeNode NodetobeDeleted, DBRecord key, BTreeNode Root)
+        {
+            InternalTableCell tmpCell;
+            MemoryPage tmpPage;
+            BTreeNode tmpNode;
+
+            BTreeCell cell;
+            UInt16 offset;
+            int indexInOffsetArray;
+
+            MemoryPage parentPage = null;
+            BTreeNode parentNode = null;
+
+            while (NodetobeDeleted.NumCells < (MaxCell + 1) / 2)
+            {
+                //The root
+                if (NodetobeDeleted.ParentPage == 0)
+                {
+                    if (NodetobeDeleted.NumCells == 0)
+                    {
+                        MemoryPage NewRootPage = _pager.ReadPage((int)NodetobeDeleted.RightPage);
+                        BTreeNode newRoot = new BTreeNode(NewRootPage);
+                        newRoot.ParentPage = 0;
+                        return newRoot;
+                    }
+                    return Root;
+                }
+                else
+                {
+                    parentPage = _pager.ReadPage((int)NodetobeDeleted.ParentPage);
+                    parentNode = new BTreeNode(parentPage);
+                    (cell, offset, indexInOffsetArray) = parentNode.FindBTreeCell(key);
+                    //The node to be deleted isn't on the rightpage
+                    if (cell != null)
+                    {
+                        InternalTableCell brotherCell = null;
+                        MemoryPage brotherPage = null;
+                        BTreeNode brotherNode = null;
+                        //if the right brother is on rightpage
+                        if (indexInOffsetArray + 1 == parentNode.NumCells)
+                        {
+                            brotherPage = _pager.ReadPage((int)parentNode.RightPage);
+                            brotherNode = new BTreeNode(brotherPage);
+
+                        }
+                        else
+                        {
+                            brotherCell = (InternalTableCell)parentNode.GetBTreeCell(parentNode.CellOffsetArray[indexInOffsetArray + 1]);
+                            brotherPage = _pager.ReadPage((int)brotherCell.ChildPage);
+                            brotherNode = new BTreeNode(brotherPage);
+                        }
+                        //merge
+                        if (brotherNode.NumCells + NodetobeDeleted.NumCells < MaxCell)
+                        {
+                            for (int i = 0; i < NodetobeDeleted.NumCells; i++)
+                            {
+                                tmpCell = (InternalTableCell)NodetobeDeleted.GetBTreeCell(NodetobeDeleted.CellOffsetArray[i]);
+
+                                brotherNode.InsertBTreeCell(tmpCell);
+
+                                tmpPage = _pager.ReadPage((int)tmpCell.ChildPage);
+                                tmpNode = new BTreeNode(tmpPage);
+                                tmpNode.ParentPage = (uint)brotherNode.GetRawPage().PageNumber;
+                            }
+                            //move the cell in parentNode to brotherNode
+                            InternalTableCell insertCell=new InternalTableCell(cell.Key,(uint)NodetobeDeleted.RightPage);
+                            brotherNode.InsertBTreeCell(insertCell);
+                            tmpPage=_pager.ReadPage((int)insertCell.ChildPage);
+                            tmpNode=new BTreeNode(tmpPage);
+                            tmpNode.ParentPage=(uint)brotherNode.GetRawPage().PageNumber;
+
+                            DeleteNode(NodetobeDeleted);
+                            parentNode.DeleteBTreeCell(cell);
+                        }
+                        //redistribute
+                        else
+                        {
+                            InternalTableCell movedCell = (InternalTableCell)brotherNode.GetBTreeCell(brotherNode.CellOffsetArray[0]);
+                            DBRecord upperKey = movedCell.Key;
+                            DBRecord downKey = cell.Key;
+
+                            InternalTableCell insertDeletedCell = new InternalTableCell(downKey, (uint)NodetobeDeleted.RightPage);
+                            NodetobeDeleted.InsertBTreeCell(insertDeletedCell);
+                            NodetobeDeleted.RightPage = movedCell.ChildPage;
+
+                            tmpPage = _pager.ReadPage((int)movedCell.ChildPage);
+                            tmpNode = new BTreeNode(tmpPage);
+                            tmpNode.ParentPage = (uint)NodetobeDeleted.GetRawPage().PageNumber;
+
+                            InternalTableCell insertParentCell = new InternalTableCell(upperKey, (uint)NodetobeDeleted.GetRawPage().PageNumber);
+                            parentNode.DeleteBTreeCell(cell);
+                            parentNode.InsertBTreeCell(insertParentCell);
+                            brotherNode.DeleteBTreeCell(movedCell);
+
+                        }
+
+                    }
+                    //The node to be deleted is on the rightpage
+                    else
+                    {
+                        InternalTableCell brotherCell = null;
+                        MemoryPage brotherPage = null;
+                        BTreeNode brotherNode = null;
+
+                        brotherCell = (InternalTableCell)parentNode.GetBTreeCell(parentNode.CellOffsetArray[parentNode.NumCells - 1]);
+                        brotherPage = _pager.ReadPage((int)brotherCell.ChildPage);
+                        brotherNode = new BTreeNode(brotherPage);
+                        //merge
+                        if (brotherNode.NumCells + NodetobeDeleted.NumCells < MaxCell)
+                        {
+                            for (int i = 0; i < brotherNode.NumCells; i++)
+                            {
+                                tmpCell = (InternalTableCell)brotherNode.GetBTreeCell(brotherNode.CellOffsetArray[i]);
+
+                                NodetobeDeleted.InsertBTreeCell(tmpCell);
+
+                                tmpPage = _pager.ReadPage((int)tmpCell.ChildPage);
+                                tmpNode = new BTreeNode(tmpPage);
+                                tmpNode.ParentPage = (uint)NodetobeDeleted.GetRawPage().PageNumber;
+                            }
+                            //move the cell in parentNode to brotherNode
+                            InternalTableCell insertCell=new InternalTableCell(brotherCell.Key,(uint)brotherNode.RightPage);
+                            NodetobeDeleted.InsertBTreeCell(insertCell);
+                            tmpPage=_pager.ReadPage((int)insertCell.ChildPage);
+                            tmpNode=new BTreeNode(tmpPage);
+                            tmpNode.ParentPage=(uint)NodetobeDeleted.GetRawPage().PageNumber;
+
+                            DeleteNode(brotherNode);
+                            parentNode.DeleteBTreeCell(parentNode.GetBTreeCell(parentNode.CellOffsetArray[parentNode.NumCells - 1]));
+                        }
+                        //redistribute
+                        else
+                        {
+                            DBRecord downKey = parentNode.GetBTreeCell(parentNode.CellOffsetArray[parentNode.NumCells - 1]).Key;
+                            InternalTableCell insertDeletedCell = new InternalTableCell(downKey, brotherNode.RightPage);
+                            NodetobeDeleted.InsertBTreeCell(insertDeletedCell);
+
+
+                            InternalTableCell movedCell = (InternalTableCell)brotherNode.GetBTreeCell(brotherNode.CellOffsetArray[brotherNode.NumCells - 1]);
+                            brotherNode.RightPage = movedCell.ChildPage;
+                            DBRecord upperKey = movedCell.Key;
+                            InternalTableCell insertParentCell = new InternalTableCell(upperKey, (uint)brotherNode.GetRawPage().PageNumber);
+                            parentNode.InsertBTreeCell(insertParentCell);
+                            brotherNode.DeleteBTreeCell(movedCell);
+
+                            tmpPage = _pager.ReadPage((int)brotherNode.RightPage);
+                            tmpNode = new BTreeNode(tmpPage);
+                            tmpNode.ParentPage = (uint)brotherNode.GetRawPage().PageNumber;
+                        }
+                    }
+                }
+                NodetobeDeleted = parentNode;
+            }
+            return Root;
+        }
+
+        private BTreeNode Delete_entry(BTreeNode NodetobeDeleted, DBRecord key, BTreeNode Root)
         {
             BTreeCell cell;
             UInt16 offset;
@@ -314,404 +589,69 @@ namespace MiniSQL.BufferManager.Controllers
             (cell, offset, indexInOffsetArray) = NodetobeDeleted.FindBTreeCell(key, false);
             NodetobeDeleted.DeleteBTreeCell(cell);
 
-            if (NodetobeDeleted.NumCells < MaxCell / 2 && NodetobeDeleted.ParentPage!=0)
+            if (NodetobeDeleted.NumCells < MaxCell / 2 && NodetobeDeleted.ParentPage != 0)
             {
-
-                throw new Exception("The merge for deletetion isn't done yet!");
-                //The merge for deletetion isn't done yet,use one big node instead of the whole B+ tree for record manager
-
-
-                MemoryPage parentPage = _pager.ReadPage((int)NodetobeDeleted.ParentPage);
-                BTreeNode parentNode = new BTreeNode(parentPage);
-
-                (cell, offset, indexInOffsetArray) = parentNode.FindBTreeCell(key);
-                //the deleted node is not on the right page of parentNode
-                if (cell != null)
-                {
-                    MemoryPage brotherPage = _pager.ReadPage((int)NodetobeDeleted.RightPage);
-                    BTreeNode brotherNode = new BTreeNode(brotherPage);
-                    //If there is a node on the left of the deleted node,it need to be connected to the brother node.
-                    if(indexInOffsetArray>=1)
-                    {
-                        InternalTableCell leftNodeCell=(InternalTableCell)parentNode.GetBTreeCell(parentNode.CellOffsetArray[indexInOffsetArray-1]);
-                        MemoryPage leftPage = _pager.ReadPage((int)leftNodeCell.ChildPage);
-                        BTreeNode leftNode=new BTreeNode(leftPage);
-                        leftNode.RightPage=(uint)brotherNode.GetRawPage().PageNumber;
-                    }
-
-                    if (brotherNode.NumCells + NodetobeDeleted.NumCells <= MaxCell)  //merge
-                    {
-                        //After the merge,one cell in the parentNode will be deleted
-                        parentNode.DeleteBTreeCell(cell);
-                        //merge two node
-                        for(int i=0;i<NodetobeDeleted.NumCells;i++)
-                        {
-                            brotherNode.InsertBTreeCell(NodetobeDeleted.GetBTreeCell(NodetobeDeleted.CellOffsetArray[i]));
-                            DeleteNode(NodetobeDeleted);
-                        }
-
-                    }
-                    else    //redistribute
-                    {
-                        BTreeCell movedCell=brotherNode.GetBTreeCell(brotherNode.CellOffsetArray[0]);
-                        DBRecord newKey=brotherNode.GetBTreeCell(brotherNode.CellOffsetArray[1]).Key;
-
-                        NodetobeDeleted.InsertBTreeCell(movedCell);
-                        brotherNode.DeleteBTreeCell(movedCell);
-
-                        BTreeCell parent_Cell;
-                        UInt16 parent_offset;
-                        int parent_indexInOffsetArray;
-                        (parent_Cell,parent_offset,parent_indexInOffsetArray)=parentNode.FindBTreeCell(key);
-                        
-                        InternalTableCell newCell=new InternalTableCell(newKey,(uint)NodetobeDeleted.GetRawPage().PageNumber);
-                        parentNode.DeleteBTreeCell(parent_Cell);
-                        parentNode.InsertBTreeCell(newCell);
-                        
-                    }
-                }
-                //The node to be deleted is on the rightpage,the brother node is on the left
-                else
-                {
-                    InternalTableCell brotherCell=(InternalTableCell)parentNode.GetBTreeCell(parentNode.CellOffsetArray[indexInOffsetArray-1]);
-                    MemoryPage brotherPage = _pager.ReadPage((int)brotherCell.ChildPage);
-                    BTreeNode brotherNode = new BTreeNode(brotherPage);
-
-                    brotherNode.RightPage=NodetobeDeleted.RightPage;
-
-                    if (brotherNode.NumCells + NodetobeDeleted.NumCells <= MaxCell)  //merge
-                    {
-                        //After the merge,one cell in the parentNode will be deleted
-                        parentNode.DeleteBTreeCell(brotherCell);
-                        //merge two node
-                        for(int i=0;i<NodetobeDeleted.NumCells;i++)
-                        {
-                            brotherNode.InsertBTreeCell(NodetobeDeleted.GetBTreeCell(NodetobeDeleted.CellOffsetArray[i]));
-                            DeleteNode(NodetobeDeleted);
-                        }
-                        parentNode.RightPage=(uint)brotherNode.GetRawPage().PageNumber;
-
-                    }
-                    else    //redistribute
-                    {
-                        BTreeCell movedCell=brotherNode.GetBTreeCell(brotherNode.CellOffsetArray[brotherNode.NumCells-1]);
-                        DBRecord newKey=movedCell.Key;
-
-                        NodetobeDeleted.InsertBTreeCell(movedCell);
-                        brotherNode.DeleteBTreeCell(movedCell);
-
-                        BTreeCell parent_Cell;
-                        UInt16 parent_offset;
-                        int parent_indexInOffsetArray;
-                        (parent_Cell,parent_offset,parent_indexInOffsetArray)=parentNode.FindBTreeCell(key);
-                        
-                        InternalTableCell newCell=new InternalTableCell(newKey,(uint)NodetobeDeleted.GetRawPage().PageNumber);
-                        parentNode.DeleteBTreeCell(parent_Cell);
-                        parentNode.InsertBTreeCell(newCell);
-                        
-                    }
-
-                }
-                NodetobeDeleted = parentNode;
-                while(NodetobeDeleted.NumCells<(MaxCell+1)/2)
-                {
-                    //The root
-                    if(NodetobeDeleted.ParentPage==0)
-                    {
-
-                    }
-                    else
-                    {
-                        parentPage = _pager.ReadPage((int)NodetobeDeleted.ParentPage);
-                        parentNode = new BTreeNode(parentPage);
-                        (cell, offset, indexInOffsetArray) = parentNode.FindBTreeCell(key);
-                        //The node to be deleted isn't on the rightpage
-                        if(cell!=null)
-                        {
-                            InternalTableCell brotherCell=null;
-                            MemoryPage brotherPage = null;
-                            BTreeNode brotherNode = null;
-                            //if the right brother is on rightpage
-                            if(indexInOffsetArray+1==parentNode.NumCells)
-                            {
-                                brotherPage = _pager.ReadPage((int)parentNode.RightPage);
-                                brotherNode = new BTreeNode(brotherPage);
-
-                            }
-                            else
-                            {
-                                brotherCell=(InternalTableCell)parentNode.GetBTreeCell(parentNode.CellOffsetArray[indexInOffsetArray+1]);
-                                brotherPage = _pager.ReadPage((int)brotherCell.ChildPage);
-                                brotherNode = new BTreeNode(brotherPage);
-                            }
-                            //merge
-                            if (brotherNode.NumCells + NodetobeDeleted.NumCells <= MaxCell)
-                            {
-
-                            }
-                            //redistribute
-                            else
-                            {
-                                InternalTableCell movedCell=(InternalTableCell)brotherNode.GetBTreeCell(brotherNode.CellOffsetArray[0]);
-                                DBRecord upperKey=movedCell.Key;
-                                DBRecord downKey=cell.Key;
-                                
-                                InternalTableCell insertCell=new InternalTableCell(downKey,(uint)NodetobeDeleted.RightPage);
-                                NodetobeDeleted.InsertBTreeCell(insertCell);
-                                parentNode.DeleteBTreeCell(insertCell);
-                                NodetobeDeleted.RightPage=movedCell.ChildPage;
-
-                                
-
-
-
-                            }
-                            
-                        }
-                        //The node to be deleted is on the rightpage
-                        else
-                        {
-
-                        }
-
-                    }
-                }
+                return Delete_leaf_redistri(NodetobeDeleted, key, Root);
             }
-            
-
+            return Root;
         }
 
 
-
-
-        /*The following is the previous code which cannot work*/
-
-        //return with a position where the key is supposed to be,if it exist,isFind=True
-        //The function mainly used by insertion and deletetion,we use another one to implenment the real Find in SQL
-        /*public (BTreeNode result, bool isFind) Recur_FindNode(DBRecord keys, BTreeNode T)
+        public List<BTreeCell> FindCells(BTreeNode root, Expression expression, string keyName, List<AttributeDeclaration> attributeDeclarations)
         {
-            BTreeNode result = T;
-            MemoryPage Nextpage = null;
-            if (T == null)
-                return (result, false);
-            else
+            if(expression.Ands.ContainsKey(keyName))
             {
-                BTreeCell cell;
-                UInt16 offset;
-                int indexInOffsetArray;
-                //internal leaf,go to the child
-                if (T.PageType == PageTypes.InternalIndexPage || T.PageType == PageTypes.InternalTablePage)
+                List<BTreeCell> result;
+                switch(expression.Ands[keyName].Operator)
                 {
-                    (cell, offset, indexInOffsetArray) = T.FindBTreeCell(keys);
-                    if (offset == 0)  //rightpage
-                    {
-                        Nextpage = _pager.ReadPage((int)T.RightPage);
-                        result = new BTreeNode(Nextpage);
-                    }
-                    else             //child page in cell
-                    {
-                        if (cell.Types == CellTypes.InternalIndexCell)
-                        {
-                            InternalIndexCell internalIndexCell = (InternalIndexCell)cell;
-                            Nextpage = _pager.ReadPage((int)internalIndexCell.ChildPage);
-                            result = new BTreeNode(Nextpage);
-                        }
-                        else
-                        {
-                            InternalTableCell internalTableCell = (InternalTableCell)cell;
-                            Nextpage = _pager.ReadPage((int)internalTableCell.ChildPage);
-                            result = new BTreeNode(Nextpage);
-                        }
-                    }
-                    return Recur_FindNode(keys, result);
-                }
-                //leaf node
-                else
-                {
-                    (cell, offset, indexInOffsetArray) = T.FindBTreeCell(keys);
-                    if (offset == 0)
-                    {
-                        return (T, false);
-                    }
-                    else
-                    {
-                        if (cell.Key == keys)
-                        {
-                            return (T, true);
-                        }
-                        else
-                        {
-                            return (T, false);
-                        }
-                    }
-                }
-            }
-        }
-        //implenment by InsertWithoutSplit and InsertWithSplit,return with the new BTree Root
-        public BTreeNode InsertNode(BTreeCell cell, BTreeNode T)
-        {
-            BTreeNode targer = null;
-            bool flag;
-            (targer, flag) = Recur_FindNode(cell.Key, T);
-            if (flag == true)
-                throw new Exception("Cannot insert duplicate key!");
-            else
-            {
-                if (T.NumCells >= MaxCell)
-                {
-                    return InsertWithSplit(cell,targer,T);
-                }
-                else if(targer=null){                            //empty tree
-                    targer=GetNewNode(PageTypes.LeafTablePage);
-                    targer.InsertBTreeCell(cell);
-                    T=targer;
-                    return T;
-                }
-                else{
-                    targer.InsertBTreeCell(cell);
-                    return T;
-                }
+                    case Operator.NotEqual:
+
+                    break;
+                    case Operator.Equal:
+
+                    break;
+
+                    case Operator.LessThan:
+
+                    break;
+                    case Operator.LessThanOrEqualTo:
+
+                    break;
+                    case Operator.MoreThan:
+
+                    break;
+                    case Operator.MoreThanOrEqualTo:
+
+                    break;
                     
-            }
-        }
 
-        public BTreeNode InsertWithSplit(BTreeCell cell, BTreeNode T, BTreeNode root)
-        {
-            int i;
-            BTreeNode splitNode =GetNewNode(PageTypes.LeafTablePage);
-            List<ushort> offsets = BTreeNode.CellOffsetArray;
 
-            DBRecord key=T.GetBTreeCell(offsets[T.NumCells/2]).Key;
-            for(i=T.NumCells/2;i<Maxcell;i++)
-            {
-                splitNode.InsertBTreeCell(T.GetBTreeCell(offsets[i]));
-                T.DeleteBTreeCell(offsets[i]);
-            }
-            //judge the position of the cell waiting to be inserted
-            T.InsertBTreeCell(cell);
 
-            //connnect two page by rightpage
-            splitNode.RightPage = T.RightPage;
-            T.RightPage = splitNode.GetRawPage().PageNumber;
-            return InsertParentsNode(T,splitNode,key,root);    //maybe the root isn't needed because we can use parentPage
-        }
+                }
 
-        //tricky function:there remains many problem:
-        //Noted that only child_left has parent Node at first
-        public BTreeNode InsertParentsNode(BTreeNode child_left,BTreeNode child_right,DBRecord key,BTreeNode root)
-        {
-            BTreeNode parents=null;
-            //No parents above, need to create a new one
-            if(child_left.ParentPage==0) 
-            {
-                BTreeNode Head=GetNewNode(PageTypes.InternalTablePage);
-                BTreeCell NewCell=new InternalTableCell(key,child_left.GetRawPage().PageNumber);
-                Head.InsertBTreeCell(NewCell);
-                Head.RightPage=child_right.GetRawPage().PageNumber;
-                child_right.ParentPage=Head.GetRawPage().PageNumber;
-                return Head;
+
+
             }
             else
             {
-                parents=_pager.ReadPage(child_left.ParentPage);
-                if(parents.NumCells<MaxCell)  //No need to split
-                {
-                    BTreeCell NewCell=new InternalTableCell(key,child_left.GetRawPage().PageNumber);
-                    if(parents.RightPage==child_left.GetRawPage().PageNumber)
-                    {
-                        parents.RightPage=child_left.GetRawPage().PageNumber;
-                    }
-                    else
-                    {
-                        BTreeNode leftNode=_pager.ReadPage(child_left.RightPage);
-
-                        List<ushort> offsets = leftNode.CellOffsetArray;
-                        BTreeCell tmp = leftNode.GetBTreeCell(offsets[0]);
-
-                    }
-                }
+                return LinearSearch(root,expression,attributeDeclarations);
             }
 
-            */
 
-        /* BTreeNode result = root;
-         MemoryPage Nextpage = null;
-         BTreeCell cell;
-         UInt16 offset;
-         int indexInOffsetArray;
+        }
 
-         //sovle the problem recursively,find the node until it get to the leaves,then split and connected the node one by one
-         if (root.PageType == PageTypes.InternalIndexPage || root.PageType == PageTypes.InternalTablePage)
-         {
-              (cell, offset, indexInOffsetArray) = root.FindBTreeCell(key);
-              if (offset == 0)  //rightpage
-              {
-                 Nextpage = _pager.ReadPage((int)root.RightPage);
-                 result = new BTreeNode(Nextpage);
-              }
-              else             //child page in cell
-              {
-                 if (cell.Types == CellTypes.InternalIndexCell)   //these code is useless because we has ignore the index tree
-                 {
-                     InternalIndexCell internalIndexCell = (InternalIndexCell)cell;
-                     Nextpage = _pager.ReadPage((int)internalIndexCell.ChildPage);
-                     result = new BTreeNode(Nextpage);
-                 }
-                 else
-                 {
-                     InternalTableCell internalTableCell = (InternalTableCell)cell;
-                     Nextpage = _pager.ReadPage((int)internalTableCell.ChildPage);
-                     result = new BTreeNode(Nextpage);
-                  }
-              }
-             BTreeNode curNode = InsertParentsNode(child_left, child_right, key, result);
-             //no need to split
-             if(curNode.NumCells < MaxCell)   
-             {
-                 InternalTableCell insertCell=new InternalTableCell(key,child_left.GetRawPage().PageNumber);
-                 curNode.InsertBTreeCell(insertCell);
-                 return curNode;    //WARINING!Should I return the curNode or someting else?????
-             }
+        private List<BTreeCell> LinearSearch(BTreeNode root, Expression expression,List<AttributeDeclaration> attributeDeclarations)
+        {
+
+        }
+        private List<BTreeCell> CheckOtherCondition(List<BTreeCell> cells,Expression expression,List<AttributeDeclaration> attributeDeclarations)
+        {
+            
+        }
 
 
-         }
-         //when comes to the leaves node,return to the last recursion
-         //but return with what??????
-         else
-         {
+        
 
-         }
-     }
-
-     //Same as InsertNode
-     public BTreeNode DeleteNode(BTreeCell cell)
-     {
-
-     }
-
-     public BTreeNode DeleteWithoutMerge(BTreeCell cell, BTreeNode T)
-     {
-         BTreeNode targer = null;
-         bool flag;
-         (targer, flag) = Recur_FindNode(cell.Key, T);
-         if (flag == false)
-             throw new Exception("Cannot find the cell!");
-         else
-         {
-             T.DeleteBTreeCell(cell);
-         }
-     }
-
-     public BTreeNode DeleteWithMerge(BTreeCell cell)
-     {
-
-     }
-
-     //The real Find operation
-     public List<BTreeCell> FindCells(Expression expression)
-     {
-     }
-     */
 
 
 
