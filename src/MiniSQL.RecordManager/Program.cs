@@ -13,12 +13,13 @@ namespace MiniSQL.RecordManager
         {
             Console.WriteLine("[RecordManager] Test start!");
 
-            TestInsertRecord();
+            // BTreeNode might be full
+            // TestInsertRecord(10);
 
             Console.WriteLine("[RecordManager] Test end!");
         }
 
-        private static void TestInsertRecord()
+        private static void TestInsertRecord(int maxCell)
         {
             string dbPath = "./testdbfile.minidb";
             File.Delete(dbPath);
@@ -38,14 +39,23 @@ namespace MiniSQL.RecordManager
             int newRootAfterInsert;
             int i;
 
-            for (i = 0; i < 130; i++)
-            // for (i = 0; i < 199; i++)
+            for (i = 0; i < maxCell; i++)
             {
                 (insertStatement, key) = GetInsertStatement(1);
                 AtomValue atomValue = GetAtomValue(key);
                 newRootAfterInsert = recordManager.InsertRecord(insertStatement, atomValue, newRoot);
                 Debug.Assert(newRoot == newRootAfterInsert);
             }
+
+            for (i = 0; i < maxCell; i++)
+            {
+                (insertStatement, key) = GetInsertStatement(1);
+                AtomValue atomValue = GetAtomValue(key);
+                newRootAfterInsert = recordManager.InsertRecord(insertStatement, atomValue, newRoot);
+                Debug.Assert(newRoot != newRootAfterInsert);
+            }
+
+            pager.Close();
         }
 
         private static CreateStatement GetCreateStatement()

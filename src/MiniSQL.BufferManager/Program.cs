@@ -4,6 +4,7 @@ using System.Diagnostics;
 using System.IO;
 using MiniSQL.BufferManager.Controllers;
 using MiniSQL.BufferManager.Models;
+using MiniSQL.BufferManager.Utilities;
 using MiniSQL.Library.Models;
 
 namespace MiniSQL.BufferManager
@@ -12,8 +13,9 @@ namespace MiniSQL.BufferManager
     {
         static void Main(string[] args)
         {
-            Console.WriteLine("BufferManager Test Begin");
+            Console.WriteLine("[BufferManager] Test Begin");
 
+            TestInsertSplit(200);
             
             TestBTreeInsert();
 
@@ -37,10 +39,70 @@ namespace MiniSQL.BufferManager
 
             // TestFreeList();
 
-            Console.WriteLine("BufferManager Test End");
+            Console.WriteLine("[BufferManager] Test End");
         }
 
+        static void TestInsertSplit(int maxCell)
+        {
+            string dbPath = "./testdbfile.minidb";
+            File.Delete(dbPath);
+            Pager pager = new Pager(dbPath);
+            FreeList freeList = new FreeList(pager);
+            BTreeController controller = new BTreeController(pager, freeList);
 
+            // LeafTableCell result = null;
+            List<DBRecord> records = new List<DBRecord>();
+            List<DBRecord> keyRecords = new List<DBRecord>();
+
+            // init record
+            records.Add(GetTestBRecord(100));
+            records.Add(GetTestBRecord(101));
+            records.Add(GetTestBRecord(102));
+            records.Add(GetTestBRecord(103));
+            records.Add(GetTestBRecord(104));
+            records.Add(GetTestBRecord(105));
+            records.Add(GetTestBRecord(106));
+            records.Add(GetTestBRecord(107));
+            records.Add(GetTestBRecord(108));
+            records.Add(GetTestBRecord(109));
+            records.Add(GetTestBRecord(110));
+            records.Add(GetTestBRecord(111));
+            records.Add(GetTestBRecord(112));
+
+            keyRecords.Add(GetTestBRecord(1));
+            keyRecords.Add(GetTestBRecord(2));
+            keyRecords.Add(GetTestBRecord(3));
+            keyRecords.Add(GetTestBRecord(4));
+            keyRecords.Add(GetTestBRecord(5));
+            keyRecords.Add(GetTestBRecord(6));
+            keyRecords.Add(GetTestBRecord(7));
+            keyRecords.Add(GetTestBRecord(8));
+            keyRecords.Add(GetTestBRecord(9));
+            keyRecords.Add(GetTestBRecord(10));
+            keyRecords.Add(GetTestBRecord(11));
+            keyRecords.Add(GetTestBRecord(12));
+            keyRecords.Add(GetTestBRecord(13));
+
+            BTreeNode root = null;
+            root = controller.Insert(keyRecords[0], records[0], root);
+            root = controller.Insert(keyRecords[1], records[1], root);
+            root = controller.Insert(keyRecords[2], records[2], root);
+            root = controller.Insert(keyRecords[3], records[3], root);
+            root = controller.Insert(keyRecords[4], records[4], root);
+            root = controller.Insert(keyRecords[5], records[5], root);
+            root = controller.Insert(keyRecords[6], records[6], root);
+            root = controller.Insert(keyRecords[7], records[7], root);
+            root = controller.Insert(keyRecords[8], records[8], root);
+            root = controller.Insert(keyRecords[9], records[9], root);
+            root = controller.Insert(keyRecords[10], records[9], root);
+            root = controller.Insert(keyRecords[11], records[9], root);
+            root = controller.Insert(keyRecords[12], records[9], root);
+            
+            // visualize tree
+            BTreeNodeHelper.VisualizeIntegerTree(pager, root);
+
+            pager.Close();
+        }
 
         static void TestForSimpleNode()
         {
@@ -112,7 +174,8 @@ namespace MiniSQL.BufferManager
             Debug.Assert(result != null);
             Debug.Assert(result.Key.GetValues()[0].IntegerValue == 8);
 
-
+            // visualize tree
+            BTreeNodeHelper.VisualizeIntegerTree(pager, root);
 
             //Find
             result = (LeafTableCell)controller.Find(keyRecord_0, root);
