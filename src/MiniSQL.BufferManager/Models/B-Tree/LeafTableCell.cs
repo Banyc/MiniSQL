@@ -11,12 +11,14 @@ namespace MiniSQL.BufferManager.Models
         // constructor
         public LeafTableCell(byte[] data, int startIndex)
         {
+            this.Types = CellTypes.LeafTableCell;
             Unpack(data, startIndex);
         }
 
         // constructor
         public LeafTableCell(DBRecord key, DBRecord record)
         {
+            this.Types = CellTypes.LeafTableCell;
             this.Key = key;
             this.DBRecord = record;
         }

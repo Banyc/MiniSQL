@@ -39,12 +39,14 @@ namespace MiniSQL.BufferManager.Models
         // constructor
         public LeafIndexCell(byte[] data, int startIndex)
         {
+            this.Types = CellTypes.LeafIndexCell;
             Unpack(data, startIndex);
         }
 
         // constructor
         public LeafIndexCell(DBRecord key, DBRecord primaryKey)
         {
+            this.Types = CellTypes.LeafIndexCell;
             this.Key = key;
             this.PrimaryKey = primaryKey;
         }

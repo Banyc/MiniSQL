@@ -45,12 +45,14 @@ namespace MiniSQL.BufferManager.Models
         // constructor
         public InternalIndexCell(byte[] data, int startIndex)
         {
+            this.Types = CellTypes.InternalIndexCell;
             Unpack(data, startIndex);
         }
 
         // constructor
         public InternalIndexCell(DBRecord key, UInt32 childPage, DBRecord primaryKey)
         {
+            this.Types = CellTypes.InternalIndexCell;
             this.Key = key;
             this.ChildPage = childPage;
             this.PrimaryKey = primaryKey;

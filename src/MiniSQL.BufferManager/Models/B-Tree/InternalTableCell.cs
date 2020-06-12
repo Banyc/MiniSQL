@@ -11,12 +11,14 @@ namespace MiniSQL.BufferManager.Models
         // constructor
         public InternalTableCell(byte[] data, int startIndex)
         {
+            this.Types = CellTypes.InternalTableCell;
             Unpack(data, startIndex);
         }
 
         // constructor
         public InternalTableCell(DBRecord key, UInt32 childPage)
         {
+            this.Types = CellTypes.InternalTableCell;
             this.Key = key;
             this.ChildPage = childPage;
         }
