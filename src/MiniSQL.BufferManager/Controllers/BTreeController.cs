@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Runtime;
 using MiniSQL.BufferManager.Interfaces;
 using MiniSQL.BufferManager.Models;
+using MiniSQL.BufferManager.Utilities;
 using MiniSQL.Library.Models;
 
 namespace MiniSQL.BufferManager.Controllers
@@ -196,10 +197,11 @@ namespace MiniSQL.BufferManager.Controllers
                 //The normal case
                 else
                 {
-                    InternalTableCell tmp_cell = (InternalTableCell)cell;
-                    tmp_cell.ChildPage = (uint)splitNode.GetRawPage().PageNumber;
+                    InternalTableCell tmp_cell = new InternalTableCell(cell.Key,(uint)splitNode.GetRawPage().PageNumber);
+                    parantNode.DeleteBTreeCell(cell);
+                    parantNode.InsertBTreeCell(tmp_cell);
                 }
-            }
+            }    
             //This must be done after we reconnect the treeNode
             parantNode.InsertBTreeCell(newCell);
 

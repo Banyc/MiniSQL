@@ -34,7 +34,7 @@ namespace MiniSQL.BufferManager
 
             //TestBTreeDelete();
 
-            // HardTestForBTree();
+            //HardTestForBTree();
 
             // TestDBRecord();
 
@@ -620,7 +620,7 @@ namespace MiniSQL.BufferManager
             //Construct BTree
             for (int i = 1; i < 20; i++)
             {
-                DBRecord record = GetTestBRecord(i + 100);
+                DBRecord record = GetTestBRecord(i+100);
                 DBRecord keyRecord = GetTestBRecord(i);
                 root = controller.InsertCell(root, keyRecord, record);
 
