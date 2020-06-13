@@ -22,7 +22,7 @@ namespace MiniSQL.RecordManager
 
         public int CreateTable(CreateStatement createStatement)
         {
-            return _bTree.OccupyNewTableNode();
+            return _bTree.OccupyNewTableNode().GetRawPage().PageNumber;
         }
 
         public int DeleteRecords(DeleteStatement deleteStatement, string primaryKeyName, List<AttributeDeclaration> attributeDeclarations, int rootPage)
@@ -51,9 +51,6 @@ namespace MiniSQL.RecordManager
             DBRecord wrappedKey = new DBRecord(new List<AtomValue>() { key });
             DBRecord values = new DBRecord(insertStatement.Values);
             BTreeNode newRoot = _bTree.InsertCell(node, wrappedKey, values);
-            // debug
-            BTreeNodeHelper.VisualizeIntegerTree(_pager, newRoot);
-            
             return newRoot.GetRawPage().PageNumber;
         }
 

@@ -85,18 +85,41 @@ namespace MiniSQL.Library.Models
 
         public static AtomValue operator <(AtomValue leftValue, AtomValue rightValue)
         {
-            ThrowErrorIfNotSameType(leftValue, rightValue);
             AtomValue result = new AtomValue();
             result.Type = AttributeTypes.Int;
             switch (leftValue.Type)
             {
                 case AttributeTypes.Char:
+                    ThrowErrorIfNotSameType(leftValue, rightValue);
                     result.IntegerValue = string.Compare(leftValue.StringValue, rightValue.StringValue) < 0 ? 1 : 0;
                     break;
                 case AttributeTypes.Float:
-                    result.IntegerValue = leftValue.FloatValue < rightValue.FloatValue ? 1 : 0;
+                    switch (rightValue.Type)
+                    {
+                        case AttributeTypes.Int:
+                            result.IntegerValue = leftValue.FloatValue < rightValue.IntegerValue ? 1 : 0;
+                            break;
+                        case AttributeTypes.Float:
+                            result.IntegerValue = leftValue.FloatValue < rightValue.FloatValue ? 1 : 0;
+                            break;
+                        default:
+                            ThrowErrorIfNotSameType(leftValue, rightValue);
+                            break;
+                    }
                     break;
                 case AttributeTypes.Int:
+                    switch (rightValue.Type)
+                    {
+                        case AttributeTypes.Int:
+                            result.IntegerValue = leftValue.IntegerValue < rightValue.IntegerValue ? 1 : 0;
+                            break;
+                        case AttributeTypes.Float:
+                            result.IntegerValue = leftValue.IntegerValue < rightValue.FloatValue ? 1 : 0;
+                            break;
+                        default:
+                            ThrowErrorIfNotSameType(leftValue, rightValue);
+                            break;
+                    }
                     result.IntegerValue = leftValue.IntegerValue < rightValue.IntegerValue ? 1 : 0;
                     break;
                 case AttributeTypes.Null:
@@ -107,19 +130,41 @@ namespace MiniSQL.Library.Models
 
         public static AtomValue operator >(AtomValue leftValue, AtomValue rightValue)
         {
-            ThrowErrorIfNotSameType(leftValue, rightValue);
             AtomValue result = new AtomValue();
             result.Type = AttributeTypes.Int;
             switch (leftValue.Type)
             {
                 case AttributeTypes.Char:
+                    ThrowErrorIfNotSameType(leftValue, rightValue);
                     result.IntegerValue = string.Compare(leftValue.StringValue, rightValue.StringValue) > 0 ? 1 : 0;
                     break;
                 case AttributeTypes.Float:
-                    result.IntegerValue = leftValue.FloatValue > rightValue.FloatValue ? 1 : 0;
+                    switch (rightValue.Type)
+                    {
+                        case AttributeTypes.Int:
+                            result.IntegerValue = leftValue.FloatValue > rightValue.IntegerValue ? 1 : 0;
+                            break;
+                        case AttributeTypes.Float:
+                            result.IntegerValue = leftValue.FloatValue > rightValue.FloatValue ? 1 : 0;
+                            break;
+                        default:
+                            ThrowErrorIfNotSameType(leftValue, rightValue);
+                            break;
+                    }
                     break;
                 case AttributeTypes.Int:
-                    result.IntegerValue = leftValue.IntegerValue > rightValue.IntegerValue ? 1 : 0;
+                    switch (rightValue.Type)
+                    {
+                        case AttributeTypes.Int:
+                            result.IntegerValue = leftValue.IntegerValue > rightValue.IntegerValue ? 1 : 0;
+                            break;
+                        case AttributeTypes.Float:
+                            result.IntegerValue = leftValue.IntegerValue > rightValue.FloatValue ? 1 : 0;
+                            break;
+                        default:
+                            ThrowErrorIfNotSameType(leftValue, rightValue);
+                            break;
+                    }
                     break;
                 case AttributeTypes.Null:
                     throw new System.NullReferenceException();
@@ -129,19 +174,41 @@ namespace MiniSQL.Library.Models
 
         public static AtomValue operator <=(AtomValue leftValue, AtomValue rightValue)
         {
-            ThrowErrorIfNotSameType(leftValue, rightValue);
             AtomValue result = new AtomValue();
             result.Type = AttributeTypes.Int;
             switch (leftValue.Type)
             {
                 case AttributeTypes.Char:
+                    ThrowErrorIfNotSameType(leftValue, rightValue);
                     result.IntegerValue = string.Compare(leftValue.StringValue, rightValue.StringValue) <= 0 ? 1 : 0;
                     break;
                 case AttributeTypes.Float:
-                    result.IntegerValue = leftValue.FloatValue <= rightValue.FloatValue ? 1 : 0;
+                    switch (rightValue.Type)
+                    {
+                        case AttributeTypes.Int:
+                            result.IntegerValue = leftValue.FloatValue <= rightValue.IntegerValue ? 1 : 0;
+                            break;
+                        case AttributeTypes.Float:
+                            result.IntegerValue = leftValue.FloatValue <= rightValue.FloatValue ? 1 : 0;
+                            break;
+                        default:
+                            ThrowErrorIfNotSameType(leftValue, rightValue);
+                            break;
+                    }
                     break;
                 case AttributeTypes.Int:
-                    result.IntegerValue = leftValue.IntegerValue <= rightValue.IntegerValue ? 1 : 0;
+                    switch (rightValue.Type)
+                    {
+                        case AttributeTypes.Int:
+                            result.IntegerValue = leftValue.IntegerValue <= rightValue.IntegerValue ? 1 : 0;
+                            break;
+                        case AttributeTypes.Float:
+                            result.IntegerValue = leftValue.IntegerValue <= rightValue.FloatValue ? 1 : 0;
+                            break;
+                        default:
+                            ThrowErrorIfNotSameType(leftValue, rightValue);
+                            break;
+                    }
                     break;
                 case AttributeTypes.Null:
                     throw new System.NullReferenceException();
@@ -151,19 +218,41 @@ namespace MiniSQL.Library.Models
 
         public static AtomValue operator >=(AtomValue leftValue, AtomValue rightValue)
         {
-            ThrowErrorIfNotSameType(leftValue, rightValue);
             AtomValue result = new AtomValue();
             result.Type = AttributeTypes.Int;
             switch (leftValue.Type)
             {
                 case AttributeTypes.Char:
+                    ThrowErrorIfNotSameType(leftValue, rightValue);
                     result.IntegerValue = string.Compare(leftValue.StringValue, rightValue.StringValue) >= 0 ? 1 : 0;
                     break;
                 case AttributeTypes.Float:
-                    result.IntegerValue = leftValue.FloatValue >= rightValue.FloatValue ? 1 : 0;
+                    switch (rightValue.Type)
+                    {
+                        case AttributeTypes.Int:
+                            result.IntegerValue = leftValue.FloatValue >= rightValue.IntegerValue ? 1 : 0;
+                            break;
+                        case AttributeTypes.Float:
+                            result.IntegerValue = leftValue.FloatValue >= rightValue.FloatValue ? 1 : 0;
+                            break;
+                        default:
+                            ThrowErrorIfNotSameType(leftValue, rightValue);
+                            break;
+                    }
                     break;
                 case AttributeTypes.Int:
-                    result.IntegerValue = leftValue.IntegerValue >= rightValue.IntegerValue ? 1 : 0;
+                    switch (rightValue.Type)
+                    {
+                        case AttributeTypes.Int:
+                            result.IntegerValue = leftValue.IntegerValue >= rightValue.IntegerValue ? 1 : 0;
+                            break;
+                        case AttributeTypes.Float:
+                            result.IntegerValue = leftValue.IntegerValue >= rightValue.FloatValue ? 1 : 0;
+                            break;
+                        default:
+                            ThrowErrorIfNotSameType(leftValue, rightValue);
+                            break;
+                    }
                     break;
                 case AttributeTypes.Null:
                     throw new System.NullReferenceException();
@@ -185,17 +274,39 @@ namespace MiniSQL.Library.Models
                 result.IntegerValue = 0;
                 return result;
             }
-            ThrowErrorIfNotSameType(leftValue, rightValue);
             switch (leftValue.Type)
             {
                 case AttributeTypes.Char:
+                    ThrowErrorIfNotSameType(leftValue, rightValue);
                     result.IntegerValue = string.Compare(leftValue.StringValue, rightValue.StringValue) == 0 ? 1 : 0;
                     break;
                 case AttributeTypes.Float:
-                    result.IntegerValue = leftValue.FloatValue == rightValue.FloatValue ? 1 : 0;
+                    switch (rightValue.Type)
+                    {
+                        case AttributeTypes.Int:
+                            result.IntegerValue = leftValue.FloatValue == rightValue.IntegerValue ? 1 : 0;
+                            break;
+                        case AttributeTypes.Float:
+                            result.IntegerValue = leftValue.FloatValue == rightValue.FloatValue ? 1 : 0;
+                            break;
+                        default:
+                            ThrowErrorIfNotSameType(leftValue, rightValue);
+                            break;
+                    }
                     break;
                 case AttributeTypes.Int:
-                    result.IntegerValue = leftValue.IntegerValue == rightValue.IntegerValue ? 1 : 0;
+                    switch (rightValue.Type)
+                    {
+                        case AttributeTypes.Int:
+                            result.IntegerValue = leftValue.IntegerValue == rightValue.IntegerValue ? 1 : 0;
+                            break;
+                        case AttributeTypes.Float:
+                            result.IntegerValue = leftValue.IntegerValue == rightValue.FloatValue ? 1 : 0;
+                            break;
+                        default:
+                            ThrowErrorIfNotSameType(leftValue, rightValue);
+                            break;
+                    }
                     break;
                 case AttributeTypes.Null:
                     result.IntegerValue = 1;
@@ -206,19 +317,41 @@ namespace MiniSQL.Library.Models
 
         public static AtomValue operator !=(AtomValue leftValue, AtomValue rightValue)
         {
-            ThrowErrorIfNotSameType(leftValue, rightValue);
             AtomValue result = new AtomValue();
             result.Type = AttributeTypes.Int;
             switch (leftValue.Type)
             {
                 case AttributeTypes.Char:
+                    ThrowErrorIfNotSameType(leftValue, rightValue);
                     result.IntegerValue = string.Compare(leftValue.StringValue, rightValue.StringValue) != 0 ? 1 : 0;
                     break;
                 case AttributeTypes.Float:
-                    result.IntegerValue = leftValue.FloatValue != rightValue.FloatValue ? 1 : 0;
+                    switch (rightValue.Type)
+                    {
+                        case AttributeTypes.Int:
+                            result.IntegerValue = leftValue.FloatValue != rightValue.IntegerValue ? 1 : 0;
+                            break;
+                        case AttributeTypes.Float:
+                            result.IntegerValue = leftValue.FloatValue != rightValue.FloatValue ? 1 : 0;
+                            break;
+                        default:
+                            ThrowErrorIfNotSameType(leftValue, rightValue);
+                            break;
+                    }
                     break;
                 case AttributeTypes.Int:
-                    result.IntegerValue = leftValue.IntegerValue != rightValue.IntegerValue ? 1 : 0;
+                    switch (rightValue.Type)
+                    {
+                        case AttributeTypes.Int:
+                            result.IntegerValue = leftValue.IntegerValue != rightValue.IntegerValue ? 1 : 0;
+                            break;
+                        case AttributeTypes.Float:
+                            result.IntegerValue = leftValue.IntegerValue != rightValue.FloatValue ? 1 : 0;
+                            break;
+                        default:
+                            ThrowErrorIfNotSameType(leftValue, rightValue);
+                            break;
+                    }
                     break;
                 case AttributeTypes.Null:
                     throw new System.NullReferenceException();

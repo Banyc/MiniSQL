@@ -186,7 +186,8 @@ namespace MiniSQL.Api
                 statement.Values[schema.SQL.AttributeDeclarations.FindIndex(x => 
                     x.AttributeName == schema.SQL.PrimaryKey)];
             // insert
-            _recordManager.InsertRecord(statement, primaryKey, schema.RootPage);
+            int newRoot = _recordManager.InsertRecord(statement, primaryKey, schema.RootPage);
+            _catalogManager.TryUpdateSchemaRecord(statement.TableName, newRoot);
         }
 
         private Query Parse(string sql)

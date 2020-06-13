@@ -15,16 +15,16 @@ namespace MiniSQL.BufferManager
         {
             Console.WriteLine("[BufferManager] Test Begin");
 
-            // BTreeTestCases.TestAll();
+            BTreeTestCases.TestAll();
 
-            // TestMaxHeightBTree(8, true, true);
+            // TestMaxHeightBTree(8, false, true, true);
 
             //BugTest1();
 
             // Bugtest2();
 
             // TODO: Fix issue at the #6 stage
-            BugTest3();
+            // BugTest3();
 
             //TestExpressionFind();
 
@@ -265,7 +265,7 @@ namespace MiniSQL.BufferManager
         }
 
 
-        static void TestMaxHeightBTree(int cellNumber, bool isKeyRandom, bool isShowInsertOrder)
+        static void TestMaxHeightBTree(int cellNumber, bool isKeyRandom, bool isShowInsertOrder, bool isShowIntermediateTree)
         {
             string dbPath = "./testdbfile.minidb";
             File.Delete(dbPath);
@@ -294,6 +294,10 @@ namespace MiniSQL.BufferManager
                     Console.WriteLine(key);
                 }
                 root = controller.InsertCell(root, keyRecord, record);
+                if (isShowIntermediateTree)
+                {
+                    BTreeNodeHelper.VisualizeIntegerTree(pager, root);
+                }
             }
             stopwatch.Stop();
 

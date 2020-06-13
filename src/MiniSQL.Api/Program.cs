@@ -88,7 +88,7 @@ namespace MiniSQL.Api
                             Console.Write($"{value.IntegerValue} | ");
                             break;
                         case AttributeTypes.Char:
-                            Console.Write($"{value.StringValue} | ");
+                            Console.Write($"\"{value.StringValue}\" | ");
                             break;
                         case AttributeTypes.Float:
                             Console.Write($"{value.FloatValue} | ");

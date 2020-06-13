@@ -23,10 +23,10 @@ namespace MiniSQL.BufferManager.Controllers
         }
 
         // TODO: test
-        public int OccupyNewTableNode()
+        public BTreeNode OccupyNewTableNode()
         {
             BTreeNode newNode = GetNewNode(PageTypes.LeafTablePage);
-            return newNode.GetRawPage().PageNumber;
+            return newNode;
         }
 
         // TODO: test

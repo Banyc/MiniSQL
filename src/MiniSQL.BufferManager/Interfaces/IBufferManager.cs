@@ -7,7 +7,7 @@ namespace MiniSQL.BufferManager.Interfaces
     public interface IBufferManager
     {
         // when create table
-        int OccupyNewTableNode();
+        BTreeNode OccupyNewTableNode();
         // when drop table
         void RemoveTree(BTreeNode root);
         // insert cell
