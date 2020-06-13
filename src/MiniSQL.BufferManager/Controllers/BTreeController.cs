@@ -45,7 +45,7 @@ namespace MiniSQL.BufferManager.Controllers
                     RemoveTree(node);
                 }
             }
-            else
+            else  // (root.PageType == PageTypes.InternalTablePage)
             {
                 foreach (BTreeCell cell in root)
                 {
@@ -714,7 +714,6 @@ namespace MiniSQL.BufferManager.Controllers
                 {
                     case Operator.NotEqual:
                         return LinearSearch(root, expression, attributeDeclarations);
-                        break;
 
                     case Operator.Equal:
                         LeafTableCell tmpCell = (LeafTableCell)FindCell(keyFind, root);
@@ -731,11 +730,9 @@ namespace MiniSQL.BufferManager.Controllers
                     case Operator.LessThan:
                         beginNode = FindMin(root);
                         return LessFind(beginNode, expression, attributeDeclarations, bound, false);
-                        break;
                     case Operator.LessThanOrEqualTo:
                         beginNode = FindMin(root);
                         return LessFind(beginNode, expression, attributeDeclarations, bound, true);
-                        break;
                     case Operator.MoreThan:
                         beginNode = FindNode(keyFind, root, true);
                         (cell, offset, begin_Index) = beginNode.FindBTreeCell(keyFind);
@@ -756,7 +753,6 @@ namespace MiniSQL.BufferManager.Controllers
                             }
                         }
                         return MoreFind(beginNode, begin_Index, expression, attributeDeclarations, false);
-                        break;
                     case Operator.MoreThanOrEqualTo:
                         beginNode = FindNode(keyFind, root, true);
                         (cell, offset, begin_Index) = beginNode.FindBTreeCell(keyFind);
@@ -774,7 +770,6 @@ namespace MiniSQL.BufferManager.Controllers
                             }
                         }
                         return MoreFind(beginNode, begin_Index, expression, attributeDeclarations, true);
-                        break;
                     default:
                         throw new Exception("The Operant is not supported!");
                 }

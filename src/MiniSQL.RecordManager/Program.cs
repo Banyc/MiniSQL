@@ -3,6 +3,8 @@ using System.Collections.Generic;
 using System.Diagnostics;
 using System.IO;
 using MiniSQL.BufferManager.Controllers;
+using MiniSQL.BufferManager.Models;
+using MiniSQL.BufferManager.Utilities;
 using MiniSQL.Library.Models;
 
 namespace MiniSQL.RecordManager
@@ -13,13 +15,12 @@ namespace MiniSQL.RecordManager
         {
             Console.WriteLine("[RecordManager] Test start!");
 
-            // BTreeNode might be full
-            // TestInsertRecord(10);
+            TestInsertRandomRecord(4);
 
             Console.WriteLine("[RecordManager] Test end!");
         }
 
-        private static void TestInsertRecord(int maxCell)
+        private static void TestInsertRandomRecord(int maxCell)
         {
             string dbPath = "./testdbfile.minidb";
             File.Delete(dbPath);
@@ -27,33 +28,41 @@ namespace MiniSQL.RecordManager
             FreeList freeList = new FreeList(pager);
             BTreeController controller = new BTreeController(pager, freeList);
 
-            RecordManager recordManager = new RecordManager(pager, controller);
+            RecordContext recordManager = new RecordContext(pager, controller);
 
             // create new table
             CreateStatement createStatement = GetCreateStatement();
             int newRoot = recordManager.CreateTable(createStatement);
 
             // insert
+            BTreeNode node;
             InsertStatement insertStatement;
             int key;
-            int newRootAfterInsert;
+            int newRootAfterInsert = newRoot;
             int i;
 
             for (i = 0; i < maxCell; i++)
             {
                 (insertStatement, key) = GetInsertStatement(1);
                 AtomValue atomValue = GetAtomValue(key);
-                newRootAfterInsert = recordManager.InsertRecord(insertStatement, atomValue, newRoot);
+                
+                newRootAfterInsert = recordManager.InsertRecord(insertStatement, atomValue, newRootAfterInsert);
+                Console.WriteLine(key);
                 Debug.Assert(newRoot == newRootAfterInsert);
             }
+            node = BTreeNodeHelper.GetBTreeNode(pager, newRootAfterInsert);
+            BTreeNodeHelper.VisualizeIntegerTree(pager, node);
+            Console.WriteLine();
 
             for (i = 0; i < maxCell; i++)
             {
                 (insertStatement, key) = GetInsertStatement(1);
                 AtomValue atomValue = GetAtomValue(key);
-                newRootAfterInsert = recordManager.InsertRecord(insertStatement, atomValue, newRoot);
-                Debug.Assert(newRoot != newRootAfterInsert);
+                newRootAfterInsert = recordManager.InsertRecord(insertStatement, atomValue, newRootAfterInsert);
+                Console.WriteLine(key);
             }
+            node = BTreeNodeHelper.GetBTreeNode(pager, newRootAfterInsert);
+            BTreeNodeHelper.VisualizeIntegerTree(pager, node);
 
             pager.Close();
         }

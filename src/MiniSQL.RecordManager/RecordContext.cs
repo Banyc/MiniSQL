@@ -9,12 +9,12 @@ using MiniSQL.Library.Models;
 namespace MiniSQL.RecordManager
 {
     // TODO: review + test
-    public class RecordManager : IRecordManager
+    public class RecordContext : IRecordManager
     {
         private readonly IBufferManager _bTree;
         private readonly Pager _pager;
 
-        public RecordManager(Pager pager, IBufferManager bTreeController)
+        public RecordContext(Pager pager, IBufferManager bTreeController)
         {
             _pager = pager;
             _bTree = bTreeController;

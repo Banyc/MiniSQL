@@ -17,33 +17,33 @@ namespace MiniSQL.BufferManager
 
             TestMaxHeightBTree(20, true);
 
-            TestExpressionFind();
+            // TestExpressionFind();
 
-            TestExpressionDelete();
+            // TestExpressionDelete();
 
-            TestBTreeInsert();
+            // TestBTreeInsert();
 
-            TestBTreeDelete();
+            // TestBTreeDelete();
 
-            HardTestForBTree();
+            // HardTestForBTree();
 
-            TestDBRecord();
+            // TestDBRecord();
 
-            TestLeafTableCell();
+            // TestLeafTableCell();
 
-            TestInternalTableCell();
+            // TestInternalTableCell();
 
-            TestInternalIndexCell();
+            // TestInternalIndexCell();
 
-            TestLeafIndexCell();
+            // TestLeafIndexCell();
 
-            TestPager();
+            // TestPager();
 
-            TestPagerSwapping();
+            // TestPagerSwapping();
 
-            TestInsertIntoAndDeletionInsideBTreeNode();
+            // TestInsertIntoAndDeletionInsideBTreeNode();
 
-            TestFreeList();
+            // TestFreeList();
 
             Console.WriteLine("[BufferManager] Test End");
         }
@@ -81,6 +81,8 @@ namespace MiniSQL.BufferManager
             }
             stopwatch.Stop();
 
+            // BTreeNode cloneRoot = BTreeNodeHelper.GetBTreeNode(pager, root.GetRawPage().PageNumber);
+            // BTreeNodeHelper.VisualizeIntegerTree(pager, cloneRoot);
             BTreeNodeHelper.VisualizeIntegerTree(pager, root);
             Console.WriteLine();
             Console.WriteLine($"Time cost: {stopwatch.Elapsed.TotalSeconds}s");

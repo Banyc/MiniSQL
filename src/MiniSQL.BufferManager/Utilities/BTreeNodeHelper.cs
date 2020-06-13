@@ -18,6 +18,7 @@ namespace MiniSQL.BufferManager.Utilities
         // level-order
         public static void VisualizeIntegerTree(Pager pager, BTreeNode root)
         {
+            Console.WriteLine("[Visualizer] Start");
             int thisLevelwidth = 1;
             int nextLevelwidth = 0;
 
@@ -72,6 +73,7 @@ namespace MiniSQL.BufferManager.Utilities
                     nextLevelwidth = 0;
                 }
             }
+            Console.WriteLine("[Visualizer] End");
         }
     }
 }

@@ -87,16 +87,14 @@ namespace MiniSQL.Interpreter
         {
             CreateStatement obj = new CreateStatement();
             obj.TableName = context.tableName().GetText();
-            List<AttributeDeclaration> list;
             if (context.tableElementList() == null)
-                list = new List<AttributeDeclaration>();
+                obj.AttributeDeclarations = new List<AttributeDeclaration>();
             else
             {
                 (List<AttributeDeclaration>, string) AttributesPrimaryPair = ((List<AttributeDeclaration>, string))Visit(context.tableElementList());
-                list = AttributesPrimaryPair.Item1;
+                obj.AttributeDeclarations = AttributesPrimaryPair.Item1;
                 obj.PrimaryKey = AttributesPrimaryPair.Item2;
             }
-            obj.AttributeDeclarations = list;
             return obj;
         }
 
