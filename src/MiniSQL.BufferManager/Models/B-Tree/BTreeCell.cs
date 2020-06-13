@@ -11,6 +11,7 @@ namespace MiniSQL.BufferManager.Models
     }
 
     // base class for all types of B-Tree cells
+    // NOTICE: you are only getting a COPY, any modification on the cell will NOT affect the node
     public abstract class BTreeCell
     {
         public CellTypes Types { get; set; }
