@@ -16,7 +16,7 @@ namespace MiniSQL.BufferManager.Models
         public PageTypes PageType
         {
             get { return (PageTypes)_page.Data[0 + _page.AvaliableOffset]; }
-            set { _page.Data[0 + _page.AvaliableOffset] = (byte)value; }
+            private set { _page.Data[0 + _page.AvaliableOffset] = (byte)value; }
         }
         // The byte offset at which the free space starts. 
         // Note that this must be updated every time the cell offset array grows.
@@ -137,7 +137,7 @@ namespace MiniSQL.BufferManager.Models
 
                 // deprecated:
                 // this.FreeOffset = (ushort)(_page.AvaliableOffset + 8 + 4);
-                
+
                 // customized: added field `ParentPage`
                 this.FreeOffset = (ushort)(_page.AvaliableOffset + 8 + 4 + 4);
             }
@@ -190,6 +190,7 @@ namespace MiniSQL.BufferManager.Models
         }
 
         // get a cell given an offset (address)
+        // NOTICE: you are only getting a COPY, any modification on the cell will NOT affect the node
         public BTreeCell GetBTreeCell(UInt32 address)
         {
             BTreeCell cell = null;
@@ -343,6 +344,7 @@ namespace MiniSQL.BufferManager.Models
         {
             foreach (var offset in this.CellOffsetArray)
             {
+                // NOTICE: you are only getting a COPY, any modification on the cell will NOT affect the node
                 yield return this.GetBTreeCell(offset);
             }
         }
@@ -358,6 +360,7 @@ namespace MiniSQL.BufferManager.Models
         {
             get
             {
+                // NOTICE: you are only getting a COPY, any modification on the cell will NOT affect the node
                 return GetBTreeCell(this.CellOffsetArray[index]);
             }
         }

@@ -171,9 +171,21 @@ namespace MiniSQL.Api
             // TODO
             // insert into table tree
             SchemaRecord schema = _catalogManager.GetTableSchemaRecord(statement.TableName);
+            // adjust inlined type in insert statement
+            if (schema.SQL.AttributeDeclarations.Count != statement.Values.Count)
+            {
+                throw new Exception("number of columns between \"create table\" and \"insert statement\' do not match");
+            }
+            int i;
+            for (i = 0; i < statement.Values.Count; i++)
+            {
+                statement.Values[i].CharLimit = schema.SQL.AttributeDeclarations[i].CharLimit;
+            }
+            // find out primary key from insert values
             AtomValue primaryKey = 
                 statement.Values[schema.SQL.AttributeDeclarations.FindIndex(x => 
                     x.AttributeName == schema.SQL.PrimaryKey)];
+            // insert
             _recordManager.InsertRecord(statement, primaryKey, schema.RootPage);
         }
 

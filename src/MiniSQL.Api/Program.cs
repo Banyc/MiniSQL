@@ -61,6 +61,7 @@ namespace MiniSQL.Api
                 foreach (var selectResult in selectResults)
                 {
                     PrintRows(selectResult);
+                    Console.WriteLine();
                 }
                 input.Clear();
             }

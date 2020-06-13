@@ -15,6 +15,8 @@ namespace MiniSQL.BufferManager
         {
             Console.WriteLine("[BufferManager] Test Begin");
 
+            // BTreeTestCases.TestAll();
+
             // TestMaxHeightBTree(8, true, true);
 
             //BugTest1();
