@@ -123,10 +123,11 @@ namespace MiniSQL.BufferManager.Controllers
 
             //key should be the primary key to be inserted in the parent node
             int DeleteIndex = nodeTobeSplit.NumCells / 2;
-            DBRecord key = nodeTobeSplit.GetBTreeCell(nodeTobeSplit.CellOffsetArray[DeleteIndex]).Key;
+            DBRecord key = nodeTobeSplit.GetBTreeCell(nodeTobeSplit.CellOffsetArray[DeleteIndex-1]).Key;
             if ((newKey.GetValues()[0] >= key.GetValues()[0]).BooleanValue)
             {
                 DeleteIndex += 1;
+                key = nodeTobeSplit.GetBTreeCell(nodeTobeSplit.CellOffsetArray[DeleteIndex-1]).Key;
             }
 
             for (i = DeleteIndex; i < MaxCell; i++)
