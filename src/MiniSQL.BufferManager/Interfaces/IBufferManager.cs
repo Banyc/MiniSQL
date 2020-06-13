@@ -11,9 +11,9 @@ namespace MiniSQL.BufferManager.Interfaces
         // when drop table
         void RemoveTree(BTreeNode root);
         // insert cell
-        int InsertCell(BTreeNode root, DBRecord key, DBRecord dBRecord);
+        BTreeNode InsertCell(BTreeNode Root, DBRecord key, DBRecord dBRecord);
         // delete cell(s) that satisfy `expression`
-        int DeleteCells(BTreeNode root, Expression expression, string keyName, List<AttributeDeclaration> attributeDeclarations);
+        BTreeNode DeleteCells(BTreeNode root, Expression expression, string keyName, List<AttributeDeclaration> attributeDeclarations);
         // return matches that satisfy `expression`
         List<BTreeCell> FindCells(BTreeNode root, Expression expression, string keyName, List<AttributeDeclaration> attributeDeclarations);
     }

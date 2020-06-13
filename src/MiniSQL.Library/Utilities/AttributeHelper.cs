@@ -14,6 +14,7 @@ namespace MiniSQL.Library.Utilities
             while (idx < declarations.Count)
             {
                 attributes.Add(new AttributeValue(declarations[idx].AttributeName, values[idx]));
+                idx++;
             }
             return attributes;
         }

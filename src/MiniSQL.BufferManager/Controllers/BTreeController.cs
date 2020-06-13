@@ -87,7 +87,7 @@ namespace MiniSQL.BufferManager.Controllers
         }
 
 
-        public BTreeNode Insert(DBRecord key, DBRecord dBRecord, BTreeNode Root)
+        public BTreeNode InsertCell(BTreeNode Root,DBRecord key, DBRecord dBRecord)
         {
             //create a new root
             if (Root == null)
@@ -286,7 +286,13 @@ namespace MiniSQL.BufferManager.Controllers
 
         }
 
-        private BTreeNode FindNode(DBRecord key, BTreeNode root)
+        public BTreeNode Delete(BTreeCell keyCell,BTreeNode Root)
+        {
+            DBRecord key = keyCell.Key;
+            return Delete(key,Root);
+        }
+
+        private BTreeNode FindNode(DBRecord key, BTreeNode root, bool isFuzzySearch = false)
         {
             BTreeNode child;
             MemoryPage Nextpage = null;
@@ -296,7 +302,7 @@ namespace MiniSQL.BufferManager.Controllers
 
             if (root.PageType == PageTypes.LeafTablePage)
             {
-                (cell, offset, indexInOffsetArray) = root.FindBTreeCell(key, false);
+                (cell, offset, indexInOffsetArray) = root.FindBTreeCell(key, isFuzzySearch);
                 if (cell != null)
                     return root;
                 else
@@ -490,11 +496,11 @@ namespace MiniSQL.BufferManager.Controllers
                                 tmpNode.ParentPage = (uint)brotherNode.GetRawPage().PageNumber;
                             }
                             //move the cell in parentNode to brotherNode
-                            InternalTableCell insertCell=new InternalTableCell(cell.Key,(uint)NodetobeDeleted.RightPage);
+                            InternalTableCell insertCell = new InternalTableCell(cell.Key, (uint)NodetobeDeleted.RightPage);
                             brotherNode.InsertBTreeCell(insertCell);
-                            tmpPage=_pager.ReadPage((int)insertCell.ChildPage);
-                            tmpNode=new BTreeNode(tmpPage);
-                            tmpNode.ParentPage=(uint)brotherNode.GetRawPage().PageNumber;
+                            tmpPage = _pager.ReadPage((int)insertCell.ChildPage);
+                            tmpNode = new BTreeNode(tmpPage);
+                            tmpNode.ParentPage = (uint)brotherNode.GetRawPage().PageNumber;
 
                             DeleteNode(NodetobeDeleted);
                             parentNode.DeleteBTreeCell(cell);
@@ -546,11 +552,11 @@ namespace MiniSQL.BufferManager.Controllers
                                 tmpNode.ParentPage = (uint)NodetobeDeleted.GetRawPage().PageNumber;
                             }
                             //move the cell in parentNode to brotherNode
-                            InternalTableCell insertCell=new InternalTableCell(brotherCell.Key,(uint)brotherNode.RightPage);
+                            InternalTableCell insertCell = new InternalTableCell(brotherCell.Key, (uint)brotherNode.RightPage);
                             NodetobeDeleted.InsertBTreeCell(insertCell);
-                            tmpPage=_pager.ReadPage((int)insertCell.ChildPage);
-                            tmpNode=new BTreeNode(tmpPage);
-                            tmpNode.ParentPage=(uint)NodetobeDeleted.GetRawPage().PageNumber;
+                            tmpPage = _pager.ReadPage((int)insertCell.ChildPage);
+                            tmpNode = new BTreeNode(tmpPage);
+                            tmpNode.ParentPage = (uint)NodetobeDeleted.GetRawPage().PageNumber;
 
                             DeleteNode(brotherNode);
                             parentNode.DeleteBTreeCell(parentNode.GetBTreeCell(parentNode.CellOffsetArray[parentNode.NumCells - 1]));
@@ -596,64 +602,230 @@ namespace MiniSQL.BufferManager.Controllers
             return Root;
         }
 
+        private BTreeNode FindMin(BTreeNode root)
+        {
+            BTreeNode child;
+            MemoryPage Nextpage = null;
+            InternalTableCell childCell;
+
+            if (root.PageType == PageTypes.LeafTablePage)
+            {
+                return root;
+            }
+            childCell = (InternalTableCell)root.GetBTreeCell(root.CellOffsetArray[0]);
+            Nextpage = _pager.ReadPage((int)childCell.ChildPage);
+            child = new BTreeNode(Nextpage);
+
+            return FindMin(child);
+        }
+
+        private List<BTreeCell> LessFind(BTreeNode begin, Expression expression, List<AttributeDeclaration> attributeDeclarations, AtomValue UpperBound, bool isEqual)
+        {
+            MemoryPage Nextpage = null;
+            List<BTreeCell> result = new List<BTreeCell>();
+            LeafTableCell leafCell;
+
+            while (true)
+            {
+                foreach (var cell in begin)
+                {
+                    if (((cell.Key.GetValues()[0] > UpperBound).BooleanValue && isEqual) ||
+                        ((cell.Key.GetValues()[0] >= UpperBound).BooleanValue) && !isEqual)
+                    {
+                        return result;
+                    }
+                    leafCell = (LeafTableCell)cell;
+
+                    if (expression.Calculate(attributeDeclarations, leafCell.DBRecord.GetValues()).BooleanValue == true)
+                    {
+                        result.Add(cell);
+                    }
+                }
+                if (begin.RightPage == 0)
+                {
+                    return result;
+                }
+                Nextpage = _pager.ReadPage((int)begin.RightPage);
+                begin = new BTreeNode(Nextpage);
+            }
+        }
+
+        private List<BTreeCell> MoreFind(BTreeNode begin_Node, int begin_Index, Expression expression, List<AttributeDeclaration> attributeDeclarations, bool isEqual)
+        {
+            MemoryPage Nextpage = null;
+            List<BTreeCell> result = new List<BTreeCell>();
+            LeafTableCell leafCell;
+
+            if (isEqual)
+            {
+                leafCell = (LeafTableCell)begin_Node.GetBTreeCell(begin_Node.CellOffsetArray[begin_Index]);
+                if (expression.Calculate(attributeDeclarations, leafCell.DBRecord.GetValues()).BooleanValue == true)
+                {
+                    result.Add(leafCell);
+                }
+
+            }
+            for (int i = begin_Index + 1; i < begin_Node.NumCells; i++)
+            {
+                leafCell = (LeafTableCell)begin_Node.GetBTreeCell(begin_Node.CellOffsetArray[i]);
+                if (expression.Calculate(attributeDeclarations, leafCell.DBRecord.GetValues()).BooleanValue == true)
+                {
+                    result.Add(leafCell);
+                }
+            }
+            while (begin_Node.RightPage != 0)
+            {
+                Nextpage = _pager.ReadPage((int)begin_Node.RightPage);
+                begin_Node = new BTreeNode(Nextpage);
+
+                foreach (var cell in begin_Node)
+                {
+                    leafCell = (LeafTableCell)cell;
+                    if (expression.Calculate(attributeDeclarations, leafCell.DBRecord.GetValues()).BooleanValue == true)
+                    {
+                        result.Add(cell);
+                    }
+                }
+
+            }
+            return result;
+        }
+
+
+
 
         public List<BTreeCell> FindCells(BTreeNode root, Expression expression, string keyName, List<AttributeDeclaration> attributeDeclarations)
         {
-            if(expression.Ands.ContainsKey(keyName))
+            if (expression.Ands.ContainsKey(keyName))
             {
-                List<BTreeCell> result;
-                switch(expression.Ands[keyName].Operator)
+                List<BTreeCell> result = new List<BTreeCell>();
+                List<AtomValue> values = new List<AtomValue>();
+                BTreeNode beginNode;
+
+                BTreeCell cell;
+                UInt16 offset;
+                int begin_Index;
+
+                AtomValue bound = expression.Ands[keyName].RightOperant.ConcreteValue;
+
+                values.Add(bound);
+                DBRecord keyFind = new DBRecord(values);
+                switch (expression.Ands[keyName].Operator)
                 {
                     case Operator.NotEqual:
+                        return LinearSearch(root, expression, attributeDeclarations);
+                        break;
 
-                    break;
                     case Operator.Equal:
-
-                    break;
+                        LeafTableCell tmpCell = (LeafTableCell)FindCell(keyFind, root);
+                        if (tmpCell == null)
+                        {
+                            break;
+                        }
+                        else if (expression.Calculate(attributeDeclarations, tmpCell.DBRecord.GetValues()).BooleanValue == true)
+                        {
+                            result.Add(tmpCell);
+                        }
+                        break;
 
                     case Operator.LessThan:
-
-                    break;
+                        beginNode = FindMin(root);
+                        return LessFind(beginNode, expression, attributeDeclarations, bound, false);
+                        break;
                     case Operator.LessThanOrEqualTo:
-
-                    break;
+                        beginNode = FindMin(root);
+                        return LessFind(beginNode, expression, attributeDeclarations, bound, true);
+                        break;
                     case Operator.MoreThan:
-
-                    break;
+                        beginNode = FindNode(keyFind, root, true);
+                        (cell, offset, begin_Index) = beginNode.FindBTreeCell(keyFind);
+                        //2 possible sitiutions for cell==null:
+                        //1:The keyFind is bigger than all the key
+                        //2:The keyFind is just between the bigest one in this node and the smallest one in next node
+                        if (cell == null)
+                        {
+                            if (beginNode.RightPage == 0)
+                            {
+                                return result;
+                            }
+                            else
+                            {
+                                begin_Index = 0;
+                                MemoryPage Nextpage = _pager.ReadPage((int)beginNode.RightPage);
+                                beginNode = new BTreeNode(Nextpage);
+                            }
+                        }
+                        return MoreFind(beginNode, begin_Index, expression, attributeDeclarations, false);
+                        break;
                     case Operator.MoreThanOrEqualTo:
-
-                    break;
-                    
-
-
-
+                        beginNode = FindNode(keyFind, root, true);
+                        (cell, offset, begin_Index) = beginNode.FindBTreeCell(keyFind);
+                        if (cell == null)
+                        {
+                            if (beginNode.RightPage == 0)
+                            {
+                                return result;
+                            }
+                            else
+                            {
+                                begin_Index = 0;
+                                MemoryPage Nextpage = _pager.ReadPage((int)beginNode.RightPage);
+                                beginNode = new BTreeNode(Nextpage);
+                            }
+                        }
+                        return MoreFind(beginNode, begin_Index, expression, attributeDeclarations, true);
+                        break;
+                    default:
+                        throw new Exception("The Operant is not supported!");
                 }
-
-
+                //This step may not need?
+                return result;
 
             }
             else
             {
-                return LinearSearch(root,expression,attributeDeclarations);
+                return LinearSearch(root, expression, attributeDeclarations);
             }
 
 
         }
 
-        private List<BTreeCell> LinearSearch(BTreeNode root, Expression expression,List<AttributeDeclaration> attributeDeclarations)
+        private List<BTreeCell> LinearSearch(BTreeNode root, Expression expression, List<AttributeDeclaration> attributeDeclarations)
         {
+            BTreeNode beginNode = FindMin(root);
 
+            MemoryPage Nextpage = null;
+            List<BTreeCell> result = new List<BTreeCell>();
+            LeafTableCell leafCell;
+
+            while (true)
+            {
+                foreach (var cell in beginNode)
+                {
+                    leafCell = (LeafTableCell)cell;
+                    if (expression.Calculate(attributeDeclarations, leafCell.DBRecord.GetValues()).BooleanValue == true)
+                    {
+                        result.Add(cell);
+                    }
+                }
+                if (beginNode.RightPage == 0)
+                {
+                    return result;
+                }
+                Nextpage = _pager.ReadPage((int)beginNode.RightPage);
+                beginNode = new BTreeNode(Nextpage);
+            }
         }
-        private List<BTreeCell> CheckOtherCondition(List<BTreeCell> cells,Expression expression,List<AttributeDeclaration> attributeDeclarations)
+
+        public BTreeNode DeleteCells(BTreeNode root, Expression expression, string keyName, List<AttributeDeclaration> attributeDeclarations)
         {
-            
+            List<BTreeCell> nodesTobeDeleted=FindCells(root,expression,keyName,attributeDeclarations);
+            foreach(var cell in nodesTobeDeleted)
+            {
+                root=Delete(cell,root);
+            }
+            return root;
         }
-
-
-        
-
-
-
 
     }
 }

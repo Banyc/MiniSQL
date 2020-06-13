@@ -25,11 +25,11 @@ namespace MiniSQL.RecordManager
             return _bTree.OccupyNewTableNode();
         }
 
-        public int DeleteRecords(DeleteStatement deleteStatement, string primaryKeyName, List<AttributeDeclaration> attributeDeclarations, int rootPage)
-        {
-            BTreeNode node = BTreeNodeHelper.GetBTreeNode(_pager, rootPage);
-            return _bTree.DeleteCells(node, deleteStatement.Condition, primaryKeyName, attributeDeclarations);
-        }
+        // public int DeleteRecords(DeleteStatement deleteStatement, string primaryKeyName, List<AttributeDeclaration> attributeDeclarations, int rootPage)
+        // {
+        //     BTreeNode node = BTreeNodeHelper.GetBTreeNode(_pager, rootPage);
+        //     return _bTree.DeleteCells(node, deleteStatement.Condition, primaryKeyName, attributeDeclarations);
+        // }
 
         public int DeleteRecords(List<AtomValue> primaryKeys, int rootPage)
         {
@@ -44,13 +44,13 @@ namespace MiniSQL.RecordManager
         }
 
         // return new root page number
-        public int InsertRecord(InsertStatement insertStatement, AtomValue key, int rootPage)
-        {
-            BTreeNode node = BTreeNodeHelper.GetBTreeNode(_pager, rootPage);
-            DBRecord wrappedKey = new DBRecord(new List<AtomValue>() { key });
-            DBRecord values = new DBRecord(insertStatement.Values);
-            return _bTree.InsertCell(node, wrappedKey, values);
-        }
+        // public int InsertRecord(InsertStatement insertStatement, AtomValue key, int rootPage)
+        // {
+        //     BTreeNode node = BTreeNodeHelper.GetBTreeNode(_pager, rootPage);
+        //     DBRecord wrappedKey = new DBRecord(new List<AtomValue>() { key });
+        //     DBRecord values = new DBRecord(insertStatement.Values);
+        //     return _bTree.InsertCell(node, wrappedKey, values);
+        // }
 
         public List<List<AtomValue>> SelectRecords(SelectStatement selectStatement, string primaryKeyName, List<AttributeDeclaration> attributeDeclarations, int rootPage)
         {
