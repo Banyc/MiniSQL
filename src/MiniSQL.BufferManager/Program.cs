@@ -15,7 +15,9 @@ namespace MiniSQL.BufferManager
         {
             Console.WriteLine("[BufferManager] Test Begin");
 
-            TestMaxHeightBTree();
+            //BugTest1();
+
+            Bugtest2();
 
             //TestExpressionFind();
 
@@ -59,7 +61,7 @@ namespace MiniSQL.BufferManager
             BTreeController controller = new BTreeController(pager, freeList);
         }
 
-        static void TestMaxHeightBTree()
+        static void BugTest1()
         {
             string dbPath = "./testdbfile.minidb";
             File.Delete(dbPath);
@@ -68,6 +70,127 @@ namespace MiniSQL.BufferManager
             BTreeController controller = new BTreeController(pager, freeList);
             BTreeNode root = null;
             LeafTableCell result = null;
+
+            DBRecord record = GetTestBRecord(76767785);
+            DBRecord keyRecord = GetTestBRecord(76767785);
+            root = controller.InsertCell(root,keyRecord, record);
+
+            record = GetTestBRecord(1922063022);
+            keyRecord = GetTestBRecord(1922063022);
+            root = controller.InsertCell(root,keyRecord, record);
+
+            record = GetTestBRecord(514874720);
+            keyRecord = GetTestBRecord(514874720);
+            root = controller.InsertCell(root,keyRecord, record);
+
+            record = GetTestBRecord(724803552);
+            keyRecord = GetTestBRecord(724803552);
+            root = controller.InsertCell(root,keyRecord, record);
+
+            BTreeNodeHelper.VisualizeIntegerTree(pager, root);
+
+            record = GetTestBRecord(1219882375);
+            keyRecord = GetTestBRecord(1219882375);
+            root = controller.InsertCell(root,keyRecord, record);
+
+            keyRecord = GetTestBRecord(724803552);
+            result=(LeafTableCell)controller.FindCell(keyRecord,root);
+            Debug.Assert(result!=null);
+            Debug.Assert(result.Key.GetValues()[0].IntegerValue==724803552);
+
+
+            BTreeNodeHelper.VisualizeIntegerTree(pager, root);
+
+            record = GetTestBRecord(681446986);
+            keyRecord = GetTestBRecord(681446986);
+            root = controller.InsertCell(root,keyRecord, record);
+
+            BTreeNodeHelper.VisualizeIntegerTree(pager, root);
+
+            record = GetTestBRecord(1427789753);
+            keyRecord = GetTestBRecord(1427789753);
+            root = controller.InsertCell(root,keyRecord, record);
+
+            BTreeNodeHelper.VisualizeIntegerTree(pager, root);
+
+            record = GetTestBRecord(1066176166);
+            keyRecord = GetTestBRecord(1066176166);
+            root = controller.InsertCell(root,keyRecord, record);
+
+            BTreeNodeHelper.VisualizeIntegerTree(pager, root);
+           
+        }
+
+        static void Bugtest2()
+        {
+            string dbPath = "./testdbfile.minidb";
+            File.Delete(dbPath);
+            Pager pager = new Pager(dbPath);
+            FreeList freeList = new FreeList(pager);
+            BTreeController controller = new BTreeController(pager, freeList);
+            BTreeNode root = null;
+            LeafTableCell result = null;
+
+            DBRecord record = GetTestBRecord(660132168);
+            DBRecord keyRecord = GetTestBRecord(660132168);
+            root = controller.InsertCell(root,keyRecord, record);
+
+            record = GetTestBRecord(2007593075);
+            keyRecord = GetTestBRecord(2007593075);
+            root = controller.InsertCell(root,keyRecord, record);
+
+            record = GetTestBRecord(356456016 );
+            keyRecord = GetTestBRecord(356456016);
+            root = controller.InsertCell(root,keyRecord, record);
+
+            record = GetTestBRecord(32731844);
+            keyRecord = GetTestBRecord(32731844);
+            root = controller.InsertCell(root,keyRecord, record);
+
+            BTreeNodeHelper.VisualizeIntegerTree(pager, root);
+
+            record = GetTestBRecord(159431057);
+            keyRecord = GetTestBRecord(159431057);
+            root = controller.InsertCell(root,keyRecord, record);
+
+            keyRecord = GetTestBRecord(660132168);
+            result=(LeafTableCell)controller.FindCell(keyRecord,root);
+            Debug.Assert(result!=null);
+            Debug.Assert(result.Key.GetValues()[0].IntegerValue==660132168);
+
+
+            BTreeNodeHelper.VisualizeIntegerTree(pager, root);
+
+            record = GetTestBRecord(991596943);
+            keyRecord = GetTestBRecord(991596943);
+            root = controller.InsertCell(root,keyRecord, record);
+
+            BTreeNodeHelper.VisualizeIntegerTree(pager, root);
+
+            record = GetTestBRecord(794643883);
+            keyRecord = GetTestBRecord(794643883);
+            root = controller.InsertCell(root,keyRecord, record);
+
+            BTreeNodeHelper.VisualizeIntegerTree(pager, root);
+
+            record = GetTestBRecord(1158712065);
+            keyRecord = GetTestBRecord(1158712065);
+            root = controller.InsertCell(root,keyRecord, record);
+
+            BTreeNodeHelper.VisualizeIntegerTree(pager, root);
+           
+        }
+
+
+        static void TestMaxHeightBTree()
+        {
+            string dbPath = "./testdbfile.minidb";
+            File.Delete(dbPath);
+            Pager pager = new Pager(dbPath);
+            FreeList freeList = new FreeList(pager);
+            BTreeController controller = new BTreeController(pager, freeList);
+            BTreeNode root = null;
+            //LeafTableCell result = null;
 
             System.Diagnostics.Stopwatch stopwatch = new System.Diagnostics.Stopwatch();
  
@@ -80,10 +203,6 @@ namespace MiniSQL.BufferManager
                 DBRecord keyRecord = GetTestBRecord(i);
                 root = controller.InsertCell(root,keyRecord, record);
 
-                result = (LeafTableCell)controller.FindCell(keyRecord, root);
-                Debug.Assert(result != null);
-                Debug.Assert(result.Key.GetValues()[0].IntegerValue == i);
-
             }
             stopwatch.Stop();
 
@@ -94,6 +213,7 @@ namespace MiniSQL.BufferManager
             Console.Write(stopwatch.ElapsedTicks);
 
         }
+
 
         static void TestExpressionDelete()
         {
