@@ -228,7 +228,8 @@ namespace MiniSQL.BufferManager.Models
             foreach (int headerValue in this.HeaderList)
             {
                 if (headerValue == (int)HeaderValue.NULL
-                    || headerValue == (int)HeaderValue.INTEGER)
+                    || headerValue == (int)HeaderValue.INTEGER
+                    || headerValue == (int)HeaderValue.FloatingPoint)
                     pack.AddRange(VarintBitConverter.ToVarint((uint)headerValue, VarintType.Varint8));
                 else if ((headerValue - (int)HeaderValue.TEXT) % 2 == 0)
                     pack.AddRange(VarintBitConverter.ToVarint((uint)headerValue, VarintType.Varint32));
