@@ -15,51 +15,40 @@ namespace MiniSQL.BufferManager
         {
             Console.WriteLine("[BufferManager] Test Begin");
 
-            TestMaxHeightBTree();
+            TestMaxHeightBTree(20, true);
 
-            //TestExpressionFind();
+            TestExpressionFind();
 
-            //TestExpressionDelete();
+            TestExpressionDelete();
 
-            //TestInsertSplit(200);
+            TestBTreeInsert();
 
-            //TestBTreeInsert();
+            TestBTreeDelete();
 
-            //TestBTreeDelete();
+            HardTestForBTree();
 
-            // HardTestForBTree();
+            TestDBRecord();
 
-            // TestDBRecord();
+            TestLeafTableCell();
 
-            // TestLeafTableCell();
+            TestInternalTableCell();
 
-            // TestInternalTableCell();
+            TestInternalIndexCell();
 
-            // TestInternalIndexCell();
+            TestLeafIndexCell();
 
-            // TestLeafIndexCell();
+            TestPager();
 
-            // TestPager();
+            TestPagerSwapping();
 
-            // TestPagerSwapping();
+            TestInsertIntoAndDeletionInsideBTreeNode();
 
-            //TestInsertIntoAndDeletionInsideBTreeNode();
-
-            // TestFreeList();
+            TestFreeList();
 
             Console.WriteLine("[BufferManager] Test End");
         }
 
-        static void TestInsertSplit(int maxCell)
-        {
-            string dbPath = "./testdbfile.minidb";
-            File.Delete(dbPath);
-            Pager pager = new Pager(dbPath);
-            FreeList freeList = new FreeList(pager);
-            BTreeController controller = new BTreeController(pager, freeList);
-        }
-
-        static void TestMaxHeightBTree()
+        static void TestMaxHeightBTree(int recordCount, bool isRandom)
         {
             string dbPath = "./testdbfile.minidb";
             File.Delete(dbPath);
@@ -67,32 +56,36 @@ namespace MiniSQL.BufferManager
             FreeList freeList = new FreeList(pager);
             BTreeController controller = new BTreeController(pager, freeList);
             BTreeNode root = null;
-            LeafTableCell result = null;
 
-            System.Diagnostics.Stopwatch stopwatch = new System.Diagnostics.Stopwatch();
- 
+            Random rnd = new Random();
+
+            Stopwatch stopwatch = new Stopwatch();
             stopwatch.Start();
 
             //Construct BTree
-            for (int i = 1; i < 10000; i++)
+            for (int i = 1; i < recordCount; i++)
             {
                 DBRecord record = GetTestBRecord(i + 100);
-                DBRecord keyRecord = GetTestBRecord(i);
-                root = controller.InsertCell(root,keyRecord, record);
+                int keyInt = i;
+                if (isRandom)
+                {
+                    keyInt = rnd.Next();
+                }
+                DBRecord keyRecord = GetTestBRecord(keyInt);
+                root = controller.InsertCell(root, keyRecord, record);
 
+                LeafTableCell result = null;
                 result = (LeafTableCell)controller.FindCell(keyRecord, root);
                 Debug.Assert(result != null);
-                Debug.Assert(result.Key.GetValues()[0].IntegerValue == i);
-
+                Debug.Assert(result.Key.GetValues()[0].IntegerValue == keyInt);
             }
             stopwatch.Stop();
 
             BTreeNodeHelper.VisualizeIntegerTree(pager, root);
             Console.WriteLine();
-            Console.Write("Time cost:");
+            Console.WriteLine($"Time cost: {stopwatch.Elapsed.TotalSeconds}s");
 
-            Console.Write(stopwatch.ElapsedTicks);
-
+            pager.Close();
         }
 
         static void TestExpressionDelete()
@@ -104,43 +97,44 @@ namespace MiniSQL.BufferManager
             BTreeController controller = new BTreeController(pager, freeList);
             BTreeNode root = null;
 
-            Expression expression=GetAndsExpression();
+            Expression expression = GetAndsExpression();
 
-            for(int i=1;i<30;i++)
+            for (int i = 1; i < 30; i++)
             {
-                DBRecord record=GetTestRecord_expression(i,"str",(float)3.3);
-                DBRecord key=GetTestKey_expression(i);
-                if(i==17||i==19)
+                DBRecord record = GetTestRecord_expression(i, "str", (float)3.3);
+                DBRecord key = GetTestKey_expression(i);
+                if (i == 17 || i == 19)
                 {
-                    record=GetTestRecord_expression(i,"str",(float)10.5);
+                    record = GetTestRecord_expression(i, "str", (float)10.5);
                 }
-                else if(i==20||i==23)
+                else if (i == 20 || i == 23)
                 {
-                    record=GetTestRecord_expression(i,"www",(float)1.3);
+                    record = GetTestRecord_expression(i, "www", (float)1.3);
                 }
-                root=controller.InsertCell(root,key,record);
+                root = controller.InsertCell(root, key, record);
             }
-            List<AttributeDeclaration> attributeNames=new List<AttributeDeclaration>();
+            List<AttributeDeclaration> attributeNames = new List<AttributeDeclaration>();
 
-            AttributeDeclaration attribute_1=new AttributeDeclaration();
-            attribute_1.AttributeName="a";
-            attribute_1.IsUnique=true;
+            AttributeDeclaration attribute_1 = new AttributeDeclaration();
+            attribute_1.AttributeName = "a";
+            attribute_1.IsUnique = true;
             attributeNames.Add(attribute_1);
 
-            AttributeDeclaration attribute_2=new AttributeDeclaration();
-            attribute_2.AttributeName="b";
-            attribute_2.IsUnique=false;
+            AttributeDeclaration attribute_2 = new AttributeDeclaration();
+            attribute_2.AttributeName = "b";
+            attribute_2.IsUnique = false;
             attributeNames.Add(attribute_2);
 
-            AttributeDeclaration attribute_3=new AttributeDeclaration();
-            attribute_3.AttributeName="c";
-            attribute_3.IsUnique=false;
+            AttributeDeclaration attribute_3 = new AttributeDeclaration();
+            attribute_3.AttributeName = "c";
+            attribute_3.IsUnique = false;
             attributeNames.Add(attribute_3);
 
-            root=controller.DeleteCells(root,expression,"a",attributeNames);
+            root = controller.DeleteCells(root, expression, "a", attributeNames);
 
             BTreeNodeHelper.VisualizeIntegerTree(pager, root);
 
+            pager.Close();
         }
 
         static void TestExpressionFind()
@@ -151,46 +145,46 @@ namespace MiniSQL.BufferManager
             FreeList freeList = new FreeList(pager);
             BTreeController controller = new BTreeController(pager, freeList);
             BTreeNode root = null;
-            List<BTreeCell> result =null;
+            List<BTreeCell> result = null;
 
-            Expression expression=GetAndsExpression();
+            Expression expression = GetAndsExpression();
 
-            for(int i=1;i<30;i++)
+            for (int i = 1; i < 30; i++)
             {
-                DBRecord record=GetTestRecord_expression(i,"str",(float)3.3);
-                DBRecord key=GetTestKey_expression(i);
-                if(i==17||i==19)
+                DBRecord record = GetTestRecord_expression(i, "str", (float)3.3);
+                DBRecord key = GetTestKey_expression(i);
+                if (i == 17 || i == 19)
                 {
-                    record=GetTestRecord_expression(i,"str",(float)10.5);
+                    record = GetTestRecord_expression(i, "str", (float)10.5);
                 }
-                else if(i==20||i==23)
+                else if (i == 20 || i == 23)
                 {
-                    record=GetTestRecord_expression(i,"www",(float)1.3);
+                    record = GetTestRecord_expression(i, "www", (float)1.3);
                 }
-                root=controller.InsertCell(root,key,record);
+                root = controller.InsertCell(root, key, record);
             }
-            List<AttributeDeclaration> attributeNames=new List<AttributeDeclaration>();
+            List<AttributeDeclaration> attributeNames = new List<AttributeDeclaration>();
 
-            AttributeDeclaration attribute_1=new AttributeDeclaration();
-            attribute_1.AttributeName="a";
-            attribute_1.IsUnique=true;
+            AttributeDeclaration attribute_1 = new AttributeDeclaration();
+            attribute_1.AttributeName = "a";
+            attribute_1.IsUnique = true;
             attributeNames.Add(attribute_1);
 
-            AttributeDeclaration attribute_2=new AttributeDeclaration();
-            attribute_2.AttributeName="b";
-            attribute_2.IsUnique=false;
+            AttributeDeclaration attribute_2 = new AttributeDeclaration();
+            attribute_2.AttributeName = "b";
+            attribute_2.IsUnique = false;
             attributeNames.Add(attribute_2);
 
-            AttributeDeclaration attribute_3=new AttributeDeclaration();
-            attribute_3.AttributeName="c";
-            attribute_3.IsUnique=false;
+            AttributeDeclaration attribute_3 = new AttributeDeclaration();
+            attribute_3.AttributeName = "c";
+            attribute_3.IsUnique = false;
             attributeNames.Add(attribute_3);
 
-            result=controller.FindCells(root,expression,"a",attributeNames);
+            result = controller.FindCells(root, expression, "a", attributeNames);
 
-            foreach(var cell in result)
+            foreach (var cell in result)
             {
-                LeafTableCell leafTableCell=(LeafTableCell)cell;
+                LeafTableCell leafTableCell = (LeafTableCell)cell;
                 Console.Write(leafTableCell.DBRecord.GetValues()[0].IntegerValue);
                 Console.Write("|");
                 Console.Write(leafTableCell.DBRecord.GetValues()[1].StringValue);
@@ -199,14 +193,15 @@ namespace MiniSQL.BufferManager
                 Console.WriteLine();
             }
 
+            pager.Close();
         }
 
-        private static DBRecord GetTestRecord_expression(int value_1,string value_2,float value_3)
+        private static DBRecord GetTestRecord_expression(int value_1, string value_2, float value_3)
         {
             List<AtomValue> values = new List<AtomValue>();
             AtomValue value1 = new AtomValue() { Type = AttributeTypes.Int, IntegerValue = value_1 };
             AtomValue value2 = new AtomValue() { Type = AttributeTypes.Char, CharLimit = 5, StringValue = value_2 };
-            AtomValue value3 = new AtomValue() { Type = AttributeTypes.Float, FloatValue = value_3};
+            AtomValue value3 = new AtomValue() { Type = AttributeTypes.Float, FloatValue = value_3 };
             values.Add(value1);
             values.Add(value2);
             values.Add(value3);
@@ -326,19 +321,19 @@ namespace MiniSQL.BufferManager
             BTreeController controller = new BTreeController(pager, freeList);
             BTreeNode root = null;
             //0
-            root = controller.InsertCell(root,keyRecord_0, record_0);
+            root = controller.InsertCell(root, keyRecord_0, record_0);
             //1
-            root = controller.InsertCell(root,keyRecord_1, record_1);
+            root = controller.InsertCell(root, keyRecord_1, record_1);
             //2
-            root = controller.InsertCell(root,keyRecord_2, record_2);
+            root = controller.InsertCell(root, keyRecord_2, record_2);
             //3
-            root = controller.InsertCell(root,keyRecord_3, record_3);
+            root = controller.InsertCell(root, keyRecord_3, record_3);
             //4
-            root = controller.InsertCell(root,keyRecord_4, record_4);
+            root = controller.InsertCell(root, keyRecord_4, record_4);
             //5
-            root = controller.InsertCell(root,keyRecord_5, record_5);
+            root = controller.InsertCell(root, keyRecord_5, record_5);
             //6
-            root = controller.InsertCell(root,keyRecord_6, record_6);
+            root = controller.InsertCell(root, keyRecord_6, record_6);
 
             //Delete test;
 
@@ -381,22 +376,23 @@ namespace MiniSQL.BufferManager
 
 
             //insert after delete
-            root = controller.InsertCell(root,keyRecord_0, record_0);
+            root = controller.InsertCell(root, keyRecord_0, record_0);
             result = (LeafTableCell)controller.FindCell(keyRecord_0, root);
             Debug.Assert(result != null);
             Debug.Assert(result.Key.GetValues()[0].IntegerValue == 1);
 
-            root = controller.InsertCell(root,keyRecord_7, record_7);
+            root = controller.InsertCell(root, keyRecord_7, record_7);
             result = (LeafTableCell)controller.FindCell(keyRecord_7, root);
             Debug.Assert(result != null);
             Debug.Assert(result.Key.GetValues()[0].IntegerValue == 8);
 
 
-            root = controller.InsertCell(root,keyRecord_6, record_6);
+            root = controller.InsertCell(root, keyRecord_6, record_6);
             result = (LeafTableCell)controller.FindCell(keyRecord_6, root);
             Debug.Assert(result != null);
             Debug.Assert(result.Key.GetValues()[0].IntegerValue == 7);
 
+            pager.Close();
         }
 
         static void HardTestForBTree()
@@ -414,7 +410,7 @@ namespace MiniSQL.BufferManager
             {
                 DBRecord record = GetTestBRecord(i + 100);
                 DBRecord keyRecord = GetTestBRecord(i);
-                root = controller.InsertCell(root,keyRecord, record);
+                root = controller.InsertCell(root, keyRecord, record);
 
                 result = (LeafTableCell)controller.FindCell(keyRecord, root);
                 Debug.Assert(result != null);
@@ -472,7 +468,7 @@ namespace MiniSQL.BufferManager
             {
                 DBRecord record = GetTestBRecord(i + 100);
                 DBRecord keyRecord = GetTestBRecord(i);
-                root = controller.InsertCell(root,keyRecord, record);
+                root = controller.InsertCell(root, keyRecord, record);
 
                 result = (LeafTableCell)controller.FindCell(keyRecord, root);
                 Debug.Assert(result != null);
@@ -491,9 +487,8 @@ namespace MiniSQL.BufferManager
 
             }
 
+            pager.Close();
         }
-
-
 
         static void TestBTreeInsert()
         {
@@ -525,38 +520,38 @@ namespace MiniSQL.BufferManager
             BTreeController controller = new BTreeController(pager, freeList);
 
             BTreeNode root = null;
-            root = controller.InsertCell(root,keyRecord_0, record_0);
+            root = controller.InsertCell(root, keyRecord_0, record_0);
             result = (LeafTableCell)controller.FindCell(keyRecord_0, root);
             Debug.Assert(result != null);
             Debug.Assert(result.Key.GetValues()[0].IntegerValue == 1);
             //1
-            root = controller.InsertCell(root,keyRecord_1, record_1);
+            root = controller.InsertCell(root, keyRecord_1, record_1);
             result = (LeafTableCell)controller.FindCell(keyRecord_1, root);
             Debug.Assert(result != null);
             Debug.Assert(result.Key.GetValues()[0].IntegerValue == 2);
             //2
-            root = controller.InsertCell(root,keyRecord_2, record_2);
+            root = controller.InsertCell(root, keyRecord_2, record_2);
             result = (LeafTableCell)controller.FindCell(keyRecord_2, root);
             Debug.Assert(result != null);
             Debug.Assert(result.Key.GetValues()[0].IntegerValue == 3);
             //3
-            root = controller.InsertCell(root,keyRecord_3, record_3);
+            root = controller.InsertCell(root, keyRecord_3, record_3);
             result = (LeafTableCell)controller.FindCell(keyRecord_3, root);
             Debug.Assert(result != null);
             Debug.Assert(result.Key.GetValues()[0].IntegerValue == 4);
             //4
-            root = controller.InsertCell(root,keyRecord_4, record_4);
+            root = controller.InsertCell(root, keyRecord_4, record_4);
             result = (LeafTableCell)controller.FindCell(keyRecord_4, root);
             Debug.Assert(result != null);
             Debug.Assert(result.Key.GetValues()[0].IntegerValue == 5);
             //5
-            root = controller.InsertCell(root,keyRecord_5, record_5);
+            root = controller.InsertCell(root, keyRecord_5, record_5);
             result = (LeafTableCell)controller.FindCell(keyRecord_5, root);
             Debug.Assert(result != null);
             Debug.Assert(result.Key.GetValues()[0].IntegerValue == 6);
 
             //6
-            root = controller.InsertCell(root,keyRecord_6, record_6);
+            root = controller.InsertCell(root, keyRecord_6, record_6);
             result = (LeafTableCell)controller.FindCell(keyRecord_6, root);
             Debug.Assert(result != null);
             Debug.Assert(result.Key.GetValues()[0].IntegerValue == 7);
