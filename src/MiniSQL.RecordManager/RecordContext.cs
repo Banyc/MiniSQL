@@ -51,6 +51,9 @@ namespace MiniSQL.RecordManager
             DBRecord wrappedKey = new DBRecord(new List<AtomValue>() { key });
             DBRecord values = new DBRecord(insertStatement.Values);
             BTreeNode newRoot = _bTree.InsertCell(node, wrappedKey, values);
+            // debug
+            BTreeNodeHelper.VisualizeIntegerTree(_pager, newRoot);
+            
             return newRoot.GetRawPage().PageNumber;
         }
 
