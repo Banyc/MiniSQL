@@ -22,9 +22,9 @@ namespace MiniSQL.Api
         {
             // init
             string dbPath = "./testdbfile.minidb";
-            Pager pager = new Pager(dbPath, 1024 * 16, 400);
+            Pager pager = new Pager(dbPath, 1024 * 8, 400);
             FreeList freeList = new FreeList(pager);
-            IBufferManager bTreeController = new BTreeController(pager, freeList, 80);
+            IBufferManager bTreeController = new BTreeController(pager, freeList, 40);
             IInterpreter interpreter = new Parsing();
             ICatalogManager catalogManager = new Catalog();
             // IIndexManager indexManager = new IndexManager();

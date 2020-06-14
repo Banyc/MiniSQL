@@ -127,6 +127,8 @@ namespace MiniSQL.BufferManager.Models
                         break;
                     case AttributeTypes.Char:
                         int stringLength = value.CharLimit;
+                        if (BTreeConfiguration.IsIgnoreCharLimit)
+                            stringLength = Encoding.UTF8.GetBytes(value.StringValue).Length;
                         this.HeaderList.Add((uint)stringLength * 2 + (int)HeaderValue.TEXT);
                         headerSize += 4;
                         break;
@@ -160,7 +162,8 @@ namespace MiniSQL.BufferManager.Models
                         break;
                     case AttributeTypes.Char:
                         binaryValue = Encoding.UTF8.GetBytes(value.StringValue);
-                        Array.Resize(ref binaryValue, value.CharLimit);
+                        if (!BTreeConfiguration.IsIgnoreCharLimit)
+                            Array.Resize(ref binaryValue, value.CharLimit);
                         field.AddRange(binaryValue);
                         fieldOffset += binaryValue.Length;
                         break;
