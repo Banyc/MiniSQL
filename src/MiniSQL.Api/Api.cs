@@ -36,7 +36,15 @@ namespace MiniSQL.Api
         public List<SelectResult> Query(string sql)
         {
             List<SelectResult> selectResults = new List<SelectResult>();
-            Query query = Parse(sql);
+            Query query;
+            try
+            {
+                query = Parse(sql);
+            }
+            catch (Exception ex)
+            {
+                throw new StatementPreCheckException(ex.Message, ex.InnerException);
+            }
             foreach (IStatement statement in query.StatementList)
             {
                 SelectResult selectResult = HandleStatement(statement);
