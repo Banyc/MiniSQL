@@ -41,7 +41,13 @@ namespace MiniSQL.Api
             {
                 // read input
                 Console.Write("> ");
+                // change color to yellow
+                ConsoleColor defaultColor;
+                defaultColor = Console.ForegroundColor;
+                Console.ForegroundColor = ConsoleColor.Yellow;
                 string line = Console.ReadLine();
+                // restore the previous color
+                Console.ForegroundColor = defaultColor;
                 input.Append(line);
                 // exit when "exit"
                 if (line == "exit")
@@ -66,7 +72,7 @@ namespace MiniSQL.Api
                     Console.WriteLine();
                 }
                 // print time consumed
-                ConsoleColor defaultColor = Console.ForegroundColor;
+                defaultColor = Console.ForegroundColor;
                 Console.ForegroundColor = ConsoleColor.Magenta;
                 Console.WriteLine($"Time cost: {stopwatch.Elapsed.TotalSeconds}s");
                 Console.ForegroundColor = defaultColor;
@@ -89,7 +95,8 @@ namespace MiniSQL.Api
             foreach (AttributeDeclaration name in result.ColumnDeclarations)
             {
                 string format = "{0, " + (-sizes[columnIndex]).ToString() + "}";
-                Console.Write($" {string.Format(format, name.AttributeName)} |");
+                Console.Write($" {string.Format(format, name.AttributeName)} ");
+                Print("|", ConsoleColor.DarkGray);
                 columnIndex++;
             }
             Console.WriteLine();
@@ -117,11 +124,13 @@ namespace MiniSQL.Api
                             stringToPrint = $"NULL";
                             break;
                     }
-                    Console.Write($" {string.Format(format, stringToPrint)} |");
+                    Console.Write($" {string.Format(format, stringToPrint)} ");
+                    Print("|", ConsoleColor.DarkGray);
                     columnIndex++;
                 }
                 Console.WriteLine();
             }
+            // restore the previous color
             Console.ForegroundColor = defaultColor;
         }
 
@@ -159,6 +168,17 @@ namespace MiniSQL.Api
                 }
             }
             return sizes;
+        }
+
+        private static void Print(string toPrint, ConsoleColor color)
+        {
+            // change color
+            ConsoleColor defaultColor = Console.ForegroundColor;
+            Console.ForegroundColor = color;
+            // print
+            Console.Write(toPrint);
+            // restore the previous color
+            Console.ForegroundColor = defaultColor;
         }
     }
 }

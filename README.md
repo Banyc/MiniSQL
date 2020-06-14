@@ -6,11 +6,11 @@ A functioning database supporting a subset of SQL.
 
 ```sql
 create table student (
-		sno char(8),
-		sname char(16) unique,
-		sage int,
-		sgender char (1),
-		primary key ( sno )
+	sno char(8),
+	sname char(16) unique,
+	sage int,
+	sgender char (1),
+	primary key ( sno )
 );
 
 drop table student;
@@ -28,9 +28,9 @@ insert into student values (‘12345678’,’wy’,22,’M’);
 delete from student;
 delete from student where sno = ‘88888888’;
 
--- TODO:
-quit;
-execfile 文件名 ;
+execfile "PATH_TO_SQL_FILE" ;
+
+exit
 ```
 
 ## Spec
