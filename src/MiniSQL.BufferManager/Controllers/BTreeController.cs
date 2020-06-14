@@ -81,8 +81,7 @@ namespace MiniSQL.BufferManager.Controllers
             }
 
             // initialize node
-            BTreeNode node = new BTreeNode(newPage);
-            node.InitializeEmptyFormat(nodeType);
+            BTreeNode node = new BTreeNode(newPage, nodeType);
 
             return node;
         }

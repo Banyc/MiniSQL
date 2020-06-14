@@ -96,9 +96,15 @@ namespace MiniSQL.BufferManager.Models
         }
 
         // constructor
-        public BTreeNode(MemoryPage page)
+        public BTreeNode(MemoryPage assembledPage)
         {
-            this._page = page;
+            this._page = assembledPage;
+        }
+
+        public BTreeNode(MemoryPage emptyPage, PageTypes pageType)
+        {
+            this._page = emptyPage;
+            InitializeEmptyFormat(pageType);
         }
 
         // use it when freeing this node
@@ -338,6 +344,18 @@ namespace MiniSQL.BufferManager.Models
 
             return (peer, offset, i);
         }
+
+        // TODO
+        // modify field `ChildPage` on internal index cells or internal table cells
+        public void ChangeChildPage(int indexInOffsetArray, UInt32 newChildPage)
+        {
+            if (this.PageType == PageTypes.LeafIndexPage
+                || this.PageType == PageTypes.LeafTablePage)
+            {
+                throw new Exception("Leaf Cells do not have field `ChildPage`");
+            }
+
+        } 
 
         // make this object to be iterable
         public IEnumerator<BTreeCell> GetEnumerator()

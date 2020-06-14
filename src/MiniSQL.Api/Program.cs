@@ -41,28 +41,38 @@ namespace MiniSQL.Api
 
             while (!isExit)
             {
+                // read input
                 Console.Write("> ");
                 string line = Console.ReadLine();
                 input.Append(line);
+                // exit when "exit"
                 if (line == "exit")
                 {
                     isExit = true;
                     continue;
                 }
+                // perform SQL for each input when the last line ends with ';'
                 if (!line.TrimEnd().EndsWith(";"))
                 {
                     continue;
                 }
+                // execute SQL
                 stopwatch.Reset();
                 stopwatch.Start();
                 List<SelectResult> selectResults = api.Query(input.ToString());
                 stopwatch.Stop();
-                Console.WriteLine($"Time cost: {stopwatch.Elapsed.TotalSeconds}s");
+                // print results for select statement
                 foreach (var selectResult in selectResults)
                 {
                     PrintRows(selectResult);
                     Console.WriteLine();
                 }
+                // print time consumed
+                ConsoleColor defaultColor = Console.ForegroundColor;
+                Console.ForegroundColor = ConsoleColor.Magenta;
+                Console.WriteLine($"Time cost: {stopwatch.Elapsed.TotalSeconds}s");
+                Console.ForegroundColor = defaultColor;
+                // clear input to the interpreter
                 input.Clear();
             }
 
@@ -71,12 +81,15 @@ namespace MiniSQL.Api
 
         private static void PrintRows(SelectResult result)
         {
+            ConsoleColor defaultColor = Console.ForegroundColor;
+            Console.ForegroundColor = ConsoleColor.Magenta;
             // print names
             foreach (AttributeDeclaration name in result.ColumnDeclarations)
             {
-                Console.Write($"{name.AttributeName} | ");
+                Console.Write($"{name.AttributeName}\t|\t");
             }
             Console.WriteLine();
+            Console.ForegroundColor = ConsoleColor.Cyan;
             // print rows
             foreach (List<AtomValue> row in result.Rows)
             {
@@ -85,21 +98,22 @@ namespace MiniSQL.Api
                     switch (value.Type)
                     {
                         case AttributeTypes.Int:
-                            Console.Write($"{value.IntegerValue} | ");
+                            Console.Write($"{value.IntegerValue}\t|\t");
                             break;
                         case AttributeTypes.Char:
-                            Console.Write($"\"{value.StringValue}\" | ");
+                            Console.Write($"\"{value.StringValue}\"\t|\t");
                             break;
                         case AttributeTypes.Float:
-                            Console.Write($"{value.FloatValue} | ");
+                            Console.Write($"{value.FloatValue.ToString("0.##")}\t|\t");
                             break;
                         case AttributeTypes.Null:
-                            Console.Write($"NULL | ");
+                            Console.Write($"NULL\t|\t");
                             break;
                     }
                 }
                 Console.WriteLine();
             }
+            Console.ForegroundColor = defaultColor;
         }
     }
 }

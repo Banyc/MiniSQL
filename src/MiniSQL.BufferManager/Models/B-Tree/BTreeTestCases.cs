@@ -85,8 +85,7 @@ namespace MiniSQL.BufferManager.Models
             Pager pager = new Pager(dbPath);
             MemoryPage page = pager.GetNewPage();
 
-            BTreeNode node = new BTreeNode(page);
-            node.InitializeEmptyFormat(PageTypes.LeafTablePage);
+            BTreeNode node = new BTreeNode(page, PageTypes.LeafTablePage);
 
             // init record
             DBRecord keyRecord = null;

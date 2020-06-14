@@ -865,8 +865,7 @@ namespace MiniSQL.BufferManager
 
             MemoryPage page = pager.ReadPage(1);
 
-            BTreeNode node = new BTreeNode(page);
-            node.InitializeEmptyFormat(PageTypes.InternalIndexPage);
+            BTreeNode node = new BTreeNode(page, PageTypes.InternalIndexPage);
 
 
             // `keys` := (1, 6, 2, 5, 3, 4)
