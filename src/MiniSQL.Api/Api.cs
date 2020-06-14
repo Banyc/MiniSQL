@@ -21,14 +21,11 @@ namespace MiniSQL.Api
 
         private readonly IInterpreter _interpreter;
         private readonly ICatalogManager _catalogManager;
-        // private readonly IIndexManager _indexManager;
         private readonly IRecordManager _recordManager;
 
-        // public Api(IInterpreter interpreter, ICatalogManager catalogManager, IIndexManager indexManager, IRecordManager recordManager)
         public Api(IInterpreter interpreter, ICatalogManager catalogManager, IRecordManager recordManager)
         {
             _catalogManager = catalogManager;
-            // _indexManager = indexManager;
             _interpreter = interpreter;
             _recordManager = recordManager;
         }
@@ -81,8 +78,7 @@ namespace MiniSQL.Api
             }
             return selectResult;
         }
-        // TODO: ignore non-unique create index request
-        // TODO: review code
+        
         // create statement
         private void HandleStatement(CreateStatement statement)
         {
@@ -91,12 +87,13 @@ namespace MiniSQL.Api
             switch (statement.CreateType)
             {
                 case CreateType.Table:
-                    int newTableRoot = _recordManager.CreateTable(statement);
+                    int newTableRoot = _recordManager.CreateTable();
                     _catalogManager.TryCreateStatement(statement, newTableRoot);
                     break;
                 case CreateType.Index:
-                    // int newIndexRoot = _indexManager.CreateIndex(statement);
-                    // _catalogManager.TryCreateStatement(statement.IndexName, newIndexRoot);
+                    SchemaRecord tableSchema = _catalogManager.GetTableSchemaRecord(statement.TableName);
+                    int newIndexRoot = _recordManager.CreateIndex(tableSchema.RootPage, statement.AttributeName, tableSchema.SQL.AttributeDeclarations);
+                    _catalogManager.TryCreateStatement(statement, newIndexRoot);
                     break;
             }
         }
@@ -105,10 +102,6 @@ namespace MiniSQL.Api
         // drop statement
         private void HandleStatement(DropStatement statement)
         {
-            // WORK AROUND: not considering drop index
-            if (statement.TargetType == DropTarget.Index)
-                return;
-
             if (!_catalogManager.IsValid(statement))
                 throw new StatementPreCheckException("invalid drop statement");
             SchemaRecord schema;
@@ -116,22 +109,26 @@ namespace MiniSQL.Api
             {
                 case DropTarget.Table:
                     schema = _catalogManager.GetTableSchemaRecord(statement.TableName);
-                    // drop index trees first
-                    // TODO
+                    List<SchemaRecord> indices = _catalogManager.GetIndicesSchemaRecord(statement.TableName);
                     // drop table
                     if (_catalogManager.TryDropStatement(statement))
                         _recordManager.DropTable(schema.RootPage);
+                    // drop index trees
+                    foreach (SchemaRecord index in indices)
+                    {
+                        _recordManager.DropTable(index.RootPage);
+                    }
                     break;
                 case DropTarget.Index:
                     schema = _catalogManager.GetIndexSchemaRecord(statement.IndexName);
-                    // if (_catalogManager.TryDropStatement(statement))
-                    //     _indexManager.DropIndex(schema.RootPage);
+                    if (_catalogManager.TryDropStatement(statement))
+                        _recordManager.DropTable(schema.RootPage);
                     break;
             }
         }
 
-        // TODO
         // delete statement
+        // NOTICE: relative index trees will NOT change accordingly
         private void HandleStatement(DeleteStatement statement)
         {
             // get table and indices
@@ -143,11 +140,10 @@ namespace MiniSQL.Api
             // // delete index records from index trees
             // foreach (SchemaRecord indexSchema in indexSchemas)
             // {
-            //     int indexOfAttribute =
-            //         tableSchema.SQL.AttributeDeclarations
-            //             .FindIndex(x => x.AttributeName == indexSchema.SQL.AttributeName);
-            //     (int newIndexRootPage, List<AtomValue> primaryKeys) = _indexManager
-            //         .DeleteIndexRecords(statement, indexOfAttribute, indexSchema.RootPage);
+            //     // build condition for each index tree
+            //     Expression condition = new Expression();
+
+                
             // }
 
             // TODO
@@ -158,7 +154,7 @@ namespace MiniSQL.Api
             // issue: to delete the records satisfying the condition above
 
             // delete record from table tree
-            int newTableRootPage = _recordManager.DeleteRecords(statement, tableSchema.SQL.PrimaryKey, tableSchema.SQL.AttributeDeclarations, tableSchema.RootPage);
+            int newTableRootPage = _recordManager.DeleteRecords(statement.Condition, tableSchema.SQL.PrimaryKey, tableSchema.SQL.AttributeDeclarations, tableSchema.RootPage);
             _catalogManager.TryUpdateSchemaRecord(statement.TableName, newTableRootPage);
         }
 
@@ -170,25 +166,51 @@ namespace MiniSQL.Api
             SchemaRecord tableSchema = _catalogManager.GetTableSchemaRecord(statement.FromTable);
             List<SchemaRecord> indexSchemas = _catalogManager.GetIndicesSchemaRecord(statement.FromTable);
 
-            // TODO
             // select from index tree if possible
-
-            // select record from table tree
-            List<List<AtomValue>> rows = _recordManager.SelectRecords(statement, tableSchema.SQL.PrimaryKey, tableSchema.SQL.AttributeDeclarations, tableSchema.RootPage);
+            AtomValue primaryKey = null;
+            if (statement.Condition != null)
+            {
+                foreach (SchemaRecord indexSchema in indexSchemas)
+                {
+                    // if there has a condition `=` on indexed column
+                    if (statement.Condition.Ands.ContainsKey(indexSchema.SQL.AttributeName)
+                        && statement.Condition.Ands[indexSchema.SQL.AttributeName].Operator == Operator.Equal)
+                    {
+                        // find out the primary key
+                        // List<AtomValue> indexPrimaryKeyPair = _recordManager.SelectRecord(statement.Condition.Ands[indexSchema.Name].RightOperant.ConcreteValue, indexSchema.RootPage);
+                        // primaryKey = indexPrimaryKeyPair[1];
+                        List<AtomValue> wrappedPrimaryKey = _recordManager.SelectRecord(statement.Condition.Ands[indexSchema.SQL.AttributeName].RightOperant.ConcreteValue, indexSchema.RootPage);
+                        primaryKey = wrappedPrimaryKey[0];
+                        break;
+                    }
+                }
+            }
             SelectResult result = new SelectResult();
-            result.Rows = rows;
             result.ColumnDeclarations = tableSchema.SQL.AttributeDeclarations;
+            // index tree is not available
+            if (object.ReferenceEquals(primaryKey, null))
+            {
+                // select records from table tree
+                List<List<AtomValue>> rows = _recordManager.SelectRecords(statement, tableSchema.SQL.PrimaryKey, tableSchema.SQL.AttributeDeclarations, tableSchema.RootPage);
+                result.Rows = rows;
+            }
+            // index tree is available
+            else
+            {
+                // select one record from table tree
+                List<List<AtomValue>> rows = new List<List<AtomValue>>();
+                List<AtomValue> recordFromTable = _recordManager.SelectRecord(primaryKey, tableSchema.RootPage);
+                rows.Add(recordFromTable);
+                result.Rows = rows;
+            }
             return result;
         }
 
-        // TODO
         private void HandleStatement(InsertStatement statement)
         {
             if (!_catalogManager.IsValid(statement))
                 throw new StatementPreCheckException("invalid insert statement");
-            // insert into index trees
-            // TODO
-            // insert into table tree
+            // get table schema
             SchemaRecord schema = _catalogManager.GetTableSchemaRecord(statement.TableName);
             // adjust inlined type in insert statement
             if (schema.SQL.AttributeDeclarations.Count != statement.Values.Count)
@@ -204,8 +226,22 @@ namespace MiniSQL.Api
             AtomValue primaryKey =
                 statement.Values[schema.SQL.AttributeDeclarations.FindIndex(x =>
                     x.AttributeName == schema.SQL.PrimaryKey)];
-            // insert
-            int newRoot = _recordManager.InsertRecord(statement, primaryKey, schema.RootPage);
+            // insert into index trees
+            List<SchemaRecord> indexSchemas = _catalogManager.GetIndicesSchemaRecord(statement.TableName);
+            foreach (SchemaRecord indexSchema in indexSchemas)
+            {
+                // find indexed value from insert values
+                AtomValue indexedValue =
+                    statement.Values[schema.SQL.AttributeDeclarations.FindIndex(x =>
+                        x.AttributeName == indexSchema.Name)];
+                // wrap up indexed value and primary key
+                List<AtomValue> indexPrimaryKeyPair = new List<AtomValue>() { indexedValue, primaryKey };
+                // insert into index trees
+                int newIndexRoot = _recordManager.InsertRecord(indexPrimaryKeyPair, indexedValue, indexSchema.RootPage);
+                _catalogManager.TryUpdateSchemaRecord(indexSchema.Name, newIndexRoot);
+            }
+            // insert into table tree
+            int newRoot = _recordManager.InsertRecord(statement.Values, primaryKey, schema.RootPage);
             _catalogManager.TryUpdateSchemaRecord(statement.TableName, newRoot);
         }
 

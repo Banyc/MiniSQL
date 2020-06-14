@@ -824,6 +824,25 @@ namespace MiniSQL.BufferManager.Controllers
             }
         }
 
+        public System.Collections.Generic.IEnumerable<BTreeCell> LinearSearch(BTreeNode root)
+        {
+            BTreeNode beginNode = FindMin(root);
+            List<BTreeCell> result = new List<BTreeCell>();
+
+            while (true)
+            {
+                foreach (var cell in beginNode)
+                {
+                    yield return cell;
+                }
+                if (beginNode.RightPage == 0)
+                {
+                    break;
+                }
+                beginNode = BTreeNodeHelper.GetBTreeNode(_pager, (int)beginNode.RightPage);
+            }
+        }
+
         public BTreeNode DeleteCells(BTreeNode root, Expression expression, string keyName, List<AttributeDeclaration> attributeDeclarations)
         {
             List<BTreeCell> nodesTobeDeleted = FindCells(root, expression, keyName, attributeDeclarations);

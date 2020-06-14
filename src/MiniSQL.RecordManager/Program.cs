@@ -32,7 +32,7 @@ namespace MiniSQL.RecordManager
 
             // create new table
             CreateStatement createStatement = GetCreateStatement();
-            int newRoot = recordManager.CreateTable(createStatement);
+            int newRoot = recordManager.CreateTable();
 
             // insert
             BTreeNode node;
@@ -46,7 +46,7 @@ namespace MiniSQL.RecordManager
                 (insertStatement, key) = GetInsertStatement(1);
                 AtomValue atomValue = GetAtomValue(key);
                 
-                newRootAfterInsert = recordManager.InsertRecord(insertStatement, atomValue, newRootAfterInsert);
+                newRootAfterInsert = recordManager.InsertRecord(insertStatement.Values, atomValue, newRootAfterInsert);
                 Console.WriteLine(key);
                 Debug.Assert(newRoot == newRootAfterInsert);
             }
@@ -58,7 +58,7 @@ namespace MiniSQL.RecordManager
             {
                 (insertStatement, key) = GetInsertStatement(1);
                 AtomValue atomValue = GetAtomValue(key);
-                newRootAfterInsert = recordManager.InsertRecord(insertStatement, atomValue, newRootAfterInsert);
+                newRootAfterInsert = recordManager.InsertRecord(insertStatement.Values, atomValue, newRootAfterInsert);
                 Console.WriteLine(key);
             }
             node = BTreeNodeHelper.GetBTreeNode(pager, newRootAfterInsert);

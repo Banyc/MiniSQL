@@ -1,4 +1,5 @@
 using System.Collections.Generic;
+using System.Text;
 using Antlr4.Runtime.Misc;
 using Antlr4.Runtime.Tree;
 using MiniSQL.Interpreter.Models;
@@ -497,12 +498,14 @@ namespace MiniSQL.Interpreter
                 value.Type = AttributeTypes.Char;
                 string withQuotes = context.SINGLE_QUOTED_TEXT().GetText();
                 value.StringValue = withQuotes.Substring(1, withQuotes.Length - 2);
+                value.CharLimit = Encoding.UTF8.GetByteCount(value.StringValue);
             }
             else if (context.DOUBLE_QUOTED_TEXT() != null)
             {
                 value.Type = AttributeTypes.Char;
                 string withQuotes = context.DOUBLE_QUOTED_TEXT().GetText();
                 value.StringValue = withQuotes.Substring(1, withQuotes.Length - 2);
+                value.CharLimit = Encoding.UTF8.GetByteCount(value.StringValue);
             }
             else
                 throw new System.NotImplementedException();

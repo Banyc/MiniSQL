@@ -6,14 +6,16 @@ namespace MiniSQL.Library.Interfaces
     // TODO: review
     public interface IRecordManager
     {
-        // return the root page number
-        int CreateTable(CreateStatement createStatement);
+        // return the root page number of the table tree
+        int CreateTable();
+        // return the root page number of the index tree
+        int CreateIndex(int tableRootPage, string indexedColumnName, List<AttributeDeclaration> attributeDeclarations);
         void DropTable(int rootPage);
         // insert a cell
-        int InsertRecord(InsertStatement insertStatement, AtomValue key, int rootPage);
+        int InsertRecord(List<AtomValue> values, AtomValue key, int rootPage);
         // delete some records
         // return the root page number
-        int DeleteRecords(DeleteStatement deleteStatement, string primaryKeyName, List<AttributeDeclaration> attributeDeclarations, int rootPage);
+        int DeleteRecords(Expression condition, string primaryKeyName, List<AttributeDeclaration> attributeDeclarations, int rootPage);
         // delete some records
         // return the root page number
         // each primary key corresponds to one record/row
@@ -22,6 +24,6 @@ namespace MiniSQL.Library.Interfaces
         List<List<AtomValue>> SelectRecords(SelectStatement selectStatement, string primaryKeyName, List<AttributeDeclaration> attributeDeclarations, int rootPage);
         // select some records
         // each primary key corresponds to one record/row
-        List<List<AtomValue>> SelectRecords(List<AtomValue> primaryKeys, int rootPage);
+        List<AtomValue> SelectRecord(AtomValue primaryKey, int rootPage);
     }
 }

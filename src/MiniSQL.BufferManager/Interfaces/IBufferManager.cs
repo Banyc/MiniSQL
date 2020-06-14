@@ -16,5 +16,7 @@ namespace MiniSQL.BufferManager.Interfaces
         BTreeNode DeleteCells(BTreeNode root, Expression expression, string keyName, List<AttributeDeclaration> attributeDeclarations);
         // return matches that satisfy `expression`
         List<BTreeCell> FindCells(BTreeNode root, Expression expression, string keyName, List<AttributeDeclaration> attributeDeclarations);
+        BTreeCell FindCell(DBRecord key, BTreeNode root);
+        System.Collections.Generic.IEnumerable<BTreeCell> LinearSearch(BTreeNode root);
     }
 }

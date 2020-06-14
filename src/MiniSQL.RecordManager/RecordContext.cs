@@ -20,15 +20,37 @@ namespace MiniSQL.RecordManager
             _bTree = bTreeController;
         }
 
-        public int CreateTable(CreateStatement createStatement)
+        public int CreateTable()
         {
             return _bTree.OccupyNewTableNode().GetRawPage().PageNumber;
         }
 
-        public int DeleteRecords(DeleteStatement deleteStatement, string primaryKeyName, List<AttributeDeclaration> attributeDeclarations, int rootPage)
+        public int CreateIndex(int tableRootPage, string indexedColumnName, List<AttributeDeclaration> attributeDeclarations)
+        {
+            BTreeNode indexRoot = _bTree.OccupyNewTableNode();
+            BTreeNode tableRoot = BTreeNodeHelper.GetBTreeNode(_pager, tableRootPage);
+
+            int indexedColumnIndex = attributeDeclarations.FindIndex(x => x.AttributeName == indexedColumnName);
+
+            foreach (BTreeCell tableCell in _bTree.LinearSearch(tableRoot))
+            {
+                AtomValue indexedValue = ((LeafTableCell)tableCell).DBRecord.GetValues()[indexedColumnIndex];
+                AtomValue primaryKey = ((LeafTableCell)tableCell).Key.GetValues()[0];
+                // List<AtomValue> indexPrimaryKeyPair = new List<AtomValue>() { indexedValue, primaryKey };
+                List<AtomValue> wrappedPrimaryKey = new List<AtomValue>() { primaryKey };
+                DBRecord wrappedKey = new DBRecord(new List<AtomValue>() { indexedValue });
+                // DBRecord wrappedValues = new DBRecord(indexPrimaryKeyPair);
+                DBRecord wrappedValues = new DBRecord(wrappedPrimaryKey);
+                indexRoot = _bTree.InsertCell(indexRoot, wrappedKey, wrappedValues);
+            }
+
+            return indexRoot.GetRawPage().PageNumber;
+        }
+
+        public int DeleteRecords(Expression condition, string primaryKeyName, List<AttributeDeclaration> attributeDeclarations, int rootPage)
         {
             BTreeNode node = BTreeNodeHelper.GetBTreeNode(_pager, rootPage);
-            BTreeNode newRoot = _bTree.DeleteCells(node, deleteStatement.Condition, primaryKeyName, attributeDeclarations);
+            BTreeNode newRoot = _bTree.DeleteCells(node, condition, primaryKeyName, attributeDeclarations);
             return newRoot.GetRawPage().PageNumber;
         }
 
@@ -45,12 +67,12 @@ namespace MiniSQL.RecordManager
         }
 
         // return new root page number
-        public int InsertRecord(InsertStatement insertStatement, AtomValue key, int rootPage)
+        public int InsertRecord(List<AtomValue> values, AtomValue key, int rootPage)
         {
             BTreeNode node = BTreeNodeHelper.GetBTreeNode(_pager, rootPage);
             DBRecord wrappedKey = new DBRecord(new List<AtomValue>() { key });
-            DBRecord values = new DBRecord(insertStatement.Values);
-            BTreeNode newRoot = _bTree.InsertCell(node, wrappedKey, values);
+            DBRecord wrappedValues = new DBRecord(values);
+            BTreeNode newRoot = _bTree.InsertCell(node, wrappedKey, wrappedValues);
             return newRoot.GetRawPage().PageNumber;
         }
 
@@ -67,9 +89,14 @@ namespace MiniSQL.RecordManager
             return rows;
         }
 
-        public List<List<AtomValue>> SelectRecords(List<AtomValue> primaryKeys, int rootPage)
+        public List<AtomValue> SelectRecord(AtomValue key, int rootPage)
         {
-            throw new System.NotImplementedException();
+            List<AtomValue> wrapper = new List<AtomValue> { key };
+            DBRecord keyDBRecord = new DBRecord(wrapper);
+            BTreeNode node = BTreeNodeHelper.GetBTreeNode(_pager, rootPage);
+            BTreeCell cell = _bTree.FindCell(keyDBRecord, node);
+            List<AtomValue> result = ((LeafTableCell)cell).DBRecord.GetValues();
+            return result;
         }
     }
 }

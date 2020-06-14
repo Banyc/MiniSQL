@@ -132,7 +132,10 @@ namespace MiniSQL.CatalogManager
                 //to drop a index,we need to check whether the index exists
                 else
                 {
-                    return b.If_in(x.IndexName) && b.Of_table(x.IndexName) == x.TableName;
+                    if (x.TableName != "")
+                        return b.If_in(x.IndexName) && b.Of_table(x.IndexName) == x.TableName;
+                    else
+                        return b.If_in(x.IndexName);
                 }
             }
 
@@ -550,7 +553,7 @@ namespace MiniSQL.CatalogManager
                     temp.TableName = index[i].table_name;
                     temp.IsUnique = index[i].is_uniqve;
                     temp.IndexName = index[i].index_name;
-                    temp.AttributeName = index[i].table_name;
+                    temp.AttributeName = index[i].attribute_name;
                     record.SQL = temp;
                 }
             }
@@ -656,10 +659,12 @@ namespace MiniSQL.CatalogManager
                 if (index[i].index_name == dropStatement.IndexName)
                 {
                     index.RemoveAt(i);
+                    break;
                 }
                 else
                     i++;
             }
+            Save_index(this.index);
             return true;
         }
 

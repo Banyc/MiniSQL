@@ -27,7 +27,6 @@ namespace MiniSQL.Api
             IBufferManager bTreeController = new BTreeController(pager, freeList, 40);
             IInterpreter interpreter = new Parsing();
             ICatalogManager catalogManager = new Catalog();
-            // IIndexManager indexManager = new IndexManager();
             IRecordManager recordManager = new RecordContext(pager, bTreeController);
             IApi api = new Api(interpreter, catalogManager, recordManager);
 
