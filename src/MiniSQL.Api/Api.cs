@@ -6,8 +6,19 @@ using System.Linq;
 
 namespace MiniSQL.Api
 {
+    public class StatementPreCheckException : Exception
+    {
+        public StatementPreCheckException()
+        { }
+        public StatementPreCheckException(string message)
+            : base(message) { }
+        public StatementPreCheckException(string message, Exception inner)
+            : base(message, inner) { }
+    }
+
     public class Api : IApi
     {
+
         private readonly IInterpreter _interpreter;
         private readonly ICatalogManager _catalogManager;
         // private readonly IIndexManager _indexManager;
@@ -68,7 +79,7 @@ namespace MiniSQL.Api
         private void HandleStatement(CreateStatement statement)
         {
             if (!_catalogManager.IsValid(statement))
-                throw new InvalidOperationException("invalid create statement");
+                throw new StatementPreCheckException("invalid create statement");
             switch (statement.CreateType)
             {
                 case CreateType.Table:
@@ -91,7 +102,7 @@ namespace MiniSQL.Api
                 return;
 
             if (!_catalogManager.IsValid(statement))
-                throw new InvalidOperationException("invalid drop statement");
+                throw new StatementPreCheckException("invalid drop statement");
             SchemaRecord schema;
             switch (statement.TargetType)
             {
@@ -117,7 +128,7 @@ namespace MiniSQL.Api
         {
             // get table and indices
             if (!_catalogManager.IsValid(statement))
-                throw new InvalidOperationException("invalid delete statement");
+                throw new StatementPreCheckException("invalid delete statement");
             SchemaRecord tableSchema = _catalogManager.GetTableSchemaRecord(statement.TableName);
             List<SchemaRecord> indexSchemas = _catalogManager.GetIndicesSchemaRecord(statement.TableName);
 
@@ -147,7 +158,7 @@ namespace MiniSQL.Api
         {
             // get table and indices
             if (!_catalogManager.IsValid(statement))
-                throw new InvalidOperationException("invalid select statement");
+                throw new StatementPreCheckException("invalid select statement");
             SchemaRecord tableSchema = _catalogManager.GetTableSchemaRecord(statement.FromTable);
             List<SchemaRecord> indexSchemas = _catalogManager.GetIndicesSchemaRecord(statement.FromTable);
 
@@ -166,7 +177,7 @@ namespace MiniSQL.Api
         private void HandleStatement(InsertStatement statement)
         {
             if (!_catalogManager.IsValid(statement))
-                throw new InvalidOperationException("invalid insert statement");
+                throw new StatementPreCheckException("invalid insert statement");
             // insert into index trees
             // TODO
             // insert into table tree
@@ -182,8 +193,8 @@ namespace MiniSQL.Api
                 statement.Values[i].CharLimit = schema.SQL.AttributeDeclarations[i].CharLimit;
             }
             // find out primary key from insert values
-            AtomValue primaryKey = 
-                statement.Values[schema.SQL.AttributeDeclarations.FindIndex(x => 
+            AtomValue primaryKey =
+                statement.Values[schema.SQL.AttributeDeclarations.FindIndex(x =>
                     x.AttributeName == schema.SQL.PrimaryKey)];
             // insert
             int newRoot = _recordManager.InsertRecord(statement, primaryKey, schema.RootPage);
