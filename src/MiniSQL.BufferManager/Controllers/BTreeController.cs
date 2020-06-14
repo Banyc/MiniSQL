@@ -12,14 +12,16 @@ namespace MiniSQL.BufferManager.Controllers
     {
         private readonly Pager _pager;
         private readonly FreeList _freeList;
-        private readonly int MaxCell = 4;   //At least 4
-
+        public int MaxCell { get; }  // At least 4
 
         // constructor
-        public BTreeController(Pager pager, FreeList freeList)
+        public BTreeController(Pager pager, FreeList freeList, int maxCell = 4)
         {
             this._pager = pager;
             this._freeList = freeList;
+            if (maxCell < 4)
+                throw new Exception($"maxCell expected at least 4, actual {maxCell}");
+            this.MaxCell = maxCell;
         }
 
         // TODO: test
@@ -87,7 +89,7 @@ namespace MiniSQL.BufferManager.Controllers
         }
 
 
-        public BTreeNode InsertCell(BTreeNode Root,DBRecord key, DBRecord dBRecord)
+        public BTreeNode InsertCell(BTreeNode Root, DBRecord key, DBRecord dBRecord)
         {
             //create a new root
             if (Root == null)
@@ -123,11 +125,11 @@ namespace MiniSQL.BufferManager.Controllers
 
             //key should be the primary key to be inserted in the parent node
             int DeleteIndex = nodeTobeSplit.NumCells / 2;
-            DBRecord key = nodeTobeSplit.GetBTreeCell(nodeTobeSplit.CellOffsetArray[DeleteIndex-1]).Key;
+            DBRecord key = nodeTobeSplit.GetBTreeCell(nodeTobeSplit.CellOffsetArray[DeleteIndex - 1]).Key;
             if ((newKey.GetValues()[0] >= key.GetValues()[0]).BooleanValue)
             {
                 DeleteIndex += 1;
-                key = nodeTobeSplit.GetBTreeCell(nodeTobeSplit.CellOffsetArray[DeleteIndex-1]).Key;
+                key = nodeTobeSplit.GetBTreeCell(nodeTobeSplit.CellOffsetArray[DeleteIndex - 1]).Key;
             }
 
             for (i = DeleteIndex; i < MaxCell; i++)
@@ -196,11 +198,11 @@ namespace MiniSQL.BufferManager.Controllers
                 //The normal case
                 else
                 {
-                    InternalTableCell tmp_cell = new InternalTableCell(cell.Key,(uint)splitNode.GetRawPage().PageNumber);
+                    InternalTableCell tmp_cell = new InternalTableCell(cell.Key, (uint)splitNode.GetRawPage().PageNumber);
                     parantNode.DeleteBTreeCell(cell);
                     parantNode.InsertBTreeCell(tmp_cell);
                 }
-            }    
+            }
             //This must be done after we reconnect the treeNode
             parantNode.InsertBTreeCell(newCell);
 
@@ -288,10 +290,10 @@ namespace MiniSQL.BufferManager.Controllers
 
         }
 
-        public BTreeNode Delete(BTreeCell keyCell,BTreeNode Root)
+        public BTreeNode Delete(BTreeCell keyCell, BTreeNode Root)
         {
             DBRecord key = keyCell.Key;
-            return Delete(key,Root);
+            return Delete(key, Root);
         }
 
         private BTreeNode FindNode(DBRecord key, BTreeNode root, bool isFuzzySearch = false)
@@ -698,7 +700,7 @@ namespace MiniSQL.BufferManager.Controllers
 
         public List<BTreeCell> FindCells(BTreeNode root, Expression expression, string keyName, List<AttributeDeclaration> attributeDeclarations)
         {
-            if(expression==null)
+            if (expression == null)
             {
                 return LinearSearch(root, expression, attributeDeclarations);
             }
@@ -804,7 +806,7 @@ namespace MiniSQL.BufferManager.Controllers
                 foreach (var cell in beginNode)
                 {
                     leafCell = (LeafTableCell)cell;
-                    if(expression==null)
+                    if (expression == null)
                     {
                         result.Add(cell);
                     }
@@ -824,10 +826,10 @@ namespace MiniSQL.BufferManager.Controllers
 
         public BTreeNode DeleteCells(BTreeNode root, Expression expression, string keyName, List<AttributeDeclaration> attributeDeclarations)
         {
-            List<BTreeCell> nodesTobeDeleted=FindCells(root,expression,keyName,attributeDeclarations);
-            foreach(var cell in nodesTobeDeleted)
+            List<BTreeCell> nodesTobeDeleted = FindCells(root, expression, keyName, attributeDeclarations);
+            foreach (var cell in nodesTobeDeleted)
             {
-                root=Delete(cell,root);
+                root = Delete(cell, root);
             }
             return root;
         }

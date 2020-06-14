@@ -25,9 +25,9 @@ namespace MiniSQL.Api
             Console.WriteLine();
             // init
             string dbPath = "./testdbfile.minidb";
-            Pager pager = new Pager(dbPath);
+            Pager pager = new Pager(dbPath, 1024 * 16, 400);
             FreeList freeList = new FreeList(pager);
-            IBufferManager bTreeController = new BTreeController(pager, freeList);
+            IBufferManager bTreeController = new BTreeController(pager, freeList, 80);
             Stopwatch stopwatch = new Stopwatch();
             IInterpreter interpreter = new Parsing();
             ICatalogManager catalogManager = new Catalog();
