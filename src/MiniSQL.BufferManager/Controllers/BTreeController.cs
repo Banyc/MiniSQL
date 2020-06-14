@@ -698,7 +698,11 @@ namespace MiniSQL.BufferManager.Controllers
 
         public List<BTreeCell> FindCells(BTreeNode root, Expression expression, string keyName, List<AttributeDeclaration> attributeDeclarations)
         {
-            if (expression.Ands.ContainsKey(keyName))
+            if(expression==null)
+            {
+                return LinearSearch(root, expression, attributeDeclarations);
+            }
+            else if (expression.Ands.ContainsKey(keyName))
             {
                 List<BTreeCell> result = new List<BTreeCell>();
                 List<AtomValue> values = new List<AtomValue>();
@@ -800,7 +804,11 @@ namespace MiniSQL.BufferManager.Controllers
                 foreach (var cell in beginNode)
                 {
                     leafCell = (LeafTableCell)cell;
-                    if (expression.Calculate(attributeDeclarations, leafCell.DBRecord.GetValues()).BooleanValue == true)
+                    if(expression==null)
+                    {
+                        result.Add(cell);
+                    }
+                    else if (expression.Calculate(attributeDeclarations, leafCell.DBRecord.GetValues()).BooleanValue == true)
                     {
                         result.Add(cell);
                     }
