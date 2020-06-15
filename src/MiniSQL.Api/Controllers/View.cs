@@ -95,6 +95,14 @@ namespace MiniSQL.Api.Controllers
                 {
                     Console.WriteLine($"[Error] {ex.Message}");
                 }
+                catch (KeyNotExistException ex)
+                {   
+                    Console.WriteLine($"[Error] {ex.Message}");
+                }
+                catch (RepeatedKeyException ex)
+                {
+                    Console.WriteLine($"[Error] {ex.Message}");
+                }
                 stopwatch.Stop();
                 // print time consumed
                 defaultColor = Console.ForegroundColor;

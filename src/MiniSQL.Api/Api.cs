@@ -6,16 +6,6 @@ using System.Linq;
 
 namespace MiniSQL.Api
 {
-    public class StatementPreCheckException : Exception
-    {
-        public StatementPreCheckException()
-        { }
-        public StatementPreCheckException(string message)
-            : base(message) { }
-        public StatementPreCheckException(string message, Exception inner)
-            : base(message, inner) { }
-    }
-
     public class Api : IApi
     {
 
@@ -247,7 +237,7 @@ namespace MiniSQL.Api
                 // find indexed value from insert values
                 AtomValue indexedValue =
                     statement.Values[schema.SQL.AttributeDeclarations.FindIndex(x =>
-                        x.AttributeName == indexSchema.Name)];
+                        x.AttributeName == indexSchema.SQL.AttributeName)];
                 // wrap up indexed value and primary key
                 List<AtomValue> indexPrimaryKeyPair = new List<AtomValue>() { indexedValue, primaryKey };
                 // insert into index trees

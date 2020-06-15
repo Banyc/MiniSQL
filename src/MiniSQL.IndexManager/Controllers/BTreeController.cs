@@ -10,18 +10,6 @@ using MiniSQL.IndexManager.Utilities;
 
 namespace MiniSQL.IndexManager.Controllers
 {
-    public class KeyNotExistException:Exception
-    {
-        public KeyNotExistException() {}
-        public KeyNotExistException(string message): base(message) { }
-    }
-
-    public class RepeatedKeyException:Exception
-    {
-        public RepeatedKeyException(){}
-        public RepeatedKeyException(string message): base(message) { }
-    }
-
     public class BTreeController : IIndexManager
     {
         private readonly Pager _pager;
