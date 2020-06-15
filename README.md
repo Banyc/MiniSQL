@@ -78,7 +78,7 @@ exit
 
 ## Architecture
 
-![](img/2020-06-15-13-47-03.png)
+![](img/2020-06-15-21-29-42.png)
 
 ### Interpreter
 
