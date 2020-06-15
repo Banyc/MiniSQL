@@ -1,6 +1,20 @@
 # MiniSQL
 
-A functioning database supporting a subset of SQL.
+A functioning database supporting a subset of SQL. Cross-platform.
+
+## Run
+
+1. Set `cwd` to `src/MiniSQL.Api/`
+1. Run command `dotnet run`
+1. Type in some supported SQL
+1. Type `exit` to exit
+    - Caution: type `exit` is the only way to exit the process!
+
+## Environment
+
+You will need .NET Core SDK to build and run this code.
+
+Download link: <https://dotnet.microsoft.com/download/dotnet-core>.
 
 ## Supported Grammar
 
