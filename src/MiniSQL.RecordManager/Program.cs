@@ -4,7 +4,9 @@ using System.Diagnostics;
 using System.IO;
 using MiniSQL.BufferManager.Controllers;
 using MiniSQL.BufferManager.Models;
-using MiniSQL.BufferManager.Utilities;
+using MiniSQL.IndexManager.Controllers;
+using MiniSQL.IndexManager.Models;
+using MiniSQL.IndexManager.Utilities;
 using MiniSQL.Library.Models;
 
 namespace MiniSQL.RecordManager

@@ -1,14 +1,16 @@
 using System;
 using System.Collections.Generic;
 using System.Runtime;
-using MiniSQL.BufferManager.Interfaces;
+using MiniSQL.BufferManager.Controllers;
+using MiniSQL.IndexManager.Models;
 using MiniSQL.BufferManager.Models;
-using MiniSQL.BufferManager.Utilities;
+using MiniSQL.IndexManager.Interfaces;
 using MiniSQL.Library.Models;
+using MiniSQL.IndexManager.Utilities;
 
-namespace MiniSQL.BufferManager.Controllers
+namespace MiniSQL.IndexManager.Controllers
 {
-    public class BTreeController : IBufferManager
+    public class BTreeController : IIndexManager
     {
         private readonly Pager _pager;
         private readonly FreeList _freeList;

@@ -2,17 +2,23 @@ using System;
 using System.Collections.Generic;
 using MiniSQL.Library.Utilities;
 
-namespace MiniSQL.BufferManager.Models
+namespace MiniSQL.IndexManager.Models
 {
-    public class LeafIndexCell : BTreeCell
+    // <childPage (4 bytes)> <remaining size (including this field) (1 byte)> <header size (1 byte)> <key-idx size (1 byte)> <key-pk size (1 byte)> <key-idx> <key-pk>
+    // update: the size of the fields <remaining size (including this field)> <header size> <key-idx size> <key-pk size> are set as varint. It could be in the length of 8 bytes or 32 bytes
+    public class InternalIndexCell : BTreeCell
     {
+        // ChildPage “pointer”
+        // this “pointer” is the number of the page where the referenced node can be found
+        // ChildPage is the number of the page containing the entries with keys less than or equal to Key.
+        public UInt32 ChildPage { get; set; }
         // primary key of the table
         // it is NOT the key being indexed
         public DBRecord PrimaryKey { get; set; }
 
         // the property `Key` is the key being indexed
 
-        // the size of the cell
+        // the size of the cell excluding the <childPage> field
         public uint RemainingSize
         {
             get
@@ -22,32 +28,33 @@ namespace MiniSQL.BufferManager.Models
             }
         }
 
-        // the size of header excluding the field <remaining size>
+        // the size of header excluding the fields <childPage> and <remaining size>
         public uint HeaderSize
         {
             get
             {
                 uint size = (uint)VarintSize.GetVarintSize(this.KeyIdxSize) + (uint)VarintSize.GetVarintSize(this.KeyPKSize);
-                return (uint)VarintSize.GetVarintSize(size + 4);
+                return size + (uint)VarintSize.GetVarintSize(size + 4);
             }
         }
         // size of index key
         public uint KeyIdxSize { get { return (uint)this.Key.RecordSize; } }
         // size of primary key (not the key being indexed)
         public uint KeyPKSize { get { return (uint)this.PrimaryKey.RecordSize; } }
-
+        
         // constructor
-        public LeafIndexCell(byte[] data, int startIndex)
+        public InternalIndexCell(byte[] data, int startIndex)
         {
-            this.Types = CellTypes.LeafIndexCell;
+            this.Types = CellTypes.InternalIndexCell;
             Unpack(data, startIndex);
         }
 
         // constructor
-        public LeafIndexCell(DBRecord key, DBRecord primaryKey)
+        public InternalIndexCell(DBRecord key, UInt32 childPage, DBRecord primaryKey)
         {
-            this.Types = CellTypes.LeafIndexCell;
+            this.Types = CellTypes.InternalIndexCell;
             this.Key = key;
+            this.ChildPage = childPage;
             this.PrimaryKey = primaryKey;
         }
 
@@ -55,6 +62,7 @@ namespace MiniSQL.BufferManager.Models
         public override byte[] Pack()
         {
             List<byte> pack = new List<byte>();
+            pack.AddRange(BitConverter.GetBytes(this.ChildPage));
             pack.AddRange(VarintBitConverter.ToVarint(this.RemainingSize).Item1);
             pack.AddRange(VarintBitConverter.ToVarint(this.HeaderSize).Item1);
             pack.AddRange(VarintBitConverter.ToVarint(this.KeyIdxSize).Item1);
@@ -69,8 +77,10 @@ namespace MiniSQL.BufferManager.Models
         {
             uint tmpUInt;
             VarintType type;
+            // child page
+            this.ChildPage = BitConverter.ToUInt32(data, startIndex);
             // remaining size
-            int startOffsetOfRemainingSize = 0;
+            int startOffsetOfRemainingSize = 4;
             (tmpUInt, type) = VarintBitConverter.FromVarint(data, startIndex + startOffsetOfRemainingSize);
             // header size
             int startOffsetOfHeaderSize = startOffsetOfRemainingSize + VarintSize.GetVarintSize(tmpUInt);

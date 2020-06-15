@@ -1,6 +1,6 @@
 using System;
 
-namespace MiniSQL.BufferManager.Models
+namespace MiniSQL.IndexManager.Models
 {
     public enum CellTypes
     {

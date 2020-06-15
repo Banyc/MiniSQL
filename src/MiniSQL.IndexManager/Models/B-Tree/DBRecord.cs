@@ -5,7 +5,7 @@ using System.Linq;
 using MiniSQL.Library.Models;
 using MiniSQL.Library.Utilities;
 
-namespace MiniSQL.BufferManager.Models
+namespace MiniSQL.IndexManager.Models
 {
     public enum HeaderValue
     {

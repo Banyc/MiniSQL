@@ -1,8 +1,9 @@
 using System.Collections.Generic;
 using MiniSQL.BufferManager.Controllers;
-using MiniSQL.BufferManager.Interfaces;
 using MiniSQL.BufferManager.Models;
-using MiniSQL.BufferManager.Utilities;
+using MiniSQL.IndexManager.Interfaces;
+using MiniSQL.IndexManager.Models;
+using MiniSQL.IndexManager.Utilities;
 using MiniSQL.Library.Interfaces;
 using MiniSQL.Library.Models;
 
@@ -11,10 +12,10 @@ namespace MiniSQL.RecordManager
     // TODO: review + test
     public class RecordContext : IRecordManager
     {
-        private readonly IBufferManager _bTree;
+        private readonly IIndexManager _bTree;
         private readonly Pager _pager;
 
-        public RecordContext(Pager pager, IBufferManager bTreeController)
+        public RecordContext(Pager pager, IIndexManager bTreeController)
         {
             _pager = pager;
             _bTree = bTreeController;

@@ -3,10 +3,12 @@ using System.Collections.Generic;
 using System.Diagnostics;
 using System.IO;
 using MiniSQL.BufferManager.Controllers;
-using MiniSQL.BufferManager.Utilities;
+using MiniSQL.BufferManager.Models;
+using MiniSQL.IndexManager.Controllers;
+using MiniSQL.IndexManager.Utilities;
 using MiniSQL.Library.Models;
 
-namespace MiniSQL.BufferManager.Models
+namespace MiniSQL.IndexManager.Models
 {
     public static class BTreeTestCases
     {

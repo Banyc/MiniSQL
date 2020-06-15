@@ -4,7 +4,7 @@ using System.Collections.Generic;
 using MiniSQL.BufferManager.Models;
 using MiniSQL.Library.Models;
 
-namespace MiniSQL.BufferManager.Models
+namespace MiniSQL.IndexManager.Models
 {
     // TODO: to test the inter-node operations
     // The term "offset" is the same as "address"

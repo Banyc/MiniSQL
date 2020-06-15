@@ -3,7 +3,7 @@ using System.Collections.Generic;
 using System.Linq;
 using MiniSQL.Library.Models;
 
-namespace MiniSQL.BufferManager.Models
+namespace MiniSQL.IndexManager.Models
 {
     // <DBRecordSize (4 bytes)> <Key> <DBRecord>
     public class LeafTableCell : BTreeCell

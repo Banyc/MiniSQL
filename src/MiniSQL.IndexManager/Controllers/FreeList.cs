@@ -1,9 +1,11 @@
 using System;
 using System.Collections;
 using System.Collections.Generic;
+using MiniSQL.BufferManager.Controllers;
 using MiniSQL.BufferManager.Models;
+using MiniSQL.IndexManager.Models;
 
-namespace MiniSQL.BufferManager.Controllers
+namespace MiniSQL.IndexManager.Controllers
 {
     // a link list recording all free pages
     public class FreeList

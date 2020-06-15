@@ -2,7 +2,7 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 
-namespace MiniSQL.BufferManager.Models
+namespace MiniSQL.IndexManager.Models
 {
     // original: <childPage (4 bytes)> <key (4 bytes)>
     // update: <childPage (4 bytes)> <key as DBRecord>

@@ -1,4 +1,4 @@
-namespace MiniSQL.BufferManager.Models
+namespace MiniSQL.IndexManager.Models
 {
     public static class BTreeConfiguration
     {

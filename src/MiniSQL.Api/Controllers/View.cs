@@ -3,8 +3,8 @@ using System.Collections.Generic;
 using System.Diagnostics;
 using System.Text;
 using MiniSQL.BufferManager.Controllers;
-using MiniSQL.BufferManager.Interfaces;
 using MiniSQL.CatalogManager;
+using MiniSQL.IndexManager.Interfaces;
 using MiniSQL.Interpreter;
 using MiniSQL.Library.Interfaces;
 using MiniSQL.Library.Models;
@@ -14,7 +14,7 @@ namespace MiniSQL.Api.Controllers
 {
     public class View
     {
-        private readonly IBufferManager _bTreeController;
+        private readonly IIndexManager _bTreeController;
         private readonly IInterpreter _interpreter;
         private readonly ICatalogManager _catalogManager;
         private readonly IRecordManager _recordManager;
@@ -22,7 +22,7 @@ namespace MiniSQL.Api.Controllers
         private readonly Pager _pager;
         private bool isCtrlC = false;
 
-        public View(IBufferManager bTreeController, IInterpreter interpreter, ICatalogManager catalogManager, IRecordManager recordManager, IApi api, Pager pager)
+        public View(IIndexManager bTreeController, IInterpreter interpreter, ICatalogManager catalogManager, IRecordManager recordManager, IApi api, Pager pager)
         {
             // ensure writing back when ctrl-c
             Console.CancelKeyPress += OnExit;

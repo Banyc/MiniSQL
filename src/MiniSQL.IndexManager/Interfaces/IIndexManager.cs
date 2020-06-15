@@ -1,10 +1,10 @@
 using MiniSQL.Library.Models;
-using MiniSQL.BufferManager.Models;
+using MiniSQL.IndexManager.Models;
 using System.Collections.Generic;
 
-namespace MiniSQL.BufferManager.Interfaces
+namespace MiniSQL.IndexManager.Interfaces
 {
-    public interface IBufferManager
+    public interface IIndexManager
     {
         // when create table
         BTreeNode OccupyNewTableNode();

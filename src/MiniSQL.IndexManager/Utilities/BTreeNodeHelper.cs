@@ -3,9 +3,10 @@ using System.Collections.Generic;
 using System.Diagnostics;
 using MiniSQL.BufferManager.Controllers;
 using MiniSQL.BufferManager.Models;
+using MiniSQL.IndexManager.Models;
 using MiniSQL.Library.Models;
 
-namespace MiniSQL.BufferManager.Utilities
+namespace MiniSQL.IndexManager.Utilities
 {
     public static class BTreeNodeHelper
     {
