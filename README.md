@@ -2,13 +2,17 @@
 
 A functioning database supporting a subset of SQL. Cross-platform.
 
+## Introduction
+
+![](img/2020-06-15-14-40-50.png)
+
 ## Run
 
 1. Set `cwd` to `src/MiniSQL.Api/`
 1. Run command `dotnet run`
 1. Type in some supported SQL
 1. Type `exit` to exit
-    - Caution: type `exit` is the only way to exit the process!
+    - Caution: typing `exit` is the only way to exit the process!
 
 ## Environment
 

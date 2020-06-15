@@ -23,7 +23,8 @@ namespace MiniSQL.Library.Interfaces
         // select some records
         List<List<AtomValue>> SelectRecords(SelectStatement selectStatement, string primaryKeyName, List<AttributeDeclaration> attributeDeclarations, int rootPage);
         // select some records
-        // each primary key corresponds to one record/row
+        // the primary key corresponds to one record/row
+        // return null if not found
         List<AtomValue> SelectRecord(AtomValue primaryKey, int rootPage);
     }
 }

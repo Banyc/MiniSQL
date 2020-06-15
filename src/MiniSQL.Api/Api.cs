@@ -160,6 +160,7 @@ namespace MiniSQL.Api
 
         private SelectResult HandleSelectStatement(SelectStatement statement)
         {
+            bool isIndexTreeAvailable = false;
             // get table and indices
             if (!_catalogManager.IsValid(statement))
                 throw new StatementPreCheckException("invalid select statement");
@@ -176,11 +177,12 @@ namespace MiniSQL.Api
                     if (statement.Condition.Ands.ContainsKey(indexSchema.SQL.AttributeName)
                         && statement.Condition.Ands[indexSchema.SQL.AttributeName].Operator == Operator.Equal)
                     {
+                        isIndexTreeAvailable = true;
                         // find out the primary key
                         // List<AtomValue> indexPrimaryKeyPair = _recordManager.SelectRecord(statement.Condition.Ands[indexSchema.Name].RightOperant.ConcreteValue, indexSchema.RootPage);
                         // primaryKey = indexPrimaryKeyPair[1];
                         List<AtomValue> wrappedPrimaryKey = _recordManager.SelectRecord(statement.Condition.Ands[indexSchema.SQL.AttributeName].RightOperant.ConcreteValue, indexSchema.RootPage);
-                        primaryKey = wrappedPrimaryKey[0];
+                        primaryKey = wrappedPrimaryKey?[0];
                         break;
                     }
                 }
@@ -188,7 +190,7 @@ namespace MiniSQL.Api
             SelectResult result = new SelectResult();
             result.ColumnDeclarations = tableSchema.SQL.AttributeDeclarations;
             // index tree is not available
-            if (object.ReferenceEquals(primaryKey, null))
+            if (!isIndexTreeAvailable)
             {
                 // select records from table tree
                 List<List<AtomValue>> rows = _recordManager.SelectRecords(statement, tableSchema.SQL.PrimaryKey, tableSchema.SQL.AttributeDeclarations, tableSchema.RootPage);
@@ -199,9 +201,21 @@ namespace MiniSQL.Api
             {
                 // select one record from table tree
                 List<List<AtomValue>> rows = new List<List<AtomValue>>();
-                List<AtomValue> recordFromTable = _recordManager.SelectRecord(primaryKey, tableSchema.RootPage);
-                rows.Add(recordFromTable);
-                result.Rows = rows;
+                if (!object.ReferenceEquals(primaryKey, null))
+                {
+                    List<AtomValue> recordFromTable = _recordManager.SelectRecord(primaryKey, tableSchema.RootPage);
+                    rows.Add(recordFromTable);
+                    result.Rows = rows;
+                }
+                else  // the primary key is null.
+                // if primaryKey is null, 
+                // it means from the index tree could not find the primary key.
+                // in order words, there is not a row with the condition existing in table tree.
+                // thus, no need to visit the table tree
+                {
+                    // assign an empty list
+                    result.Rows = new List<List<AtomValue>>();
+                }
             }
             return result;
         }

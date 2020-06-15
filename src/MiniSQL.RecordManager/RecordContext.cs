@@ -90,13 +90,15 @@ namespace MiniSQL.RecordManager
             return rows;
         }
 
+        // return null if not found
         public List<AtomValue> SelectRecord(AtomValue key, int rootPage)
         {
             List<AtomValue> wrapper = new List<AtomValue> { key };
             DBRecord keyDBRecord = new DBRecord(wrapper);
             BTreeNode node = BTreeNodeHelper.GetBTreeNode(_pager, rootPage);
             BTreeCell cell = _bTree.FindCell(keyDBRecord, node);
-            List<AtomValue> result = ((LeafTableCell)cell).DBRecord.GetValues();
+            List<AtomValue> result = null;
+            result = ((LeafTableCell)cell)?.DBRecord.GetValues();
             return result;
         }
     }
