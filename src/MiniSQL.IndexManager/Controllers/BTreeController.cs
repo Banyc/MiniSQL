@@ -214,6 +214,16 @@ namespace MiniSQL.IndexManager.Controllers
         {
             if (node.PageType == PageTypes.LeafTablePage)
             {
+                BTreeCell check_repeat;
+                ushort offSet;
+                int indexinOffsetArray;
+                (check_repeat,offSet,indexinOffsetArray)=node.FindBTreeCell(newKey,false);
+                if(check_repeat!=null)
+                {
+                    
+                    throw new RepeatedKeyException("The primary key to be inserted is repeated!");
+
+                }
                 LeafTableCell newCell = new LeafTableCell(newKey, dBRecord);
                 node.InsertBTreeCell(newCell);
                 return node;
@@ -286,7 +296,7 @@ namespace MiniSQL.IndexManager.Controllers
             BTreeNode NodeTobeDeleted = FindNode(key, Root);
             if (NodeTobeDeleted == null)
             {
-                throw new Exception("Cannot find the key!");
+                throw new KeyNotExistException("Cannot find the key!");
             }
             return Delete_entry(NodeTobeDeleted, key, Root);
 

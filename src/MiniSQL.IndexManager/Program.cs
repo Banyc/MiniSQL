@@ -17,7 +17,7 @@ namespace MiniSQL.IndexManager
         {
             Console.WriteLine("[IndexManager] Test Begin");
 
-            BTreeTestCases.TestAll();
+            //BTreeTestCases.TestAll();
 
             // TestMaxHeightBTree(8, false, true, true);
 
@@ -38,7 +38,7 @@ namespace MiniSQL.IndexManager
 
             //TestBTreeDelete();
 
-            //HardTestForBTree();
+            HardTestForBTree();
 
             // TestDBRecord();
 
@@ -637,6 +637,14 @@ namespace MiniSQL.IndexManager
                 Debug.Assert(result.Key.GetValues()[0].IntegerValue == i);
 
             }
+            DBRecord record_D = GetTestBRecord(103);
+            DBRecord keyRecord_D = GetTestBRecord(3);
+            root = controller.InsertCell(root, keyRecord_D, record_D);
+             
+            record_D = GetTestBRecord(105);
+            keyRecord_D = GetTestBRecord(5);
+            root = controller.InsertCell(root, keyRecord_D, record_D);
+
             BTreeNodeHelper.VisualizeIntegerTree(pager, root);
 
             //find all
