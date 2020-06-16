@@ -18,7 +18,6 @@ namespace MiniSQL.Api
 {
     class Program
     {
-        // TODO: view of the whole solution 
         static void Main(string[] args)
         {
             // init

@@ -1,17 +1,8 @@
 using System.Collections.Generic;
 using MiniSQL.Library.Models;
-using System;
-using System.ComponentModel;
-using System.IO;
-using System.Runtime.InteropServices.ComTypes;
-using System.Runtime.Serialization.Formatters.Binary;
-using System.Text;
-using System.Diagnostics;
 
 namespace MiniSQL.Library.Interfaces
 {
-
-    // TODO: review
     public interface ICatalogManager
     {
         // try to save the create statement into file as a few schema records
@@ -23,11 +14,11 @@ namespace MiniSQL.Library.Interfaces
         // update the root page of a table or an index
         // if succeeded, return true. Vice versa
         bool TryUpdateSchemaRecord(string name, int rootPage);
-        // according to the table name required, return corresponding schema record
+        // according to the table name requested, return corresponding schema record
         SchemaRecord GetTableSchemaRecord(string tableName);
-        // according to the table name required, return the all index schema records that is associated to the table
+        // according to the table name requested, return the all index schema records that is associated to the table
         List<SchemaRecord> GetIndicesSchemaRecord(string tableName);
-        // according to the index name required, return corresponding schema record
+        // according to the index name requested, return corresponding schema record
         SchemaRecord GetIndexSchemaRecord(string indexName);
         // check validation of the statement
         bool IsValid(IStatement statement);

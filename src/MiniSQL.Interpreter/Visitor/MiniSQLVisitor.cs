@@ -176,8 +176,8 @@ namespace MiniSQL.Interpreter
             Expression left = (Expression)Visit(context.expr(0));
             Expression right = (Expression)Visit(context.expr(1));
             Expression obj = new Expression();
-            obj.LeftOperant = left;
-            obj.RightOperant = right;
+            obj.LeftOperand = left;
+            obj.RightOperand = right;
             if (context.PLUS_OPERATOR() != null)
                 obj.Operator = Operator.Plus;
             else
@@ -197,8 +197,8 @@ namespace MiniSQL.Interpreter
             Expression left = (Expression)Visit(context.expr(0));
             Expression right = (Expression)Visit(context.expr(1));
             Expression obj = new Expression();
-            obj.LeftOperant = left;
-            obj.RightOperant = right;
+            obj.LeftOperand = left;
+            obj.RightOperand = right;
             obj.Operator = Operator.And;
             // optimize expression
             if (left.Operator == Operator.AtomConcreteValue
@@ -220,8 +220,8 @@ namespace MiniSQL.Interpreter
             Expression left = (Expression)Visit(context.expr(0));
             Expression right = (Expression)Visit(context.expr(1));
             Expression obj = new Expression();
-            obj.LeftOperant = left;
-            obj.RightOperant = right;
+            obj.LeftOperand = left;
+            obj.RightOperand = right;
             if (context.compOp().EQUAL_OPERATOR() != null)
                 obj.Operator = Operator.Equal;
             else if (context.compOp().GREATER_OR_EQUAL_OPERATOR() != null)
@@ -251,8 +251,8 @@ namespace MiniSQL.Interpreter
             Expression left = (Expression)Visit(context.expr(0));
             Expression right = (Expression)Visit(context.expr(1));
             Expression obj = new Expression();
-            obj.LeftOperant = left;
-            obj.RightOperant = right;
+            obj.LeftOperand = left;
+            obj.RightOperand = right;
             if (context.MULT_OPERATOR() != null)
                 obj.Operator = Operator.Multiply;
             else
@@ -286,7 +286,7 @@ namespace MiniSQL.Interpreter
             //     return left;
             // }
             Expression obj = new Expression();
-            obj.LeftOperant = left;
+            obj.LeftOperand = left;
             obj.Operator = Operator.Not;
             // optimize expression
             if (left.Operator == Operator.AtomConcreteValue)
@@ -302,8 +302,8 @@ namespace MiniSQL.Interpreter
             Expression left = (Expression)Visit(context.expr(0));
             Expression right = (Expression)Visit(context.expr(1));
             Expression obj = new Expression();
-            obj.LeftOperant = left;
-            obj.RightOperant = right;
+            obj.LeftOperand = left;
+            obj.RightOperand = right;
             obj.Operator = Operator.Or;
             // optimize expression
             if (left.Operator == Operator.AtomConcreteValue
@@ -341,7 +341,7 @@ namespace MiniSQL.Interpreter
             //     return left;
             // }
             Expression obj = new Expression();
-            obj.LeftOperant = left;
+            obj.LeftOperand = left;
             obj.Operator = Operator.Negative;
             // optimize expression
             if (left.Operator == Operator.AtomConcreteValue)
@@ -357,8 +357,8 @@ namespace MiniSQL.Interpreter
             Expression left = (Expression)Visit(context.expr(0));
             Expression right = (Expression)Visit(context.expr(1));
             Expression obj = new Expression();
-            obj.LeftOperant = left;
-            obj.RightOperant = right;
+            obj.LeftOperand = left;
+            obj.RightOperand = right;
             obj.Operator = Operator.Xor;
             // optimize expression
             if (left.Operator == Operator.AtomConcreteValue

@@ -3,7 +3,6 @@ using MiniSQL.Library.Models;
 
 namespace MiniSQL.Library.Interfaces
 {
-    // TODO: review
     public interface IRecordManager
     {
         // return the root page number of the table tree

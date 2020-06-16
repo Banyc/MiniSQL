@@ -469,7 +469,7 @@ namespace MiniSQL.Library.Models
             // make sure the types of children are the same
             if (leftValue?.Type != rightValue?.Type)
             {
-                throw new System.Exception("Operants type not matched!");
+                throw new System.Exception("Operands type not matched!");
             }
         }
 

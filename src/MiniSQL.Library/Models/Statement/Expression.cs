@@ -29,9 +29,9 @@ namespace MiniSQL.Library.Models
     public class Expression
     {
         public Operator Operator { get; set; }
-        public Expression LeftOperant { get; set; } = null;
-        // if nary, this.RightOperant will be null
-        public Expression RightOperant { get; set; } = null;
+        public Expression LeftOperand { get; set; } = null;
+        // if nary, this.RightOperand will be null
+        public Expression RightOperand { get; set; } = null;
         // use if this Expression is only the attribute
         // this could be a number or a string
         public AtomValue ConcreteValue { get; set; } = null;
@@ -63,8 +63,8 @@ namespace MiniSQL.Library.Models
             {
                 return;
             }
-            this.LeftOperant.BuildAndList();
-            this.RightOperant.BuildAndList();
+            this.LeftOperand.BuildAndList();
+            this.RightOperand.BuildAndList();
 
             if (this.Operator == Operator.Equal
                     || this.Operator == Operator.LessThan
@@ -75,13 +75,13 @@ namespace MiniSQL.Library.Models
                     // || this.Operator == Operator.NotEqual
                     )
             {
-                if (this.LeftOperant.Operator == Operator.AtomConcreteValue
-                    && this.RightOperant.Operator == Operator.AtomVariable)
+                if (this.LeftOperand.Operator == Operator.AtomConcreteValue
+                    && this.RightOperand.Operator == Operator.AtomVariable)
                 {
                     // swap variable to the left
-                    Expression tmp = this.LeftOperant;
-                    this.LeftOperant = this.RightOperant;
-                    this.RightOperant = tmp;
+                    Expression tmp = this.LeftOperand;
+                    this.LeftOperand = this.RightOperand;
+                    this.RightOperand = tmp;
                     // change operator
                     switch (this.Operator)
                     {
@@ -99,27 +99,28 @@ namespace MiniSQL.Library.Models
                             break;
                     }
                     // add to the "and" list
-                    this.Ands[this.LeftOperant.AttributeName] = this;
+                    this.Ands[this.LeftOperand.AttributeName] = this;
                 }
-                else if (this.LeftOperant.Operator == Operator.AtomVariable
-                    && this.RightOperant.Operator == Operator.AtomConcreteValue)
-                    this.Ands[this.LeftOperant.AttributeName] = this;
+                else if (this.LeftOperand.Operator == Operator.AtomVariable
+                    && this.RightOperand.Operator == Operator.AtomConcreteValue)
+                    this.Ands[this.LeftOperand.AttributeName] = this;
             }
             // only operator `and` could take `Ands` in its children
             else if (this.Operator == Operator.And)
             {
-                foreach (var andExpresion in this.LeftOperant.Ands.ToList())
+                foreach (var andExpresion in this.LeftOperand.Ands.ToList())
                 {
                     this.Ands[andExpresion.Key] = andExpresion.Value;
                 }
                 // duplicate key will be overwritten
-                foreach (var andExpresion in this.RightOperant.Ands.ToList())
+                foreach (var andExpresion in this.RightOperand.Ands.ToList())
                 {
                     this.Ands[andExpresion.Key] = andExpresion.Value;
                 }
             }
         }
 
+        // check if a value could satisfy part of the expression
         public bool CheckKey(string attributeName, AtomValue valueToCheck)
         {
             if (this.Ands.ContainsKey(attributeName))
@@ -165,8 +166,8 @@ namespace MiniSQL.Library.Models
                 return this.ConcreteValue;
 
             // fetch the values of children
-            AtomValue leftValue = this.LeftOperant?.Calculate(row);
-            AtomValue rightValue = this.RightOperant?.Calculate(row);
+            AtomValue leftValue = this.LeftOperand?.Calculate(row);
+            AtomValue rightValue = this.RightOperand?.Calculate(row);
             AtomValue result = null;
 
             // // make sure the types of children are the same

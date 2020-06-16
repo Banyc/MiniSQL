@@ -6,7 +6,6 @@ using MiniSQL.Library.Models;
 
 namespace MiniSQL.IndexManager.Models
 {
-    // TODO: to test the inter-node operations
     // The term "offset" is the same as "address"
     // each node exclusively owns one page
     // <PageType (1 byte)> <FreeOffset (2 bytes)> <NumCells (2 bytes)> <CellsOffset (2 bytes)> <0 (1 byte)> <RightPage (4 bytes)> <ParentPage (4 bytes)>

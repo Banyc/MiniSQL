@@ -109,9 +109,9 @@ namespace MiniSQL.Library
             // "not equal" operator is ignored
             Debug.Assert(andList.ContainsKey("a") == false);
             Debug.Assert(andList["b"].Operator == Operator.LessThanOrEqualTo);
-            Debug.Assert(andList["b"].RightOperant.ConcreteValue.StringValue == "str");
+            Debug.Assert(andList["b"].RightOperand.ConcreteValue.StringValue == "str");
             Debug.Assert(andList["c"].Operator == Operator.LessThan);
-            Debug.Assert(andList["c"].RightOperant.ConcreteValue.FloatValue == 6.6);
+            Debug.Assert(andList["c"].RightOperand.ConcreteValue.FloatValue == 6.6);
         }
 
         private static Expression GetAndsExpression()
@@ -146,13 +146,13 @@ namespace MiniSQL.Library
             // !=
             Expression node4 = new Expression();
             node4.Operator = Operator.NotEqual;
-            node4.LeftOperant = node8;
-            node4.RightOperant = node9;
+            node4.LeftOperand = node8;
+            node4.RightOperand = node9;
             // <=
             Expression node5 = new Expression();
             node5.Operator = Operator.LessThanOrEqualTo;
-            node5.LeftOperant = node10;
-            node5.RightOperant = node11;
+            node5.LeftOperand = node10;
+            node5.RightOperand = node11;
             // 6.6
             Expression node6 = new Expression();
             node6.Operator = Operator.AtomConcreteValue;
@@ -166,18 +166,18 @@ namespace MiniSQL.Library
             // and
             Expression node2 = new Expression();
             node2.Operator = Operator.And;
-            node2.LeftOperant = node4;
-            node2.RightOperant = node5;
+            node2.LeftOperand = node4;
+            node2.RightOperand = node5;
             // >
             Expression node3 = new Expression();
             node3.Operator = Operator.MoreThan;
-            node3.LeftOperant = node6;
-            node3.RightOperant = node7;
+            node3.LeftOperand = node6;
+            node3.RightOperand = node7;
             // and
             Expression node1 = new Expression();
             node1.Operator = Operator.And;
-            node1.LeftOperant = node2;
-            node1.RightOperant = node3;
+            node1.LeftOperand = node2;
+            node1.RightOperand = node3;
 
             return node1;
         }

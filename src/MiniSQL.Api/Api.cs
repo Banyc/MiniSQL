@@ -88,7 +88,6 @@ namespace MiniSQL.Api
             }
         }
 
-        // TODO: review
         // drop statement
         private void HandleStatement(DropStatement statement)
         {
@@ -127,16 +126,8 @@ namespace MiniSQL.Api
             SchemaRecord tableSchema = _catalogManager.GetTableSchemaRecord(statement.TableName);
             List<SchemaRecord> indexSchemas = _catalogManager.GetIndicesSchemaRecord(statement.TableName);
 
-            // // delete index records from index trees
-            // foreach (SchemaRecord indexSchema in indexSchemas)
-            // {
-            //     // build condition for each index tree
-            //     Expression condition = new Expression();
-
-                
-            // }
-
             // TODO
+            // delete index records from index trees
             // __problem__:
             // attribute names := (priKey, a, b, c)
             // condition := b < 3 and c > 5
@@ -169,9 +160,9 @@ namespace MiniSQL.Api
                     {
                         isIndexTreeAvailable = true;
                         // find out the primary key
-                        // List<AtomValue> indexPrimaryKeyPair = _recordManager.SelectRecord(statement.Condition.Ands[indexSchema.Name].RightOperant.ConcreteValue, indexSchema.RootPage);
+                        // List<AtomValue> indexPrimaryKeyPair = _recordManager.SelectRecord(statement.Condition.Ands[indexSchema.Name].RightOperand.ConcreteValue, indexSchema.RootPage);
                         // primaryKey = indexPrimaryKeyPair[1];
-                        List<AtomValue> wrappedPrimaryKey = _recordManager.SelectRecord(statement.Condition.Ands[indexSchema.SQL.AttributeName].RightOperant.ConcreteValue, indexSchema.RootPage);
+                        List<AtomValue> wrappedPrimaryKey = _recordManager.SelectRecord(statement.Condition.Ands[indexSchema.SQL.AttributeName].RightOperand.ConcreteValue, indexSchema.RootPage);
                         primaryKey = wrappedPrimaryKey?[0];
                         break;
                     }

@@ -516,25 +516,25 @@ namespace MiniSQL.CatalogManager
             Expression idExp = new Expression() { Operator = Operator.AtomVariable, AttributeName = name1 };
             Expression temp1 = new Expression()
             { Operator = Operator.AtomConcreteValue, ConcreteValue = new AtomValue() { Type = AttributeTypes.Int, IntegerValue = 10 } };
-            idOperator.LeftOperant = idExp;
-            idOperator.RightOperant = temp1;
+            idOperator.LeftOperand = idExp;
+            idOperator.RightOperand = temp1;
             Expression classOperator = new Expression() { Operator = Operator.MoreThan };
             Expression classExp = new Expression() { Operator = Operator.AtomVariable, AttributeName = name2 };
             Expression temp2 = new Expression()
             { Operator = Operator.AtomConcreteValue, ConcreteValue = new AtomValue() { Type = AttributeTypes.Int, IntegerValue = 10 } };
-            classOperator.LeftOperant = temp2;
-            classOperator.RightOperant = classExp;
+            classOperator.LeftOperand = temp2;
+            classOperator.RightOperand = classExp;
             Expression scoreOperator = new Expression() { Operator = Operator.LessThanOrEqualTo };
             Expression scoreExp = new Expression() { Operator = Operator.AtomVariable, AttributeName = name3 };
             Expression temp3 = new Expression()
             { Operator = Operator.AtomConcreteValue, ConcreteValue = new AtomValue() { Type = AttributeTypes.Int, IntegerValue = 10 } };
-            scoreOperator.LeftOperant = temp3;
-            scoreOperator.RightOperant = scoreExp;
+            scoreOperator.LeftOperand = temp3;
+            scoreOperator.RightOperand = scoreExp;
             // connect tree trunk
-            root.LeftOperant = secondAnd;
-            root.RightOperant = scoreOperator;
-            secondAnd.LeftOperant = idOperator;
-            secondAnd.RightOperant = classOperator;
+            root.LeftOperand = secondAnd;
+            root.RightOperand = scoreOperator;
+            secondAnd.LeftOperand = idOperator;
+            secondAnd.RightOperand = classOperator;
 
             return root;
         }
