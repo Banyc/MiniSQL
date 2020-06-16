@@ -26,14 +26,12 @@ namespace MiniSQL.IndexManager.Controllers
             this.MaxCell = maxCell;
         }
 
-        // TODO: test
         public BTreeNode OccupyNewTableNode()
         {
             BTreeNode newNode = GetNewNode(PageTypes.LeafTablePage);
             return newNode;
         }
 
-        // TODO: test
         public void RemoveTree(BTreeNode root)
         {
             if (root.PageType == PageTypes.LeafIndexPage || root.PageType == PageTypes.LeafTablePage)
@@ -726,7 +724,7 @@ namespace MiniSQL.IndexManager.Controllers
                 UInt16 offset;
                 int begin_Index;
 
-                AtomValue bound = expression.Ands[keyName].RightOperant.ConcreteValue;
+                AtomValue bound = expression.Ands[keyName].RightOperand.ConcreteValue;
 
                 values.Add(bound);
                 DBRecord keyFind = new DBRecord(values);
@@ -755,6 +753,12 @@ namespace MiniSQL.IndexManager.Controllers
                         return LessFind(beginNode, expression, attributeDeclarations, bound, true);
                     case Operator.MoreThan:
                         beginNode = FindNode(keyFind, root, true);
+                        // WORK AROUND
+                        if (beginNode == null)
+                        {
+                            // variable > <overlimited number>
+                            return result;
+                        }
                         (cell, offset, begin_Index) = beginNode.FindBTreeCell(keyFind);
                         //2 possible sitiutions for cell==null:
                         //1:The keyFind is bigger than all the key
@@ -791,7 +795,7 @@ namespace MiniSQL.IndexManager.Controllers
                         }
                         return MoreFind(beginNode, begin_Index, expression, attributeDeclarations, true);
                     default:
-                        throw new Exception("The Operant is not supported!");
+                        throw new Exception("The Operand is not supported!");
                 }
                 //This step may not need?
                 return result;

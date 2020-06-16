@@ -76,6 +76,8 @@ namespace MiniSQL.Api.Controllers
                 // perform SQL for each input when the last line ends with ';'
                 if (!line.TrimEnd().EndsWith(";"))
                 {
+                    // compensate '\n'
+                    input.Append("\n");
                     continue;
                 }
                 // execute SQL
