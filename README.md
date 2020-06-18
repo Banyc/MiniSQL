@@ -56,6 +56,10 @@ exit
 
 ## Spec
 
+### Database File Format
+
+The database file format mimicked that of SQLite but with some differences. 
+
 ### 数据类型
 
 只要求支持三种基本数据类型：int，char(n)，float，其中char(n)满足 1 <= n <= 255 。
@@ -78,7 +82,7 @@ exit
 
 ## Architecture
 
-![](img/2020-06-15-21-29-42.png)
+![](img/2020-06-16-14-33-06.png)
 
 ### Interpreter
 

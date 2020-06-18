@@ -160,8 +160,6 @@ namespace MiniSQL.Api
                     {
                         isIndexTreeAvailable = true;
                         // find out the primary key
-                        // List<AtomValue> indexPrimaryKeyPair = _recordManager.SelectRecord(statement.Condition.Ands[indexSchema.Name].RightOperand.ConcreteValue, indexSchema.RootPage);
-                        // primaryKey = indexPrimaryKeyPair[1];
                         List<AtomValue> wrappedPrimaryKey = _recordManager.SelectRecord(statement.Condition.Ands[indexSchema.SQL.AttributeName].RightOperand.ConcreteValue, indexSchema.RootPage);
                         primaryKey = wrappedPrimaryKey?[0];
                         break;
@@ -190,8 +188,8 @@ namespace MiniSQL.Api
                 }
                 else  // the primary key is null.
                 // if primaryKey is null, 
-                // it means from the index tree could not find the primary key.
-                // in order words, there is not a row with the condition existing in table tree.
+                // it means that from the index tree it could not find the primary key.
+                // in order words, there is not a row existing in the table tree satisfying the condition.
                 // thus, no need to visit the table tree
                 {
                     // assign an empty list

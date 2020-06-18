@@ -37,7 +37,6 @@ namespace MiniSQL.Api.Controllers
             _bTreeController = bTreeController;
             _interpreter = interpreter;
             _catalogManager = catalogManager;
-            // IIndexManager indexManager = new IndexManager();
             _recordManager = recordManager;
             _api = api;
         }

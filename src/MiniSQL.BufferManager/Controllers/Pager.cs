@@ -170,7 +170,8 @@ namespace MiniSQL.BufferManager.Controllers
 
             this.Stream.Seek((page.PageNumber - 1) * this.PageSize, SeekOrigin.Begin);
             this.Stream.Write(page.Data, 0, page.PageSize);
-            this.Stream.Flush(true);
+            // WORK AROUND: make good use of OS-level buffer XD
+            // this.Stream.Flush(true);
             page.IsDirty = false;
         }
 

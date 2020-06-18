@@ -1,7 +1,6 @@
 using System;
-using MiniSQL.BufferManager.Models;
 
-namespace MiniSQL.IndexManager.Models
+namespace MiniSQL.BufferManager.Models
 {
     public class FreeListTruck
     {
