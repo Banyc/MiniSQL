@@ -14,11 +14,11 @@ namespace MiniSQL.BufferManager
         {
             Console.WriteLine("[BufferManager] Test Begin");
 
-            // TestPager();
+            TestPager();
 
-            // TestPagerSwapping();
+            TestPagerSwapping();
 
-            // TestFreeList();
+            TestFreeList();
 
             Console.WriteLine("[BufferManager] Test End");
         }

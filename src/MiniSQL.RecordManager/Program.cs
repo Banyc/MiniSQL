@@ -3,7 +3,6 @@ using System.Collections.Generic;
 using System.Diagnostics;
 using System.IO;
 using MiniSQL.BufferManager.Controllers;
-using MiniSQL.BufferManager.Models;
 using MiniSQL.IndexManager.Controllers;
 using MiniSQL.IndexManager.Models;
 using MiniSQL.IndexManager.Utilities;

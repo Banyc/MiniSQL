@@ -5,6 +5,7 @@ using System.IO;
 using MiniSQL.BufferManager.Controllers;
 using MiniSQL.BufferManager.Models;
 using MiniSQL.IndexManager.Controllers;
+using MiniSQL.IndexManager.Interfaces;
 using MiniSQL.IndexManager.Models;
 using MiniSQL.IndexManager.Utilities;
 using MiniSQL.Library.Models;
@@ -17,43 +18,41 @@ namespace MiniSQL.IndexManager
         {
             Console.WriteLine("[IndexManager] Test Begin");
 
-            //BTreeTestCases.TestAll();
+            // BTreeTestCases.TestAll();
 
             // TestMaxHeightBTree(8, false, true, true);
 
-            //BugTest1();
+            BugTest1();
 
-            // Bugtest2();
+            Bugtest2();
 
-            // BugTest3();
+            BugTest3();
 
-            //TestExpressionFind();
+            TestExpressionFind();
 
-            //TestExpressionDelete();
+            TestExpressionDelete();
 
-            //TestInsertSplit(200);
+            TestBTreeInsert();
 
-            //TestBTreeInsert();
-
-            //TestBTreeDelete();
+            TestBTreeDelete();
 
             HardTestForBTree();
 
-            // TestDBRecord();
+            TestDBRecord();
 
-            // TestLeafTableCell();
+            TestLeafTableCell();
 
-            // TestInternalTableCell();
+            TestInternalTableCell();
 
-            // TestInternalIndexCell();
+            TestInternalIndexCell();
 
-            // TestLeafIndexCell();
+            TestLeafIndexCell();
+
+            TestInsertIntoAndDeletionInsideBTreeNode();
 
             // TestPager();
 
             // TestPagerSwapping();
-
-            //TestInsertIntoAndDeletionInsideBTreeNode();
 
             // TestFreeList();
 
@@ -102,7 +101,7 @@ namespace MiniSQL.IndexManager
             record = GetTestBRecord(4);
             keyRecord = GetTestBRecord(4);
             root = controller.InsertCell(root, keyRecord, record);
-            
+
             BTreeNodeHelper.VisualizeIntegerTree(pager, root);
             // test 5
             // keyRecord = GetTestBRecord(1109110087);
@@ -356,6 +355,7 @@ namespace MiniSQL.IndexManager
 
             BTreeNodeHelper.VisualizeIntegerTree(pager, root);
 
+            pager.Close();
         }
 
         static void TestExpressionFind()
@@ -414,6 +414,7 @@ namespace MiniSQL.IndexManager
                 Console.WriteLine();
             }
 
+            pager.Close();
         }
 
         private static DBRecord GetTestRecord_expression(int value_1, string value_2, float value_3)
@@ -612,6 +613,7 @@ namespace MiniSQL.IndexManager
             Debug.Assert(result != null);
             Debug.Assert(result.Key.GetValues()[0].IntegerValue == 7);
 
+            pager.Close();
         }
 
         static void HardTestForBTree()
@@ -620,14 +622,14 @@ namespace MiniSQL.IndexManager
             File.Delete(dbPath);
             Pager pager = new Pager(dbPath);
             FreeList freeList = new FreeList(pager);
-            BTreeController controller = new BTreeController(pager, freeList);
+            BTreeController controller = new BTreeController(pager, freeList, 4);
             BTreeNode root = null;
             LeafTableCell result = null;
 
             //Construct BTree
             for (int i = 1; i < 20; i++)
             {
-                DBRecord record = GetTestBRecord(i+100);
+                DBRecord record = GetTestBRecord(i + 100);
                 DBRecord keyRecord = GetTestBRecord(i);
                 root = controller.InsertCell(root, keyRecord, record);
 
@@ -636,13 +638,31 @@ namespace MiniSQL.IndexManager
                 Debug.Assert(result.Key.GetValues()[0].IntegerValue == i);
 
             }
+            // test inserting records with repeated primary keys
             DBRecord record_D = GetTestBRecord(103);
             DBRecord keyRecord_D = GetTestBRecord(3);
-            root = controller.InsertCell(root, keyRecord_D, record_D);
-             
+            bool isError = false;
+            try
+            {
+                root = controller.InsertCell(root, keyRecord_D, record_D);
+            }
+            catch (RepeatedKeyException)
+            {
+                isError = true;
+            }
+            Debug.Assert(isError == true);
+
+            isError = false;
             record_D = GetTestBRecord(105);
             keyRecord_D = GetTestBRecord(5);
-            root = controller.InsertCell(root, keyRecord_D, record_D);
+            try
+            {
+                root = controller.InsertCell(root, keyRecord_D, record_D);
+            }
+            catch (RepeatedKeyException)
+            {
+                isError = true;
+            }
 
             BTreeNodeHelper.VisualizeIntegerTree(pager, root);
 
@@ -714,9 +734,8 @@ namespace MiniSQL.IndexManager
 
             }
 
+            pager.Close();
         }
-
-
 
         static void TestBTreeInsert()
         {

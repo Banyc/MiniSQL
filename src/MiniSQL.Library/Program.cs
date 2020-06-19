@@ -116,11 +116,13 @@ namespace MiniSQL.Library
 
         private static Expression GetAndsExpression()
         {
+            // __expression__
+            // ((32 != a) and (b <= "str")) and (6.6 > c)
             // __tree structure__
-            //             and 1
-            //        and 2,     > 3
-            //     != 4, <= 5, 6.6 6, c 7
-            // 32 8, a, 9, b 10, "str" 11
+            //                       and 1
+            //            and 2,                    > 3
+            //     != 4,        <= 5,           6.6 6, c 7
+            // 32 8, a 9,    b 10, "str" 11
 
             // 32
             Expression node8 = new Expression();

@@ -14,8 +14,8 @@ namespace MiniSQL.IndexManager.Models
     {
         public static void TestAll()
         {
-            // TestLeafTableNode();
-            // TestMaxHeightBTree();
+            TestLeafTableNode();
+            TestMaxHeightBTree();
         }
 
         static void TestMaxHeightBTree()
