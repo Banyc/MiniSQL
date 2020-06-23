@@ -52,6 +52,12 @@ execfile "PATH_TO_SQL_FILE" ;
 
 -- ensure writing back all dirty pages
 exit
+
+-- write all pages back to disk
+flush
+
+use database DATABASE_NAME
+drop database DATABASE_NAME
 ```
 
 ## Spec

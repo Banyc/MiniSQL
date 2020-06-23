@@ -1,18 +1,4 @@
 ﻿using System;
-using System.Collections.Generic;
-using System.Diagnostics;
-using System.IO;
-using System.Text;
-using MiniSQL.Api.Controllers;
-using MiniSQL.BufferManager.Controllers;
-using MiniSQL.BufferManager.Models;
-using MiniSQL.CatalogManager;
-using MiniSQL.IndexManager.Controllers;
-using MiniSQL.IndexManager.Interfaces;
-using MiniSQL.Interpreter;
-using MiniSQL.Library.Interfaces;
-using MiniSQL.Library.Models;
-using MiniSQL.RecordManager;
 
 namespace MiniSQL.Api
 {
@@ -20,31 +6,7 @@ namespace MiniSQL.Api
     {
         static void Main(string[] args)
         {
-            UseDatabase("test");
-        }
-        
-        public static void UseDatabase(string databaseName)
-        {
-            // init
-            string dbPath = $"./{databaseName}.minidb";
-            Pager pager = new Pager(dbPath, 1024 * 8, 400);
-            FreeList freeList = new FreeList(pager);
-            IIndexManager bTreeController = new BTreeController(pager, freeList, 40);
-            IInterpreter interpreter = new Parsing();
-            ICatalogManager catalogManager = new Catalog(databaseName);
-            IRecordManager recordManager = new RecordContext(pager, bTreeController);
-            IApi api = new Api(interpreter, catalogManager, recordManager);
-
-            View view = new View(
-                bTreeController,
-                interpreter,
-                catalogManager,
-                recordManager,
-                api,
-                pager
-            );
-            view.Interactive();  
-            
+            Console.WriteLine("Hello world");
         }
     }
 }

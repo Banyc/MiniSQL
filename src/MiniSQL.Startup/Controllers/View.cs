@@ -1,25 +1,26 @@
 using System;
 using System.Collections.Generic;
 using System.Diagnostics;
+using System.IO;
 using System.Text;
+using System.Text.RegularExpressions;
 using MiniSQL.BufferManager.Controllers;
 using MiniSQL.IndexManager.Interfaces;
 using MiniSQL.Library.Interfaces;
 using MiniSQL.Library.Models;
 
-namespace MiniSQL.Api.Controllers
+namespace MiniSQL.Startup.Controllers
 {
     public class View
     {
-        private readonly IIndexManager _bTreeController;
-        private readonly IInterpreter _interpreter;
-        private readonly ICatalogManager _catalogManager;
-        private readonly IRecordManager _recordManager;
-        private readonly IApi _api;
-        private readonly Pager _pager;
+        private bool isUsingDatabase = false;
+        private string nameOfDatabaseInUse;
+        private IApi _api;
+        private Pager _pager;
+        private readonly DatabaseController _databaseController;
         private bool isCtrlC = false;
 
-        public View(IIndexManager bTreeController, IInterpreter interpreter, ICatalogManager catalogManager, IRecordManager recordManager, IApi api, Pager pager)
+        public View(DatabaseController databaseController)
         {
             // ensure writing back when ctrl-c
             Console.CancelKeyPress += OnExit;
@@ -28,14 +29,34 @@ namespace MiniSQL.Api.Controllers
             Console.WriteLine();
             Console.WriteLine("Hello MiniSQL!");
             Console.WriteLine();
-            
+
+            _databaseController = databaseController;
+        }
+
+        // TODO: wrap this to a class
+        private void ChangeContext(string newDatabaseName)
+        {
+            if (isUsingDatabase)
+            {
+                _pager.Close();
+            }
             // init
-            _pager = pager;
-            _bTreeController = bTreeController;
-            _interpreter = interpreter;
-            _catalogManager = catalogManager;
-            _recordManager = recordManager;
-            _api = api;
+            this.isUsingDatabase = true;
+            this.nameOfDatabaseInUse = newDatabaseName;
+            (_api, _pager) = _databaseController.UseDatabase(newDatabaseName);
+        }
+
+        // TODO: wrap this to a class
+        private void DropDatabase(string databaseName)
+        {
+            if (nameOfDatabaseInUse == databaseName)
+            {
+                _pager.Close();
+                isUsingDatabase = false;
+            }
+            File.Delete($"{databaseName}.minidb");
+            File.Delete($"{databaseName}.indices.txt");
+            File.Delete($"{databaseName}.tables.txt");
         }
 
         // interactive(blocking) view of the whole solution 
@@ -66,6 +87,26 @@ namespace MiniSQL.Api.Controllers
                 if (line == "exit")
                 {
                     isExit = true;
+                    continue;
+                }
+                // use database
+                if (Regex.IsMatch(line, @"(?i)\s*use\s*database\s*.*(?-i)"))
+                {
+                    string databaseName = line.Split(new string[] { " ", "\n" }, StringSplitOptions.RemoveEmptyEntries)[2].TrimEnd(';');
+                    ChangeContext(databaseName);
+                    continue;
+                }
+                // drop database
+                if (Regex.IsMatch(line, @"(?i)\s*drop\s*database\s*.*(?-i)"))
+                {
+                    string databaseName = line.Split(new string[] { " ", "\n" }, StringSplitOptions.RemoveEmptyEntries)[2].TrimEnd(';');
+                    DropDatabase(databaseName);
+                    continue;
+                }
+                if (!this.isUsingDatabase)
+                {
+                    // WORKAROUND
+                    Console.WriteLine("[Error] No database in use");
                     continue;
                 }
                 // flush all the dirty pages back to secondary memory and clean the main memory out of any page
@@ -137,7 +178,8 @@ namespace MiniSQL.Api.Controllers
                 input.Clear();
             }
             // save database file
-            _pager.Close();
+            if (this.isUsingDatabase)
+                _pager.Close();
         }
 
         // BUG: NOT WORKING

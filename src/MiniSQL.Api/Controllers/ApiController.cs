@@ -4,16 +4,16 @@ using MiniSQL.Library.Interfaces;
 using System;
 using System.Linq;
 
-namespace MiniSQL.Api
+namespace MiniSQL.Api.Controllers
 {
-    public class Api : IApi
+    public class ApiController : IApi
     {
 
         private readonly IInterpreter _interpreter;
         private readonly ICatalogManager _catalogManager;
         private readonly IRecordManager _recordManager;
 
-        public Api(IInterpreter interpreter, ICatalogManager catalogManager, IRecordManager recordManager)
+        public ApiController(IInterpreter interpreter, ICatalogManager catalogManager, IRecordManager recordManager)
         {
             _catalogManager = catalogManager;
             _interpreter = interpreter;

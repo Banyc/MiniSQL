@@ -150,6 +150,8 @@ namespace MiniSQL.BufferManager.Controllers
                 // remove LRU if out of limit
                 if (this.Pages.Count >= this.InMemoryPageCountLimit)
                     RemoveLRUPage();
+                if (this.Pages.Count >= this.InMemoryPageCountLimit)
+                    throw new Exception("Race condition!");
 
                 page.Core = new MemoryPage.MemoryPageCore(this, page.PageNumber);
                 page.Core.data = new byte[this.PageSize];
@@ -187,6 +189,8 @@ namespace MiniSQL.BufferManager.Controllers
             }
         }
 
+        // write back dirty pages without closing connection to the file system
+        // the changes will not immediately affect the file in secondary memory (the disk)
         public void CleanAllPagesFromMainMemory()
         {
             lock (this)
