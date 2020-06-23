@@ -1,30 +1,67 @@
 
-using MiniSQL.Api.Controllers;
+using System.Collections.Generic;
+using System.IO;
 using MiniSQL.BufferManager.Controllers;
-using MiniSQL.CatalogManager;
-using MiniSQL.IndexManager.Controllers;
-using MiniSQL.IndexManager.Interfaces;
-using MiniSQL.Interpreter;
 using MiniSQL.Library.Interfaces;
-using MiniSQL.RecordManager;
+using MiniSQL.Library.Models;
 
 namespace MiniSQL.Startup.Controllers
 {
     public class DatabaseController
     {
-        public (IApi, Pager) UseDatabase(string databaseName)
+        private readonly ApiPagerBuilder _builder;
+
+        private IApi _api;
+        private Pager _pager;
+
+        public bool IsUsingDatabase { get; private set; } = false;
+        private string nameOfDatabaseInUse;
+
+        public DatabaseController(ApiPagerBuilder builder)
         {
+            _builder = builder;
+        }
+
+        // use database
+        public void ChangeContext(string newDatabaseName)
+        {
+            if (IsUsingDatabase)
+            {
+                _pager.Close();
+            }
             // init
-            string dbPath = $"./{databaseName}.minidb";
-            Pager pager = new Pager(dbPath, 1024 * 8, 400);
-            FreeList freeList = new FreeList(pager);
-            IIndexManager bTreeController = new BTreeController(pager, freeList, 40);
-            IInterpreter interpreter = new Parsing();
-            ICatalogManager catalogManager = new Catalog(databaseName);
-            IRecordManager recordManager = new RecordContext(pager, bTreeController);
-            IApi api = new ApiController(interpreter, catalogManager, recordManager);
-            
-            return (api, pager);
+            this.IsUsingDatabase = true;
+            this.nameOfDatabaseInUse = newDatabaseName;
+            (_api, _pager) = _builder.UseDatabase(newDatabaseName);
+        }
+
+        // delete database file
+        public void DropDatabase(string databaseName)
+        {
+            if (nameOfDatabaseInUse == databaseName)
+            {
+                _pager.Close();
+                IsUsingDatabase = false;
+            }
+            File.Delete($"{databaseName}.minidb");
+            File.Delete($"{databaseName}.indices.txt");
+            File.Delete($"{databaseName}.tables.txt");
+        }
+
+        public void ClosePager()
+        {
+            _pager.Close();
+        }
+
+        public void FlushPages()
+        {
+            _pager.CleanAllPagesFromMainMemory();
+        }
+
+        public List<SelectResult> Query(string input)
+        {
+            List<SelectResult> selectResults = _api.Query(input.ToString());
+            return selectResults;
         }
     }
 }

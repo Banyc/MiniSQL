@@ -6,7 +6,8 @@ namespace MiniSQL.Startup
     {
         static void Main(string[] args)
         {
-            DatabaseController controller = new DatabaseController();
+            ApiPagerBuilder builder = new ApiPagerBuilder();
+            DatabaseController controller = new DatabaseController(builder);
             View view = new View(controller);
             view.Interactive();
         }
