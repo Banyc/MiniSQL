@@ -63,6 +63,9 @@ namespace MiniSQL.Api.Controllers
                 case StatementType.SelectStatement:
                     selectResult = HandleSelectStatement((SelectStatement)statement);
                     break;
+                case StatementType.ShowStatement:
+                    selectResult = HandleSelectStatement((ShowStatement)statement);
+                    break;
                 case StatementType.ExecFileStatement:
                     throw new Exception("Impossible reach");
             }
@@ -134,6 +137,25 @@ namespace MiniSQL.Api.Controllers
             // delete record from table tree
             int newTableRootPage = _recordManager.DeleteRecords(statement.Condition, tableSchema.SQL.PrimaryKey, tableSchema.SQL.AttributeDeclarations, tableSchema.RootPage);
             _catalogManager.TryUpdateSchemaRecord(statement.TableName, newTableRootPage);
+        }
+
+        private SelectResult HandleSelectStatement(ShowStatement statement)
+        {
+            List<SchemaRecord> tableSchemas = _catalogManager.GetTablesSchemaRecord();
+            SelectResult result = new SelectResult();
+            result.ColumnDeclarations = new List<AttributeDeclaration>() { new AttributeDeclaration() {AttributeName = "Table", Type = AttributeTypes.Char, CharLimit = 80}};
+            result.Rows = new List<List<AtomValue>>();
+            foreach (SchemaRecord tableSchema in tableSchemas)
+            {
+                List<AtomValue> row = new List<AtomValue>();
+                AtomValue col = new AtomValue();
+                col.Type = AttributeTypes.Char;
+                col.CharLimit = 80;
+                col.StringValue = tableSchema.Name;
+                row.Add(col);
+                result.Rows.Add(row);
+            }
+            return result;
         }
 
         private SelectResult HandleSelectStatement(SelectStatement statement)

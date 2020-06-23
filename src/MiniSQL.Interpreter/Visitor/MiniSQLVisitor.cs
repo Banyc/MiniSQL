@@ -520,6 +520,13 @@ namespace MiniSQL.Interpreter
                 return (SelectStatement)Visit(context.queryExpressionParens());
         }
 
+        public override object VisitShowTablesStatement([NotNull] MiniSQLParser.ShowTablesStatementContext context)
+        {
+            ShowStatement statement = new ShowStatement();
+            statement.ShowType = ShowType.Table;
+            return statement;
+        }
+
         public override object VisitSimpleStatement([NotNull] MiniSQLParser.SimpleStatementContext context)
         {
             if (context.createStatement() != null)
@@ -536,6 +543,8 @@ namespace MiniSQL.Interpreter
                 return (IStatement)Visit(context.quitStatement());
             else if (context.selectStatement() != null)
                 return (IStatement)Visit(context.selectStatement());
+            else if (context.showTablesStatement() != null)
+                return (IStatement)Visit(context.showTablesStatement());
             else
                 throw new System.NotImplementedException(); 
         }

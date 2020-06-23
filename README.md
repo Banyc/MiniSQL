@@ -58,6 +58,8 @@ flush
 
 use database DATABASE_NAME
 drop database DATABASE_NAME
+
+show tables;
 ```
 
 ## Spec

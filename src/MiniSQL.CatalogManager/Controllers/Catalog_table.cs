@@ -68,7 +68,17 @@ namespace MiniSQL.CatalogManager.Controllers
             return s;
         }
 
-
+        //return the schema record of the table named table name
+        public List<SchemaRecord> GetTablesSchemaRecord()
+        {
+            List<SchemaRecord> list = new List<SchemaRecord>();
+            for (int i = 0; i < tables.Count; i++)
+            {
+                SchemaRecord target_table = GetTableSchemaRecord(tables[i].table_name);
+                list.Add(target_table);
+            }
+            return list;
+        }
 
         //to check if there is such a table named 'name'
         //if in,then return true. Vice versa

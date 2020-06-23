@@ -1,7 +1,7 @@
 
 using MiniSQL.Api.Controllers;
 using MiniSQL.BufferManager.Controllers;
-using MiniSQL.CatalogManager;
+using MiniSQL.CatalogManager.Controllers;
 using MiniSQL.IndexManager.Controllers;
 using MiniSQL.IndexManager.Interfaces;
 using MiniSQL.Interpreter;

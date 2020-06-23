@@ -5,6 +5,7 @@ using System.Runtime.InteropServices;
 using MiniSQL.Library.Interfaces;
 using System.Diagnostics;
 using System.IO;
+using MiniSQL.CatalogManager.Controllers;
 
 namespace MiniSQL.CatalogManager
 {

@@ -4,7 +4,7 @@ using MiniSQL.CatalogManager.Controllers;
 using MiniSQL.Library.Interfaces;
 using MiniSQL.Library.Models;
 
-namespace MiniSQL.CatalogManager
+namespace MiniSQL.CatalogManager.Controllers
 {
     //define all the functions 
     public class Catalog : ICatalogManager
@@ -314,6 +314,12 @@ namespace MiniSQL.CatalogManager
             {
                 return;
             }
+        }
+
+        public List<SchemaRecord> GetTablesSchemaRecord()
+        {
+            Catalog_table a = new Catalog_table(_databaseName);
+            return a.GetTablesSchemaRecord();
         }
     }
 }

@@ -83,6 +83,18 @@ public partial class MiniSQLBaseListener : IMiniSQLListener {
 	/// <param name="context">The parse tree.</param>
 	public virtual void ExitExecFileStatement([NotNull] MiniSQLParser.ExecFileStatementContext context) { }
 	/// <summary>
+	/// Enter a parse tree produced by <see cref="MiniSQLParser.showTablesStatement"/>.
+	/// <para>The default implementation does nothing.</para>
+	/// </summary>
+	/// <param name="context">The parse tree.</param>
+	public virtual void EnterShowTablesStatement([NotNull] MiniSQLParser.ShowTablesStatementContext context) { }
+	/// <summary>
+	/// Exit a parse tree produced by <see cref="MiniSQLParser.showTablesStatement"/>.
+	/// <para>The default implementation does nothing.</para>
+	/// </summary>
+	/// <param name="context">The parse tree.</param>
+	public virtual void ExitShowTablesStatement([NotNull] MiniSQLParser.ShowTablesStatementContext context) { }
+	/// <summary>
 	/// Enter a parse tree produced by <see cref="MiniSQLParser.createStatement"/>.
 	/// <para>The default implementation does nothing.</para>
 	/// </summary>

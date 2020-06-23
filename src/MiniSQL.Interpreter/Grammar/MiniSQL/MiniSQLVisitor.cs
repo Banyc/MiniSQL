@@ -56,6 +56,12 @@ public interface IMiniSQLVisitor<Result> : IParseTreeVisitor<Result> {
 	/// <return>The visitor result.</return>
 	Result VisitExecFileStatement([NotNull] MiniSQLParser.ExecFileStatementContext context);
 	/// <summary>
+	/// Visit a parse tree produced by <see cref="MiniSQLParser.showTablesStatement"/>.
+	/// </summary>
+	/// <param name="context">The parse tree.</param>
+	/// <return>The visitor result.</return>
+	Result VisitShowTablesStatement([NotNull] MiniSQLParser.ShowTablesStatementContext context);
+	/// <summary>
 	/// Visit a parse tree produced by <see cref="MiniSQLParser.createStatement"/>.
 	/// </summary>
 	/// <param name="context">The parse tree.</param>

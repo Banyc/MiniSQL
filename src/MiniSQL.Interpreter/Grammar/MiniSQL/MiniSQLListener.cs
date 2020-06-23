@@ -71,6 +71,16 @@ public interface IMiniSQLListener : IParseTreeListener {
 	/// <param name="context">The parse tree.</param>
 	void ExitExecFileStatement([NotNull] MiniSQLParser.ExecFileStatementContext context);
 	/// <summary>
+	/// Enter a parse tree produced by <see cref="MiniSQLParser.showTablesStatement"/>.
+	/// </summary>
+	/// <param name="context">The parse tree.</param>
+	void EnterShowTablesStatement([NotNull] MiniSQLParser.ShowTablesStatementContext context);
+	/// <summary>
+	/// Exit a parse tree produced by <see cref="MiniSQLParser.showTablesStatement"/>.
+	/// </summary>
+	/// <param name="context">The parse tree.</param>
+	void ExitShowTablesStatement([NotNull] MiniSQLParser.ShowTablesStatementContext context);
+	/// <summary>
 	/// Enter a parse tree produced by <see cref="MiniSQLParser.createStatement"/>.
 	/// </summary>
 	/// <param name="context">The parse tree.</param>

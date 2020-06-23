@@ -14,6 +14,7 @@ namespace MiniSQL.Library.Models
         // Custom
         QuitStatement,
         ExecFileStatement,
+        ShowStatement,
     }
 
     public interface IStatement

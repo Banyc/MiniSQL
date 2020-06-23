@@ -52,6 +52,7 @@ simpleStatement:
 
     | quitStatement
     | execFileStatement
+    | showTablesStatement
 ;
 
 quitStatement:
@@ -60,6 +61,10 @@ quitStatement:
 
 execFileStatement:
     EXECFILE_SYMBOL (SINGLE_QUOTED_TEXT | DOUBLE_QUOTED_TEXT)
+;
+
+showTablesStatement:
+    SHOW_SYMBOL TABLES_SYMBOL
 ;
 
 createStatement:
@@ -323,6 +328,7 @@ DECIMAL_NUMBER: DIGITS? DOT_SYMBOL DIGITS;
 FLOAT_NUMBER:   (DIGITS? DOT_SYMBOL)? DIGITS [eE] (MINUS_OPERATOR | PLUS_OPERATOR)? DIGITS;
 
 
+SHOW_SYMBOL:                     S H O W;                                    // Custom
 EXECFILE_SYMBOL:                 E X E C F I L E;                            // Custom
 QUIT_SYMBOL:                     Q U I T;                                    // Custom
 AND_SYMBOL:                      A N D;                                      // SQL-2003-R

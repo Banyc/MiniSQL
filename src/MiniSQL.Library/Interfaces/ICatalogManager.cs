@@ -73,6 +73,8 @@ namespace MiniSQL.Library.Interfaces
         SchemaRecord GetTableSchemaRecord(string tableName);
         // according to the table name requested, return the all index schema records that is associated to the table
         List<SchemaRecord> GetIndicesSchemaRecord(string tableName);
+        // return the all table schema records in this database file
+        List<SchemaRecord> GetTablesSchemaRecord();
         // according to the index name requested, return corresponding schema record
         SchemaRecord GetIndexSchemaRecord(string indexName);
         // check validation of the statement
