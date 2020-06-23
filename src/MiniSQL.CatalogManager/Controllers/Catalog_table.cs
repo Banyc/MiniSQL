@@ -2,6 +2,7 @@ using System.Collections.Generic;
 using System.IO;
 using System.Runtime.Serialization.Formatters.Binary;
 using MiniSQL.CatalogManager.Models;
+using MiniSQL.Library.Interfaces;
 using MiniSQL.Library.Models;
 
 namespace MiniSQL.CatalogManager.Controllers
@@ -82,6 +83,18 @@ namespace MiniSQL.CatalogManager.Controllers
             return false;
         }
 
+        public void AssertExist(string name)
+        {
+            if (!If_in(name))
+                throw new TableOrIndexNotExistsException($"Table {name} not exists");
+        }
+
+        public void AssertNotExist(string name)
+        {
+            if (If_in(name))
+                throw new TableOrIndexAlreadyExistsException($"Table {name} already exists");
+        }
+
         //update the rootPage of the table named 'name'
         //return false if not find
         public bool Update(string name, int rootPage)
@@ -100,7 +113,6 @@ namespace MiniSQL.CatalogManager.Controllers
             return has_find;
         }
 
-
         //try to create one table and save the result into the file
         //if succeed, return true
         //if the table is already created, return false
@@ -115,7 +127,16 @@ namespace MiniSQL.CatalogManager.Controllers
             Save_table(this.tables);
             return true;
         }
-
+        public void CreateStatementForTable(CreateStatement createStatement, int rootPage)
+        {
+            if (this.If_in(createStatement.TableName))
+            {
+                throw new TableOrIndexAlreadyExistsException("Table Already Exists");
+            }
+            Models.Table a = new Models.Table(createStatement, rootPage);
+            tables.Add(a);
+            Save_table(this.tables);
+        }
 
         //try to drop one table and save the result into the file
         //if succeed, return true
@@ -138,8 +159,28 @@ namespace MiniSQL.CatalogManager.Controllers
             //delete all the indices that are related to the deleted table 
             Catalog_index b = new Catalog_index();
             return if_find && b.DeleteIndicesOfTable(dropStatement.TableName);
-
-
+        }
+        public void DropStatementForTable(DropStatement dropStatement)
+        {
+            bool if_find = false;
+            if (this.If_in(dropStatement.TableName))
+                for (int i = 0; i < this.tables.Count;)
+                {
+                    if (this.tables[i].table_name == dropStatement.TableName)
+                    {
+                        tables.RemoveAt(i);
+                        Save_table(tables);
+                        if_find = true;
+                    }
+                    else
+                        i++;
+                }
+            //delete all the indices that are related to the deleted table 
+            Catalog_index b = new Catalog_index();
+            if (if_find)
+                b.DeleteIndicesOfTable(dropStatement.TableName);
+            else
+                throw new TableOrIndexNotExistsException($"Table {dropStatement.TableName} Not Exists");
         }
 
         //load the table from file and store the data into tables

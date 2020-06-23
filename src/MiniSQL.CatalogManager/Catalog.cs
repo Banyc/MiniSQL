@@ -1,3 +1,4 @@
+using System;
 using System.Collections.Generic;
 using MiniSQL.CatalogManager.Controllers;
 using MiniSQL.Library.Interfaces;
@@ -12,32 +13,56 @@ namespace MiniSQL.CatalogManager
         // if succeeded, return true. Vice versa
         public bool TryCreateStatement(CreateStatement createStatement, int rootPage)
         {
+            try
+            {
+                CreateStatement(createStatement, rootPage);
+                return true;
+            }
+            catch (Exception)
+            {
+                return false;
+            }
+        }
+        public void CreateStatement(CreateStatement createStatement, int rootPage)
+        {
             //create table
             if (createStatement.CreateType == CreateType.Table)
             {
                 Catalog_table a = new Catalog_table();//load the tables
-                return a.TryCreateStatementForTable(createStatement, rootPage);
+                a.CreateStatementForTable(createStatement, rootPage);
             }
             //create index
             else
             {
                 Catalog_index b = new Catalog_index();//load the index
-                return b.TryCreateStatementForIndex(createStatement, rootPage);
+                b.CreateStatementForIndex(createStatement, rootPage);
             }
         }
         // try to remove some schema records from file
         // if succeeded, return true. Vice versa
         public bool TryDropStatement(DropStatement dropStatement)
         {
+            try
+            {
+                DropStatement(dropStatement);
+                return true;
+            }
+            catch (Exception)
+            {
+                return false;
+            }
+        }
+        public void DropStatement(DropStatement dropStatement)
+        {
             if (dropStatement.TargetType == DropTarget.Table)
             {
                 Catalog_table a = new Catalog_table();//load the table
-                return a.TryDropStatementForTable(dropStatement);
+                a.DropStatementForTable(dropStatement);
             }
             else
             {
                 Catalog_index b = new Catalog_index();//load the index
-                return b.TryDropStatementForIndex(dropStatement);
+                b.DropStatementForIndex(dropStatement);
             }
         }
 
@@ -90,6 +115,19 @@ namespace MiniSQL.CatalogManager
         // check validation of the statement
         public bool IsValid(IStatement statement)
         {
+            try
+            {
+                CheckValidation(statement);
+                return true;
+            }
+            catch (Exception)
+            {
+                return false;
+            }
+        }
+        // check validation of the statement
+        public void CheckValidation(IStatement statement)
+        {
             //check validation of createStatement
             if (statement.Type == StatementType.CreateStatement)
             {
@@ -99,7 +137,7 @@ namespace MiniSQL.CatalogManager
                 {
                     //to check whether the table has been created before
                     Catalog_table a = new Catalog_table();
-                    return !a.If_in(x.TableName);
+                    a.AssertNotExist(x.TableName);
                 }
                 //to create an index
                 else
@@ -112,8 +150,12 @@ namespace MiniSQL.CatalogManager
                     bool condition2 = !b.If_in(x.IndexName);
                     //to check whether the attribute is in the attribute list of the table
                     bool condition3 = a.return_table(x.TableName).Has_attribute(x.AttributeName);
-                    //return true if the statement meets all the conditions.Vice Versa
-                    return condition1 && condition2 && condition3;
+                    if (!condition1)
+                        throw new TableOrIndexNotExistsException($"Table {x.TableName} not exists");
+                    if (!condition2)
+                        throw new TableOrIndexAlreadyExistsException($"Index {x.IndexName} not exists");
+                    if (!condition3)
+                        throw new AttributeNotExistsException($"Attribute {x.AttributeName} not exists in table {x.TableName}");
                 }
             }
             //check validation of a drop statement
@@ -125,15 +167,20 @@ namespace MiniSQL.CatalogManager
                 //to drop a table,we need to check whether the table exists
                 if (x.TargetType == DropTarget.Table)
                 {
-                    return a.If_in(x.TableName);
+                    a.AssertExist(x.TableName);
                 }
                 //to drop a index,we need to check whether the index exists
                 else
                 {
                     if (x.TableName != "")
-                        return b.If_in(x.IndexName) && b.Of_table(x.IndexName) == x.TableName;
+                    {
+                        b.AssertExist(x.IndexName);
+                        
+                        if (b.Of_table(x.IndexName) != x.TableName)
+                            throw new AttributeNotExistsException($"Index {x.IndexName} is not associated with table {x.TableName}");
+                    }
                     else
-                        return b.If_in(x.IndexName);
+                        b.AssertExist(x.IndexName);
                 }
             }
 
@@ -143,13 +190,10 @@ namespace MiniSQL.CatalogManager
                 SelectStatement x = (SelectStatement)statement;
                 //check whether the table is in the tables catalog
                 Catalog_table a = new Catalog_table();
-                if (!a.If_in(x.FromTable))
-                {
-                    return false;
-                }
+                a.AssertExist(x.FromTable);
                 if (x.Condition == null)
                 {
-                    return true;
+                    return;
                 }
                 else if (x.Condition.AttributeName == "")
                 {
@@ -157,17 +201,17 @@ namespace MiniSQL.CatalogManager
                     if (x.Condition.Ands.Count == 0)
                     {
                         //if the ands is empty and attribute name is emply, the statement means select * from a table
-                        return true;
+                        return;
                     }
                     else
                     {
-                        //for each attribute in the epression list(named 'ands')
+                        //for each attribute in the egression list(named 'ands')
                         //check whether the attribute is in the attribute list of this table
                         foreach (KeyValuePair<string, Expression> expression_piece in x.Condition.Ands)
                         {
                             if (!a.return_table(x.FromTable).Has_attribute(expression_piece.Key))
                             {
-                                return false;
+                                throw new AttributeNotExistsException($"Attribute {expression_piece.Key} not exists in table {x.FromTable}");
                             }
                         }
                     }
@@ -178,13 +222,11 @@ namespace MiniSQL.CatalogManager
                     //check whether the only attribute is one of the table's attributes
                     if (!a.return_table(x.FromTable).Has_attribute(x.Condition.AttributeName))
                     {
-                        return false;
+                        throw new AttributeNotExistsException($"Attribute {x.Condition.AttributeName} not exists in table {x.FromTable}");
                     }
 
                 }
-
-
-                return true;
+                return;
             }
             //check validation of a delete statement
             else if (statement.Type == StatementType.DeleteStatement)
@@ -193,13 +235,10 @@ namespace MiniSQL.CatalogManager
                 DeleteStatement x = (DeleteStatement)statement;
                 //check whether the table is in the tables catalog
                 Catalog_table a = new Catalog_table();
-                if (!a.If_in(x.TableName))
-                {
-                    return false;
-                }
+                a.AssertExist(x.TableName);
                 if (x.Condition == null)
                 {
-                    return true;
+                    return;
                 }
                 else if (x.Condition.AttributeName == "")
                 {
@@ -207,7 +246,7 @@ namespace MiniSQL.CatalogManager
                     if (x.Condition.Ands.Count == 0)
                     {
                         //if the ands is empty and attribute name is emply, the statement means select * from a table
-                        return true;
+                        return;
                     }
                     else
                     {
@@ -217,7 +256,7 @@ namespace MiniSQL.CatalogManager
                         {
                             if (!a.return_table(x.TableName).Has_attribute(expression_piece.Key))
                             {
-                                return false;
+                                throw new AttributeNotExistsException($"Attribute {expression_piece.Key} not exists in table {x.TableName}");
                             }
                         }
                     }
@@ -228,13 +267,11 @@ namespace MiniSQL.CatalogManager
                     //check whether the only attribute is one of the table's attributes
                     if (!a.return_table(x.TableName).Has_attribute(x.Condition.AttributeName))
                     {
-                        return false;
+                        throw new AttributeNotExistsException($"Attribute {x.Condition.AttributeName} not exists in table {x.TableName}");
                     }
 
                 }
-
-
-                return true;
+                return;
             }
             //check validation of an insert statement
             else if (statement.Type == StatementType.InsertStatement)
@@ -243,37 +280,32 @@ namespace MiniSQL.CatalogManager
 
                 //check whether the table is in the table list
                 Catalog_table a = new Catalog_table();
-                if (!a.If_in(x.TableName))
-                {
-                    return false;
-                }
+                a.AssertExist(x.TableName);
                 //check if the number of the attributes perfectly match the number of the values
                 if (x.Values.Count != a.return_table(x.TableName).attribute_list.Count)
                 {
-                    return false;
+                    throw new NumberOfAttributesNotMatchsException($"Number of attributes {x.Values.Count} not matchs {a.return_table(x.TableName).attribute_list.Count}");
                 }
                 //check whether the type of the inserted data well suits the data definition of each attribute 
                 for (int i = 0; i < x.Values.Count; i++)
                 {
                     if (a.return_table(x.TableName).attribute_list[i].type != x.Values[i].Type)
                     {
-                        return false;
+                        throw new TypeOfAttributeNotMatchsException($"Type {x.Values[i].Type} of attribute {a.return_table(x.TableName).attribute_list[i].attribute_name} not matches {a.return_table(x.TableName).attribute_list[i].type}");
                     }
                 }
                 //if all data type suit, return true
-                return true;
-
+                return;
             }
             //check validation of a quit statement
             else if (statement.Type == StatementType.QuitStatement)
             {
-                return true;
+                return;
             }
-
             //check validation of an exec file statement
             else
             {
-                return true;
+                return;
             }
         }
     }

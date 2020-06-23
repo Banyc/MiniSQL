@@ -72,18 +72,17 @@ namespace MiniSQL.Api
         // create statement
         private void HandleStatement(CreateStatement statement)
         {
-            if (!_catalogManager.IsValid(statement))
-                throw new StatementPreCheckException("invalid create statement");
+            _catalogManager.CheckValidation(statement);
             switch (statement.CreateType)
             {
                 case CreateType.Table:
                     int newTableRoot = _recordManager.CreateTable();
-                    _catalogManager.TryCreateStatement(statement, newTableRoot);
+                    _catalogManager.CreateStatement(statement, newTableRoot);
                     break;
                 case CreateType.Index:
                     SchemaRecord tableSchema = _catalogManager.GetTableSchemaRecord(statement.TableName);
                     int newIndexRoot = _recordManager.CreateIndex(tableSchema.RootPage, statement.AttributeName, tableSchema.SQL.AttributeDeclarations);
-                    _catalogManager.TryCreateStatement(statement, newIndexRoot);
+                    _catalogManager.CreateStatement(statement, newIndexRoot);
                     break;
             }
         }
@@ -91,8 +90,7 @@ namespace MiniSQL.Api
         // drop statement
         private void HandleStatement(DropStatement statement)
         {
-            if (!_catalogManager.IsValid(statement))
-                throw new StatementPreCheckException("invalid drop statement");
+            _catalogManager.CheckValidation(statement);
             SchemaRecord schema;
             switch (statement.TargetType)
             {
@@ -100,8 +98,8 @@ namespace MiniSQL.Api
                     schema = _catalogManager.GetTableSchemaRecord(statement.TableName);
                     List<SchemaRecord> indices = _catalogManager.GetIndicesSchemaRecord(statement.TableName);
                     // drop table
-                    if (_catalogManager.TryDropStatement(statement))
-                        _recordManager.DropTable(schema.RootPage);
+                    _catalogManager.DropStatement(statement);
+                    _recordManager.DropTable(schema.RootPage);
                     // drop index trees
                     foreach (SchemaRecord index in indices)
                     {
@@ -110,8 +108,8 @@ namespace MiniSQL.Api
                     break;
                 case DropTarget.Index:
                     schema = _catalogManager.GetIndexSchemaRecord(statement.IndexName);
-                    if (_catalogManager.TryDropStatement(statement))
-                        _recordManager.DropTable(schema.RootPage);
+                    _catalogManager.DropStatement(statement);
+                    _recordManager.DropTable(schema.RootPage);
                     break;
             }
         }
@@ -121,8 +119,7 @@ namespace MiniSQL.Api
         private void HandleStatement(DeleteStatement statement)
         {
             // get table and indices
-            if (!_catalogManager.IsValid(statement))
-                throw new StatementPreCheckException("invalid delete statement");
+            _catalogManager.CheckValidation(statement);
             SchemaRecord tableSchema = _catalogManager.GetTableSchemaRecord(statement.TableName);
             List<SchemaRecord> indexSchemas = _catalogManager.GetIndicesSchemaRecord(statement.TableName);
 
@@ -143,8 +140,7 @@ namespace MiniSQL.Api
         {
             bool isIndexTreeAvailable = false;
             // get table and indices
-            if (!_catalogManager.IsValid(statement))
-                throw new StatementPreCheckException("invalid select statement");
+            _catalogManager.CheckValidation(statement);
             SchemaRecord tableSchema = _catalogManager.GetTableSchemaRecord(statement.FromTable);
             List<SchemaRecord> indexSchemas = _catalogManager.GetIndicesSchemaRecord(statement.FromTable);
 
@@ -201,8 +197,7 @@ namespace MiniSQL.Api
 
         private void HandleStatement(InsertStatement statement)
         {
-            if (!_catalogManager.IsValid(statement))
-                throw new StatementPreCheckException("invalid insert statement");
+            _catalogManager.CheckValidation(statement);
             // get table schema
             SchemaRecord schema = _catalogManager.GetTableSchemaRecord(statement.TableName);
             // adjust inlined type in insert statement

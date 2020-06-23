@@ -8,7 +8,7 @@ A functioning database supporting a subset of SQL. Cross-platform.
 
 ## Run
 
-1. Set `cwd` to `src/MiniSQL.Api/`
+1. Set `pwd` to `src/MiniSQL.Api/`
 1. Run command `dotnet run`
 1. Type in some supported SQL
 1. Type `exit` to exit
@@ -131,3 +131,8 @@ Buffer Manager负责缓冲区的管理，主要功能有：
 ### DB Files
 
 DB Files指构成数据库的所有数据文件，主要由记录数据文件、索引数据文件和Catalog数据文件组成。
+
+### TODO
+
+- [ ] Support `create database <DATABASE_NAME>`
+- [ ] Support `drop database <DATABASE_NAME>`

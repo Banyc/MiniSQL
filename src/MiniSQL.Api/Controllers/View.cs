@@ -104,6 +104,26 @@ namespace MiniSQL.Api.Controllers
                 {
                     Console.WriteLine($"[Error] {ex.Message}");
                 }
+                catch (TableOrIndexAlreadyExistsException ex)
+                {
+                    Console.WriteLine($"[Error] {ex.Message}");
+                }
+                catch (TableOrIndexNotExistsException ex)
+                {
+                    Console.WriteLine($"[Error] {ex.Message}");
+                }
+                catch (AttributeNotExistsException ex)
+                {
+                    Console.WriteLine($"[Error] {ex.Message}");
+                }
+                catch (NumberOfAttributesNotMatchsException ex)
+                {
+                    Console.WriteLine($"[Error] {ex.Message}");
+                }
+                catch (TypeOfAttributeNotMatchsException ex)
+                {
+                    Console.WriteLine($"[Error] {ex.Message}");
+                }
                 stopwatch.Stop();
                 // print time consumed
                 defaultColor = Console.ForegroundColor;

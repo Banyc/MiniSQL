@@ -2,11 +2,12 @@ using System.Collections.Generic;
 using System.IO;
 using System.Runtime.Serialization.Formatters.Binary;
 using MiniSQL.CatalogManager.Models;
+using MiniSQL.Library.Interfaces;
 using MiniSQL.Library.Models;
 
 namespace MiniSQL.CatalogManager.Controllers
 {
-    
+
     class Catalog_index
     {
         //store all the indices
@@ -71,10 +72,6 @@ namespace MiniSQL.CatalogManager.Controllers
             return list;
         }
 
-
-
-
-
         //to check if there is such a index named 'name'
         //if in,then return true. Vice versa
         public bool If_in(string name)
@@ -89,7 +86,17 @@ namespace MiniSQL.CatalogManager.Controllers
             return false;
         }
 
+        public void AssertExist(string name)
+        {
+            if (!If_in(name))
+                throw new TableOrIndexNotExistsException($"Index {name} not exists");
+        }
 
+        public void AssertNotExist(string name)
+        {
+            if (If_in(name))
+                throw new TableOrIndexAlreadyExistsException($"Index {name} already exists");
+        }
 
         //update the rootPage of the index named 'name'
         public bool Update(string name, int rootPage)
@@ -108,7 +115,6 @@ namespace MiniSQL.CatalogManager.Controllers
             return has_find;
         }
 
-
         public bool TryCreateStatementForIndex(CreateStatement createStatement, int rootPage)
         {
             //if the index already exists,then return false
@@ -121,8 +127,17 @@ namespace MiniSQL.CatalogManager.Controllers
             Save_index(this.index);
             return true;
         }
-
-
+        public void CreateStatementForIndex(CreateStatement createStatement, int rootPage)
+        {
+            //if the index already exists,then return false
+            if (this.If_in(createStatement.IndexName))
+            {
+                throw new TableOrIndexAlreadyExistsException("Index Already Exists");
+            }
+            Models.Index b = new Models.Index(createStatement, rootPage);
+            index.Add(b);
+            Save_index(this.index);
+        }
 
         public bool TryDropStatementForIndex(DropStatement dropStatement)
         {
@@ -143,6 +158,25 @@ namespace MiniSQL.CatalogManager.Controllers
             }
             Save_index(this.index);
             return true;
+        }
+        public void DropStatementForIndex(DropStatement dropStatement)
+        {
+            //if the index hasn't been created before, return false
+            if (!this.If_in(dropStatement.IndexName))
+            {
+                throw new TableOrIndexNotExistsException($"Index {dropStatement.IndexName} Not Exists");
+            }
+            for (int i = 0; i < index.Count;)
+            {
+                if (index[i].index_name == dropStatement.IndexName)
+                {
+                    index.RemoveAt(i);
+                    break;
+                }
+                else
+                    i++;
+            }
+            Save_index(this.index);
         }
 
         public string Of_table(string Indexname)
@@ -184,7 +218,5 @@ namespace MiniSQL.CatalogManager.Controllers
         {
             Load_index();//get table list from the file
         }
-
-
     }
 }
