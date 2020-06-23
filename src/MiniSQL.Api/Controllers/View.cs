@@ -3,12 +3,9 @@ using System.Collections.Generic;
 using System.Diagnostics;
 using System.Text;
 using MiniSQL.BufferManager.Controllers;
-using MiniSQL.CatalogManager;
 using MiniSQL.IndexManager.Interfaces;
-using MiniSQL.Interpreter;
 using MiniSQL.Library.Interfaces;
 using MiniSQL.Library.Models;
-using MiniSQL.RecordManager;
 
 namespace MiniSQL.Api.Controllers
 {
@@ -60,7 +57,6 @@ namespace MiniSQL.Api.Controllers
                 string line = Console.ReadLine();
                 // restore the previous color
                 Console.ForegroundColor = defaultColor;
-                input.Append(line);
                 // ctrl-c pressed
                 if (line == null)
                 {
@@ -72,6 +68,13 @@ namespace MiniSQL.Api.Controllers
                     isExit = true;
                     continue;
                 }
+                // flush all the dirty pages back to secondary memory and clean the main memory out of any page
+                if (line == "flush")
+                {
+                    _pager.CleanAllPagesFromMainMemory();
+                    continue;
+                }
+                input.Append(line);
                 // perform SQL for each input when the last line ends with ';'
                 if (!line.TrimEnd().EndsWith(";"))
                 {

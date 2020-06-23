@@ -10,12 +10,12 @@ namespace MiniSQL.CatalogManager
 {
     class Program
     {
-        static ICatalogManager icatalog = new Catalog();
+        static ICatalogManager icatalog = new Catalog("test");
         //check if the program can successfully check the validation of each kind of input statement
         static bool CheckValidation()
         {   //since quitstatement and execfile statement are too simple,we skip them here
 
-            Catalog func = new Catalog();
+            Catalog func = new Catalog("test");
 
             //select statement
             //3 kinds, each with a true and a false version
@@ -495,8 +495,8 @@ namespace MiniSQL.CatalogManager
         static void Main(string[] args)
         {
             Console.WriteLine("[CatalogManager] Start!");
-            File.Delete("./index.txt");
-            File.Delete("./tables.txt");
+            File.Delete($"./test.indices.txt");
+            File.Delete($"./test.tables.txt");
             CheckCreate();
             CheckUpdate();
             CheckGetSchemaRecord();

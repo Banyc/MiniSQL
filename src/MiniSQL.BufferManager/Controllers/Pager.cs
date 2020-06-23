@@ -187,6 +187,16 @@ namespace MiniSQL.BufferManager.Controllers
             }
         }
 
+        public void CleanAllPagesFromMainMemory()
+        {
+            lock (this)
+            {
+                while (this.Pages.Count > 0)
+                    RemovePage(this.Pages.First().Value.Item1);
+                this.Stream.FlushAsync();
+            }
+        }
+
         // mark a page as active and prevent it from being swapped out
         public void SetPageAsMostRecentlyUsed(int pageNumber)
         {

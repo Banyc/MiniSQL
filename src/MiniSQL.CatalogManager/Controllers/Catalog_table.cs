@@ -10,6 +10,7 @@ namespace MiniSQL.CatalogManager.Controllers
     //save all the tables in the table catalog
     class Catalog_table
     {
+        private readonly string _databaseName;
         public List<Models.Table> tables;
 
         //return the table name 'tableName'
@@ -157,7 +158,7 @@ namespace MiniSQL.CatalogManager.Controllers
                         i++;
                 }
             //delete all the indices that are related to the deleted table 
-            Catalog_index b = new Catalog_index();
+            Catalog_index b = new Catalog_index(_databaseName);
             return if_find && b.DeleteIndicesOfTable(dropStatement.TableName);
         }
         public void DropStatementForTable(DropStatement dropStatement)
@@ -176,7 +177,7 @@ namespace MiniSQL.CatalogManager.Controllers
                         i++;
                 }
             //delete all the indices that are related to the deleted table 
-            Catalog_index b = new Catalog_index();
+            Catalog_index b = new Catalog_index(_databaseName);
             if (if_find)
                 b.DeleteIndicesOfTable(dropStatement.TableName);
             else
@@ -186,9 +187,9 @@ namespace MiniSQL.CatalogManager.Controllers
         //load the table from file and store the data into tables
         public void Load_table()
         {
-            if (System.IO.File.Exists("tables.txt"))
+            if (System.IO.File.Exists($"{_databaseName}.tables.txt"))
             {
-                using (FileStream fs = new FileStream("tables.txt", FileMode.Open))
+                using (FileStream fs = new FileStream($"{_databaseName}.tables.txt", FileMode.Open))
                 {
                     BinaryFormatter bf = new BinaryFormatter();
                     this.tables = bf.Deserialize(fs) as List<Models.Table>;
@@ -205,7 +206,7 @@ namespace MiniSQL.CatalogManager.Controllers
         //save data of tables into the file
         public void Save_table(List<Models.Table> tables)
         {
-            using (FileStream fs = new FileStream("tables.txt", FileMode.Create))
+            using (FileStream fs = new FileStream($"{_databaseName}.tables.txt", FileMode.Create))
             {
                 BinaryFormatter bf = new BinaryFormatter();
                 bf.Serialize(fs, tables);
@@ -214,8 +215,9 @@ namespace MiniSQL.CatalogManager.Controllers
         }
 
         //load the tables from the txt file 
-        public Catalog_table()
+        public Catalog_table(string databaseName)
         {
+            _databaseName = databaseName;
             Load_table();
         }
     }

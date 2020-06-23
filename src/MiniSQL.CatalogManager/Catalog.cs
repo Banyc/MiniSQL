@@ -9,6 +9,13 @@ namespace MiniSQL.CatalogManager
     //define all the functions 
     public class Catalog : ICatalogManager
     {
+        private readonly string _databaseName;
+
+        public Catalog(string databaseName)
+        {
+            _databaseName = databaseName;
+        }
+
         // try to save the create statement into file as a few schema records
         // if succeeded, return true. Vice versa
         public bool TryCreateStatement(CreateStatement createStatement, int rootPage)
@@ -28,13 +35,13 @@ namespace MiniSQL.CatalogManager
             //create table
             if (createStatement.CreateType == CreateType.Table)
             {
-                Catalog_table a = new Catalog_table();//load the tables
+                Catalog_table a = new Catalog_table(_databaseName);//load the tables
                 a.CreateStatementForTable(createStatement, rootPage);
             }
             //create index
             else
             {
-                Catalog_index b = new Catalog_index();//load the index
+                Catalog_index b = new Catalog_index(_databaseName);//load the index
                 b.CreateStatementForIndex(createStatement, rootPage);
             }
         }
@@ -56,12 +63,12 @@ namespace MiniSQL.CatalogManager
         {
             if (dropStatement.TargetType == DropTarget.Table)
             {
-                Catalog_table a = new Catalog_table();//load the table
+                Catalog_table a = new Catalog_table(_databaseName);//load the table
                 a.DropStatementForTable(dropStatement);
             }
             else
             {
-                Catalog_index b = new Catalog_index();//load the index
+                Catalog_index b = new Catalog_index(_databaseName);//load the index
                 b.DropStatementForIndex(dropStatement);
             }
         }
@@ -71,8 +78,8 @@ namespace MiniSQL.CatalogManager
         public bool TryUpdateSchemaRecord(string name, int rootPage)
         {
             //load both table and index
-            Catalog_table a = new Catalog_table();
-            Catalog_index b = new Catalog_index();
+            Catalog_table a = new Catalog_table(_databaseName);
+            Catalog_index b = new Catalog_index(_databaseName);
 
             //if it's the name of a table
             if (a.If_in(name))
@@ -96,19 +103,19 @@ namespace MiniSQL.CatalogManager
         // according to the table name required, return corresponding schema record
         public SchemaRecord GetTableSchemaRecord(string tableName)
         {
-            Catalog_table a = new Catalog_table();
+            Catalog_table a = new Catalog_table(_databaseName);
             return a.GetTableSchemaRecord(tableName);
         }
         // according to the table name required, return the all index schema records that is associated to the table
         public List<SchemaRecord> GetIndicesSchemaRecord(string tableName)
         {
-            Catalog_index b = new Catalog_index();
+            Catalog_index b = new Catalog_index(_databaseName);
             return b.GetIndicesSchemaRecord(tableName);
         }
         // according to the index name required, return corresponding schema record
         public SchemaRecord GetIndexSchemaRecord(string indexName)
         {
-            Catalog_index b = new Catalog_index();
+            Catalog_index b = new Catalog_index(_databaseName);
             return b.GetIndexSchemaRecord(indexName);
         }
 
@@ -136,14 +143,14 @@ namespace MiniSQL.CatalogManager
                 if (x.CreateType == CreateType.Table)
                 {
                     //to check whether the table has been created before
-                    Catalog_table a = new Catalog_table();
+                    Catalog_table a = new Catalog_table(_databaseName);
                     a.AssertNotExist(x.TableName);
                 }
                 //to create an index
                 else
                 {
-                    Catalog_table a = new Catalog_table();
-                    Catalog_index b = new Catalog_index();
+                    Catalog_table a = new Catalog_table(_databaseName);
+                    Catalog_index b = new Catalog_index(_databaseName);
                     //to check whether the table exists
                     bool condition1 = a.If_in(x.TableName);
                     //to check whether the index has been created before
@@ -162,8 +169,8 @@ namespace MiniSQL.CatalogManager
             else if (statement.Type == StatementType.DropStatement)
             {
                 DropStatement x = (DropStatement)statement;
-                Catalog_table a = new Catalog_table();
-                Catalog_index b = new Catalog_index();
+                Catalog_table a = new Catalog_table(_databaseName);
+                Catalog_index b = new Catalog_index(_databaseName);
                 //to drop a table,we need to check whether the table exists
                 if (x.TargetType == DropTarget.Table)
                 {
@@ -189,7 +196,7 @@ namespace MiniSQL.CatalogManager
             {
                 SelectStatement x = (SelectStatement)statement;
                 //check whether the table is in the tables catalog
-                Catalog_table a = new Catalog_table();
+                Catalog_table a = new Catalog_table(_databaseName);
                 a.AssertExist(x.FromTable);
                 if (x.Condition == null)
                 {
@@ -234,7 +241,7 @@ namespace MiniSQL.CatalogManager
 
                 DeleteStatement x = (DeleteStatement)statement;
                 //check whether the table is in the tables catalog
-                Catalog_table a = new Catalog_table();
+                Catalog_table a = new Catalog_table(_databaseName);
                 a.AssertExist(x.TableName);
                 if (x.Condition == null)
                 {
@@ -279,7 +286,7 @@ namespace MiniSQL.CatalogManager
                 InsertStatement x = (InsertStatement)statement;
 
                 //check whether the table is in the table list
-                Catalog_table a = new Catalog_table();
+                Catalog_table a = new Catalog_table(_databaseName);
                 a.AssertExist(x.TableName);
                 //check if the number of the attributes perfectly match the number of the values
                 if (x.Values.Count != a.return_table(x.TableName).attribute_list.Count)

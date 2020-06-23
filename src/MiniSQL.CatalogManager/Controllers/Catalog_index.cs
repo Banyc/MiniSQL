@@ -10,6 +10,7 @@ namespace MiniSQL.CatalogManager.Controllers
 
     class Catalog_index
     {
+        private readonly string _databaseName;
         //store all the indices
         List<Models.Index> index;
 
@@ -188,9 +189,9 @@ namespace MiniSQL.CatalogManager.Controllers
         }
         public void Load_index()
         {
-            if (System.IO.File.Exists("index.txt"))
+            if (System.IO.File.Exists($"{_databaseName}.indices.txt"))
             {
-                using (FileStream fs = new FileStream("index.txt", FileMode.Open))
+                using (FileStream fs = new FileStream($"{_databaseName}.indices.txt", FileMode.Open))
                 {
                     BinaryFormatter bf = new BinaryFormatter();
                     this.index = bf.Deserialize(fs) as List<Models.Index>;
@@ -207,15 +208,16 @@ namespace MiniSQL.CatalogManager.Controllers
 
         public void Save_index(List<Models.Index> index)
         {
-            using (FileStream fs = new FileStream("index.txt", FileMode.Create))
+            using (FileStream fs = new FileStream($"{_databaseName}.indices.txt", FileMode.Create))
             {
                 BinaryFormatter bf = new BinaryFormatter();
                 bf.Serialize(fs, index);
                 fs.Close();
             }
         }
-        public Catalog_index()
+        public Catalog_index(string databaseName)
         {
+            _databaseName = databaseName;
             Load_index();//get table list from the file
         }
     }

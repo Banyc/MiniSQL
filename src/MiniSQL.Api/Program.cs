@@ -20,13 +20,18 @@ namespace MiniSQL.Api
     {
         static void Main(string[] args)
         {
+            UseDatabase("test");
+        }
+        
+        public static void UseDatabase(string databaseName)
+        {
             // init
-            string dbPath = "./testdbfile.minidb";
+            string dbPath = $"./{databaseName}.minidb";
             Pager pager = new Pager(dbPath, 1024 * 8, 400);
             FreeList freeList = new FreeList(pager);
             IIndexManager bTreeController = new BTreeController(pager, freeList, 40);
             IInterpreter interpreter = new Parsing();
-            ICatalogManager catalogManager = new Catalog();
+            ICatalogManager catalogManager = new Catalog(databaseName);
             IRecordManager recordManager = new RecordContext(pager, bTreeController);
             IApi api = new Api(interpreter, catalogManager, recordManager);
 
@@ -39,6 +44,7 @@ namespace MiniSQL.Api
                 pager
             );
             view.Interactive();  
+            
         }
     }
 }
