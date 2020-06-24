@@ -90,13 +90,13 @@ namespace MiniSQL.CatalogManager.Controllers
         public void AssertExist(string name)
         {
             if (!If_in(name))
-                throw new TableOrIndexNotExistsException($"Index {name} not exists");
+                throw new TableOrIndexNotExistsException($"Index \"{name}\" not exists");
         }
 
         public void AssertNotExist(string name)
         {
             if (If_in(name))
-                throw new TableOrIndexAlreadyExistsException($"Index {name} already exists");
+                throw new TableOrIndexAlreadyExistsException($"Index \"{name}\" already exists");
         }
 
         //update the rootPage of the index named 'name'
@@ -189,9 +189,9 @@ namespace MiniSQL.CatalogManager.Controllers
         }
         public void Load_index()
         {
-            if (System.IO.File.Exists($"{_databaseName}.indices.txt"))
+            if (System.IO.File.Exists($"{_databaseName}.indices.dbcatalog"))
             {
-                using (FileStream fs = new FileStream($"{_databaseName}.indices.txt", FileMode.Open))
+                using (FileStream fs = new FileStream($"{_databaseName}.indices.dbcatalog", FileMode.Open))
                 {
                     BinaryFormatter bf = new BinaryFormatter();
                     this.index = bf.Deserialize(fs) as List<Models.Index>;
@@ -208,7 +208,7 @@ namespace MiniSQL.CatalogManager.Controllers
 
         public void Save_index(List<Models.Index> index)
         {
-            using (FileStream fs = new FileStream($"{_databaseName}.indices.txt", FileMode.Create))
+            using (FileStream fs = new FileStream($"{_databaseName}.indices.dbcatalog", FileMode.Create))
             {
                 BinaryFormatter bf = new BinaryFormatter();
                 bf.Serialize(fs, index);

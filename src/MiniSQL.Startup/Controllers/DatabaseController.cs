@@ -44,8 +44,8 @@ namespace MiniSQL.Startup.Controllers
                 IsUsingDatabase = false;
             }
             File.Delete($"{databaseName}.minidb");
-            File.Delete($"{databaseName}.indices.txt");
-            File.Delete($"{databaseName}.tables.txt");
+            File.Delete($"{databaseName}.indices.dbcatalog");
+            File.Delete($"{databaseName}.tables.dbcatalog");
         }
 
         public void ClosePager()

@@ -97,13 +97,13 @@ namespace MiniSQL.CatalogManager.Controllers
         public void AssertExist(string name)
         {
             if (!If_in(name))
-                throw new TableOrIndexNotExistsException($"Table {name} not exists");
+                throw new TableOrIndexNotExistsException($"Table \"{name}\" not exists");
         }
 
         public void AssertNotExist(string name)
         {
             if (If_in(name))
-                throw new TableOrIndexAlreadyExistsException($"Table {name} already exists");
+                throw new TableOrIndexAlreadyExistsException($"Table \"{name}\" already exists");
         }
 
         //update the rootPage of the table named 'name'
@@ -197,9 +197,9 @@ namespace MiniSQL.CatalogManager.Controllers
         //load the table from file and store the data into tables
         public void Load_table()
         {
-            if (System.IO.File.Exists($"{_databaseName}.tables.txt"))
+            if (System.IO.File.Exists($"{_databaseName}.tables.dbcatalog"))
             {
-                using (FileStream fs = new FileStream($"{_databaseName}.tables.txt", FileMode.Open))
+                using (FileStream fs = new FileStream($"{_databaseName}.tables.dbcatalog", FileMode.Open))
                 {
                     BinaryFormatter bf = new BinaryFormatter();
                     this.tables = bf.Deserialize(fs) as List<Models.Table>;
@@ -216,7 +216,7 @@ namespace MiniSQL.CatalogManager.Controllers
         //save data of tables into the file
         public void Save_table(List<Models.Table> tables)
         {
-            using (FileStream fs = new FileStream($"{_databaseName}.tables.txt", FileMode.Create))
+            using (FileStream fs = new FileStream($"{_databaseName}.tables.dbcatalog", FileMode.Create))
             {
                 BinaryFormatter bf = new BinaryFormatter();
                 bf.Serialize(fs, tables);

@@ -6,6 +6,6 @@ obj/
 *secret*
 *.minidb
 .vs/
-*.indices.txt
-*.tables.txt
+*.indices.dbcatalog
+*.tables.dbcatalog
 workshop/

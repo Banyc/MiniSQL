@@ -496,8 +496,8 @@ namespace MiniSQL.CatalogManager
         static void Main(string[] args)
         {
             Console.WriteLine("[CatalogManager] Start!");
-            File.Delete($"./test.indices.txt");
-            File.Delete($"./test.tables.txt");
+            File.Delete($"./test.indices.dbcatalog");
+            File.Delete($"./test.tables.dbcatalog");
             CheckCreate();
             CheckUpdate();
             CheckGetSchemaRecord();
