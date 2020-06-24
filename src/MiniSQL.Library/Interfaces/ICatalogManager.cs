@@ -54,6 +54,16 @@ namespace MiniSQL.Library.Interfaces
             : base(message, inner) { }
     }
 
+    public class KeyNotExistsException : Exception
+    {
+        public KeyNotExistsException()
+        { }
+        public KeyNotExistsException(string message)
+            : base(message) { }
+        public KeyNotExistsException(string message, Exception inner)
+            : base(message, inner) { }
+    }
+
     public interface ICatalogManager
     {
         // try to save the create statement into file as a few schema records

@@ -142,6 +142,9 @@ namespace MiniSQL.CatalogManager.Controllers
                 //to create a table
                 if (x.CreateType == CreateType.Table)
                 {
+                    // primary key not exists
+                    if (x.PrimaryKey == null || x.PrimaryKey == "")
+                        throw new KeyNotExistsException($"Table \"{x.TableName}\" does not have a primary key");
                     //to check whether the table has been created before
                     Catalog_table a = new Catalog_table(_databaseName);
                     a.AssertNotExist(x.TableName);
@@ -149,6 +152,9 @@ namespace MiniSQL.CatalogManager.Controllers
                 //to create an index
                 else
                 {
+                    // index key not exists
+                    if (x.AttributeName == null || x.AttributeName == "")
+                        throw new KeyNotExistsException($"Index \"{x.IndexName}\" does not have a index key");
                     Catalog_table a = new Catalog_table(_databaseName);
                     Catalog_index b = new Catalog_index(_databaseName);
                     //to check whether the table exists
@@ -158,11 +164,11 @@ namespace MiniSQL.CatalogManager.Controllers
                     //to check whether the attribute is in the attribute list of the table
                     bool condition3 = a.return_table(x.TableName).Has_attribute(x.AttributeName);
                     if (!condition1)
-                        throw new TableOrIndexNotExistsException($"Table {x.TableName} not exists");
+                        throw new TableOrIndexNotExistsException($"Table \"\"{x.TableName}\"\" not exists");
                     if (!condition2)
-                        throw new TableOrIndexAlreadyExistsException($"Index {x.IndexName} not exists");
+                        throw new TableOrIndexAlreadyExistsException($"Index \"\"{x.IndexName}\"\" not exists");
                     if (!condition3)
-                        throw new AttributeNotExistsException($"Attribute {x.AttributeName} not exists in table {x.TableName}");
+                        throw new AttributeNotExistsException($"Attribute \"\"{x.AttributeName}\"\" not exists in table \"\"{x.TableName}\"\"");
                 }
             }
             //check validation of a drop statement
@@ -184,7 +190,7 @@ namespace MiniSQL.CatalogManager.Controllers
                         b.AssertExist(x.IndexName);
                         
                         if (b.Of_table(x.IndexName) != x.TableName)
-                            throw new AttributeNotExistsException($"Index {x.IndexName} is not associated with table {x.TableName}");
+                            throw new AttributeNotExistsException($"Index \"{x.IndexName}\" is not associated with table \"{x.TableName}\"");
                     }
                     else
                         b.AssertExist(x.IndexName);
@@ -218,7 +224,7 @@ namespace MiniSQL.CatalogManager.Controllers
                         {
                             if (!a.return_table(x.FromTable).Has_attribute(expression_piece.Key))
                             {
-                                throw new AttributeNotExistsException($"Attribute {expression_piece.Key} not exists in table {x.FromTable}");
+                                throw new AttributeNotExistsException($"Attribute \"{expression_piece.Key}\" not exists in table \"{x.FromTable}\"");
                             }
                         }
                     }
@@ -229,7 +235,7 @@ namespace MiniSQL.CatalogManager.Controllers
                     //check whether the only attribute is one of the table's attributes
                     if (!a.return_table(x.FromTable).Has_attribute(x.Condition.AttributeName))
                     {
-                        throw new AttributeNotExistsException($"Attribute {x.Condition.AttributeName} not exists in table {x.FromTable}");
+                        throw new AttributeNotExistsException($"Attribute \"{x.Condition.AttributeName}\" not exists in table \"{x.FromTable}\"");
                     }
 
                 }
@@ -263,7 +269,7 @@ namespace MiniSQL.CatalogManager.Controllers
                         {
                             if (!a.return_table(x.TableName).Has_attribute(expression_piece.Key))
                             {
-                                throw new AttributeNotExistsException($"Attribute {expression_piece.Key} not exists in table {x.TableName}");
+                                throw new AttributeNotExistsException($"Attribute \"{expression_piece.Key}\" not exists in table \"{x.TableName}\"");
                             }
                         }
                     }
@@ -274,7 +280,7 @@ namespace MiniSQL.CatalogManager.Controllers
                     //check whether the only attribute is one of the table's attributes
                     if (!a.return_table(x.TableName).Has_attribute(x.Condition.AttributeName))
                     {
-                        throw new AttributeNotExistsException($"Attribute {x.Condition.AttributeName} not exists in table {x.TableName}");
+                        throw new AttributeNotExistsException($"Attribute \"{x.Condition.AttributeName}\" not exists in table \"{x.TableName}\"");
                     }
 
                 }
@@ -291,14 +297,14 @@ namespace MiniSQL.CatalogManager.Controllers
                 //check if the number of the attributes perfectly match the number of the values
                 if (x.Values.Count != a.return_table(x.TableName).attribute_list.Count)
                 {
-                    throw new NumberOfAttributesNotMatchsException($"Number of attributes {x.Values.Count} not matchs {a.return_table(x.TableName).attribute_list.Count}");
+                    throw new NumberOfAttributesNotMatchsException($"Number of attributes not matchs. Expected: \"{a.return_table(x.TableName).attribute_list.Count}\"; actual: \"{x.Values.Count}\"");
                 }
                 //check whether the type of the inserted data well suits the data definition of each attribute 
                 for (int i = 0; i < x.Values.Count; i++)
                 {
                     if (a.return_table(x.TableName).attribute_list[i].type != x.Values[i].Type)
                     {
-                        throw new TypeOfAttributeNotMatchsException($"Type {x.Values[i].Type} of attribute {a.return_table(x.TableName).attribute_list[i].attribute_name} not matches {a.return_table(x.TableName).attribute_list[i].type}");
+                        throw new TypeOfAttributeNotMatchsException($"Type for attribute \"{a.return_table(x.TableName).attribute_list[i].attribute_name}\" not matches. Expected: \"{a.return_table(x.TableName).attribute_list[i].type}\"; actual: \"{x.Values[i].Type}\"");
                     }
                 }
                 //if all data type suit, return true

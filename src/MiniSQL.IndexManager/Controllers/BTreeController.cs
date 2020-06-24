@@ -6,6 +6,7 @@ using MiniSQL.BufferManager.Models;
 using MiniSQL.IndexManager.Interfaces;
 using MiniSQL.Library.Models;
 using MiniSQL.IndexManager.Utilities;
+using MiniSQL.Library.Interfaces;
 
 namespace MiniSQL.IndexManager.Controllers
 {
@@ -293,10 +294,9 @@ namespace MiniSQL.IndexManager.Controllers
             BTreeNode NodeTobeDeleted = FindNode(key, Root);
             if (NodeTobeDeleted == null)
             {
-                throw new KeyNotExistException("Cannot find the key!");
+                throw new KeyNotExistsException("Cannot find the key!");
             }
             return Delete_entry(NodeTobeDeleted, key, Root);
-
         }
 
         public BTreeNode Delete(BTreeCell keyCell, BTreeNode Root)

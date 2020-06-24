@@ -105,7 +105,7 @@ namespace MiniSQL.Startup.Controllers
                 {
                     Console.WriteLine($"[Error] {ex.Message}");
                 }
-                catch (KeyNotExistException ex)
+                catch (KeyNotExistsException ex)
                 {   
                     Console.WriteLine($"[Error] {ex.Message}");
                 }
