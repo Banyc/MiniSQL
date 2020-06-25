@@ -778,6 +778,12 @@ namespace MiniSQL.IndexManager.Controllers
                         return MoreFind(beginNode, begin_Index, expression, attributeDeclarations, false);
                     case Operator.MoreThanOrEqualTo:
                         beginNode = FindNode(keyFind, root, true);
+                        // WORK AROUND
+                        if (beginNode == null)
+                        {
+                            // variable > <overlimited number>
+                            return result;
+                        }
                         (cell, offset, begin_Index) = beginNode.FindBTreeCell(keyFind);
                         if (cell == null)
                         {
