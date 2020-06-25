@@ -144,3 +144,4 @@ DB Files指构成数据库的所有数据文件，主要由记录数据文件、
 
 - [x] Support `create database <DATABASE_NAME>`
 - [x] Support `drop database <DATABASE_NAME>`
+- [ ] Show number of rows that is modified

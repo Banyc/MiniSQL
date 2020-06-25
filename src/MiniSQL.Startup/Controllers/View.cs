@@ -48,21 +48,21 @@ namespace MiniSQL.Startup.Controllers
                 {
                     return;
                 }
-                // exit when "exit"
-                if (line == "exit")
+                // exit when "exit" or "quit" or "exit;" or "exit ;" or "exit; ;;; ;"
+                if (Regex.IsMatch(line, @"^(?i)\s*(exit|quit)\s*(;\s*)*(?-i)$"))
                 {
                     isExit = true;
                     continue;
                 }
                 // use database
-                if (Regex.IsMatch(line, @"(?i)\s*use\s*database\s*.*(?-i)"))
+                if (Regex.IsMatch(line, @"^(?i)\s*use\s*database\s*\S+?\s*(;\s*)*(?-i)$"))
                 {
                     string databaseName = line.Split(new string[] { " ", "\n" }, StringSplitOptions.RemoveEmptyEntries)[2].TrimEnd(';');
                     _databaseController.ChangeContext(databaseName);
                     continue;
                 }
                 // drop database
-                if (Regex.IsMatch(line, @"(?i)\s*drop\s*database\s*.*(?-i)"))
+                if (Regex.IsMatch(line, @"^(?i)\s*drop\s*database\s*\S+?\s*(;\s*)*(?-i)$"))
                 {
                     string databaseName = line.Split(new string[] { " ", "\n" }, StringSplitOptions.RemoveEmptyEntries)[2].TrimEnd(';');
                     _databaseController.DropDatabase(databaseName);
@@ -75,7 +75,8 @@ namespace MiniSQL.Startup.Controllers
                     continue;
                 }
                 // flush all the dirty pages back to secondary memory and clean the main memory out of any page
-                if (line == "flush")
+                // "flush" or "flush;" or "flush ;" or "flush;; ;; ; "
+                if (Regex.IsMatch(line, @"^(?i)\s*(flush)\s*(;\s*)*(?-i)$"))
                 {
                     _databaseController.FlushPages();
                     continue;
