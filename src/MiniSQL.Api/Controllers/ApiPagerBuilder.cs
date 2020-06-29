@@ -1,5 +1,4 @@
 
-using MiniSQL.Api.Controllers;
 using MiniSQL.BufferManager.Controllers;
 using MiniSQL.CatalogManager.Controllers;
 using MiniSQL.IndexManager.Controllers;
@@ -8,11 +7,11 @@ using MiniSQL.Interpreter;
 using MiniSQL.Library.Interfaces;
 using MiniSQL.RecordManager;
 
-namespace MiniSQL.Startup.Controllers
+namespace MiniSQL.Api.Controllers
 {
-    public class ApiPagerBuilder
+    public class DatabaseBuilder
     {
-        public (IApi, Pager) UseDatabase(string databaseName)
+        public (IDatabaseController, Pager) UseDatabase(string databaseName)
         {
             // init
             string dbPath = $"./{databaseName}.minidb";
@@ -22,9 +21,9 @@ namespace MiniSQL.Startup.Controllers
             IInterpreter interpreter = new Parsing();
             ICatalogManager catalogManager = new Catalog(databaseName);
             IRecordManager recordManager = new RecordContext(pager, bTreeController);
-            IApi api = new ApiController(interpreter, catalogManager, recordManager);
+            IDatabaseController database = new DatabaseController(interpreter, catalogManager, recordManager);
             
-            return (api, pager);
+            return (database, pager);
         }
     }
 }

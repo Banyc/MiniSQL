@@ -1,6 +1,7 @@
 using System;
 using System.Collections.Generic;
 using MiniSQL.CatalogManager.Controllers;
+using MiniSQL.Library.Exceptions;
 using MiniSQL.Library.Interfaces;
 using MiniSQL.Library.Models;
 

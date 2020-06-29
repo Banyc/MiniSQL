@@ -4,6 +4,7 @@ using System.Diagnostics;
 using System.Text;
 using System.Text.RegularExpressions;
 using MiniSQL.IndexManager.Interfaces;
+using MiniSQL.Library.Exceptions;
 using MiniSQL.Library.Interfaces;
 using MiniSQL.Library.Models;
 
@@ -11,10 +12,10 @@ namespace MiniSQL.Startup.Controllers
 {
     public class View
     {
-        private readonly DatabaseController _databaseController;
+        private readonly IApi _databaseController;
         private bool isCtrlC = false;
 
-        public View(DatabaseController databaseController)
+        public View(IApi databaseController)
         {
             // print prologue
             Console.WriteLine();

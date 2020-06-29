@@ -1,4 +1,6 @@
-﻿using MiniSQL.Startup.Controllers;
+﻿using MiniSQL.Api.Controllers;
+using MiniSQL.Library.Interfaces;
+using MiniSQL.Startup.Controllers;
 
 namespace MiniSQL.Startup
 {
@@ -6,8 +8,8 @@ namespace MiniSQL.Startup
     {
         static void Main(string[] args)
         {
-            ApiPagerBuilder builder = new ApiPagerBuilder();
-            DatabaseController controller = new DatabaseController(builder);
+            DatabaseBuilder builder = new DatabaseBuilder();
+            IApi controller = new ApiController(builder);
             View view = new View(controller);
             view.Interactive();
         }

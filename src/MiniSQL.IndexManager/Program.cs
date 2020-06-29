@@ -8,6 +8,7 @@ using MiniSQL.IndexManager.Controllers;
 using MiniSQL.IndexManager.Interfaces;
 using MiniSQL.IndexManager.Models;
 using MiniSQL.IndexManager.Utilities;
+using MiniSQL.Library.Exceptions;
 using MiniSQL.Library.Models;
 
 namespace MiniSQL.IndexManager

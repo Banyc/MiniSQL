@@ -2,6 +2,7 @@ using System.Collections.Generic;
 using System.IO;
 using System.Runtime.Serialization.Formatters.Binary;
 using MiniSQL.CatalogManager.Models;
+using MiniSQL.Library.Exceptions;
 using MiniSQL.Library.Interfaces;
 using MiniSQL.Library.Models;
 

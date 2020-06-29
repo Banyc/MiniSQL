@@ -5,12 +5,6 @@ using System;
 
 namespace MiniSQL.IndexManager.Interfaces
 {
-    public class RepeatedKeyException : Exception
-    {
-        public RepeatedKeyException() { }
-        public RepeatedKeyException(string message) : base(message) { }
-    }
-
     public interface IIndexManager
     {
         // when create table
