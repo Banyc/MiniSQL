@@ -19,7 +19,7 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "MiniSQL.RecordManager", "sr
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "MiniSQL.Library", "src\MiniSQL.Library\MiniSQL.Library.csproj", "{3EA08587-04EB-40CA-B025-5D02A9030178}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "MiniSQL.Startup", "src\MiniSQL.Startup\MiniSQL.Startup.csproj", "{B6695733-2C87-4D7B-B8A8-0BC444A23712}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "MiniSQL.Client", "src\MiniSQL.Client\MiniSQL.Client.csproj", "{B6695733-2C87-4D7B-B8A8-0BC444A23712}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution

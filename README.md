@@ -8,7 +8,7 @@ A functioning database supporting a subset of SQL. Cross-platform.
 
 ## Run
 
-1. Set `pwd` to `src/MiniSQL.Startup/`
+1. Set `pwd` to `src/MiniSQL.Client/`
 1. Run command `dotnet run`
 1. Type in some supported SQL
 1. Type `exit` to exit

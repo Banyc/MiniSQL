@@ -1,8 +1,8 @@
 ﻿using MiniSQL.Api.Controllers;
 using MiniSQL.Library.Interfaces;
-using MiniSQL.Startup.Controllers;
+using MiniSQL.Client.Controllers;
 
-namespace MiniSQL.Startup
+namespace MiniSQL.Client
 {
     class Program
     {

@@ -8,7 +8,7 @@ using MiniSQL.Library.Exceptions;
 using MiniSQL.Library.Interfaces;
 using MiniSQL.Library.Models;
 
-namespace MiniSQL.Startup.Controllers
+namespace MiniSQL.Client.Controllers
 {
     public class View
     {
