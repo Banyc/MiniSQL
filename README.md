@@ -140,7 +140,16 @@ Buffer Manager负责缓冲区的管理，主要功能有：
 
 DB Files指构成数据库的所有数据文件，主要由记录数据文件、索引数据文件和Catalog数据文件组成。
 
-### TODO
+## Build Project
+
+1. Set `pwd` to the project folder.
+1. Make sure to uncomment the line in file `*.csproj`:
+    ```csharp
+    <!-- <OutputType>Exe</OutputType> -->
+    ```
+1. Run `dotnet run`
+
+## TODO
 
 - [x] Support `create database <DATABASE_NAME>`
 - [x] Support `drop database <DATABASE_NAME>`
