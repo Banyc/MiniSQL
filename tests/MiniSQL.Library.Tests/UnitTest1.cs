@@ -32,22 +32,22 @@ namespace MiniSQL.Library.Tests
 
             left.Type = AttributeTypes.Char;
             right.Type = AttributeTypes.Char;
-            Assert.Equal(false, (left < right).BooleanValue);
-            Assert.Equal(true, (left > right).BooleanValue);
-            Assert.Equal(false, (left == right).BooleanValue);
-            Assert.Equal(true, (left != right).BooleanValue);
-            Assert.Equal(false, (left <= right).BooleanValue);
-            Assert.Equal(true, (left >= right).BooleanValue);
+            Assert.False((left < right).BooleanValue);
+            Assert.True((left > right).BooleanValue);
+            Assert.False((left == right).BooleanValue);
+            Assert.True((left != right).BooleanValue);
+            Assert.False((left <= right).BooleanValue);
+            Assert.True((left >= right).BooleanValue);
             Assert.Equal("abedebabeceb", (left + right).StringValue);
 
             left.Type = AttributeTypes.Int;
             right.Type = AttributeTypes.Int;
-            Assert.Equal(true, (left < right).BooleanValue);
-            Assert.Equal(false, (left > right).BooleanValue);
-            Assert.Equal(false, (left == right).BooleanValue);
-            Assert.Equal(true, (left != right).BooleanValue);
-            Assert.Equal(true, (left <= right).BooleanValue);
-            Assert.Equal(false, (left >= right).BooleanValue);
+            Assert.True((left < right).BooleanValue);
+            Assert.False((left > right).BooleanValue);
+            Assert.False((left == right).BooleanValue);
+            Assert.True((left != right).BooleanValue);
+            Assert.True((left <= right).BooleanValue);
+            Assert.False((left >= right).BooleanValue);
             Assert.Equal(628, (left + right).IntegerValue);
             Assert.Equal(-400, (left - right).IntegerValue);
             Assert.Equal(114 * 514, (left * right).IntegerValue);
@@ -55,21 +55,21 @@ namespace MiniSQL.Library.Tests
 
             left.Type = AttributeTypes.Float;
             right.Type = AttributeTypes.Float;
-            Assert.Equal(false, (left < right).BooleanValue);
-            Assert.Equal(false, (left > right).BooleanValue);
-            Assert.Equal(true, (left == right).BooleanValue);
-            Assert.Equal(false, (left != right).BooleanValue);
-            Assert.Equal(true, (left <= right).BooleanValue);
-            Assert.Equal(true, (left >= right).BooleanValue);
+            Assert.False((left < right).BooleanValue);
+            Assert.False((left > right).BooleanValue);
+            Assert.True((left == right).BooleanValue);
+            Assert.False((left != right).BooleanValue);
+            Assert.True((left <= right).BooleanValue);
+            Assert.True((left >= right).BooleanValue);
             Assert.Equal(28.28, (left + right).FloatValue);
-            Assert.Equal(0.0,(left - right).FloatValue);
+            Assert.Equal(0.0, (left - right).FloatValue);
             Assert.Equal(14.14 * 14.14, (left * right).FloatValue);
             Assert.Equal(1, (left / right).FloatValue);
         }
 
         private static void TestExpression()
         {
-            TestAndList(); 
+            TestAndList();
             TestCalculateSingleValue();
             TestFullCalculate();
         }
@@ -77,19 +77,19 @@ namespace MiniSQL.Library.Tests
         private static void TestFullCalculate()
         {
             Expression exp = GetAndsExpression();
-            
+
             List<AttributeValue> nameValuePairs = new List<AttributeValue>();
-            nameValuePairs.Add(new AttributeValue("a", new AtomValue {Type = AttributeTypes.Int, IntegerValue = 33}));
-            nameValuePairs.Add(new AttributeValue("b", new AtomValue {Type = AttributeTypes.Char, CharLimit = 5 , StringValue = "stc"}));
-            nameValuePairs.Add(new AttributeValue("c", new AtomValue {Type = AttributeTypes.Float, FloatValue = 6.0}));
+            nameValuePairs.Add(new AttributeValue("a", new AtomValue { Type = AttributeTypes.Int, IntegerValue = 33 }));
+            nameValuePairs.Add(new AttributeValue("b", new AtomValue { Type = AttributeTypes.Char, CharLimit = 5, StringValue = "stc" }));
+            nameValuePairs.Add(new AttributeValue("c", new AtomValue { Type = AttributeTypes.Float, FloatValue = 6.0 }));
 
             AtomValue result = exp.Calculate(nameValuePairs);
-            Assert.Equal(true, result.BooleanValue);
+            Assert.True(result.BooleanValue);
 
             nameValuePairs[1].Value.StringValue = "stz";
 
             result = exp.Calculate(nameValuePairs);
-            Assert.Equal(false, result.BooleanValue);
+            Assert.False(result.BooleanValue);
         }
 
         private static void TestCalculateSingleValue()
@@ -100,7 +100,7 @@ namespace MiniSQL.Library.Tests
             attributeValue.Type = AttributeTypes.Char;
             attributeValue.CharLimit = 10;
             attributeValue.StringValue = "aaa";
-            Assert.Equal(true, andsExpression.CheckKey(attributeName, attributeValue));
+            Assert.True(andsExpression.CheckKey(attributeName, attributeValue));
         }
 
         private static void TestAndList()
@@ -108,7 +108,7 @@ namespace MiniSQL.Library.Tests
             Expression andsExpression = GetAndsExpression();
             var andList = andsExpression.Ands;
             // "not equal" operator is ignored
-            Assert.Equal(false, andList.ContainsKey("a"));
+            Assert.False(andList.ContainsKey("a"));
             Assert.Equal(Operator.LessThanOrEqualTo, andList["b"].Operator);
             Assert.Equal("str", andList["b"].RightOperand.ConcreteValue.StringValue);
             Assert.Equal(Operator.LessThan, andList["c"].Operator);
