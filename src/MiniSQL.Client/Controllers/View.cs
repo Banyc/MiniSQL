@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Diagnostics;
 using System.Text;
 using System.Text.RegularExpressions;
+using MiniSQL.Client.Helpers;
 using MiniSQL.Library.Exceptions;
 using MiniSQL.Library.Interfaces;
 using MiniSQL.Library.Models;
@@ -162,7 +163,7 @@ namespace MiniSQL.Client.Controllers
                 string format = "{0, " + (-sizes[columnIndex]).ToString() + "}";
                 Console.Write($" {string.Format(format, name.AttributeName)} ");
                 if (columnIndex < result.ColumnDeclarations.Count - 1)
-                    Print("|", ConsoleColor.DarkGray);
+                    PrintHelper.Print("|", ConsoleColor.DarkGray);
                 columnIndex++;
             }
             Console.WriteLine();
@@ -192,7 +193,7 @@ namespace MiniSQL.Client.Controllers
                     }
                     Console.Write($" {string.Format(format, stringToPrint)} ");
                     if (columnIndex < row.Count - 1)
-                        Print("|", ConsoleColor.DarkGray);
+                        PrintHelper.Print("|", ConsoleColor.DarkGray);
                     columnIndex++;
                 }
                 Console.WriteLine();
@@ -235,17 +236,6 @@ namespace MiniSQL.Client.Controllers
                 }
             }
             return sizes;
-        }
-
-        private static void Print(string toPrint, ConsoleColor color)
-        {
-            // change color
-            ConsoleColor defaultColor = Console.ForegroundColor;
-            Console.ForegroundColor = color;
-            // print
-            Console.Write(toPrint);
-            // restore the previous color
-            Console.ForegroundColor = defaultColor;
         }
     }
 }

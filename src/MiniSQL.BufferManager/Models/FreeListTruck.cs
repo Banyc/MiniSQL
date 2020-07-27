@@ -2,6 +2,9 @@ using System;
 
 namespace MiniSQL.BufferManager.Models
 {
+    // To keep MemoryPage intact with new functionality, 
+    //  FreeListTruck here is to wrap up the MemoryPage.
+    // a minimal unit in the FreeList
     public class FreeListTruck
     {
         private readonly MemoryPage _page;

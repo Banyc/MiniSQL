@@ -3,7 +3,7 @@ using MiniSQL.BufferManager.Models;
 
 namespace MiniSQL.BufferManager.Controllers
 {
-    // a link list recording all free pages
+    // a linked list recording all free pages
     public class FreeList
     {
         private readonly Pager _pager;

@@ -62,11 +62,31 @@ drop database DATABASE_NAME
 show tables;
 ```
 
+## Terminology
+
+- file := the database file
+- file header := the header in the database file
+- table tree := the B+ tree designed to represent a table
+- index tree := the B+ tree designed to represent an index
+
 ## Spec
 
 ### Database File Format
 
 The database file format mimicked that of SQLite but with some differences. 
+
+Differences:
+
+- the file headers omits many fields.
+- Index tree is also implemented with B+ tree, not B tree.
+- Index tree utilizes `InternalTableCell` and `LeafTableCell` rather than `InternalIndexCell` and `LeafIndexCell`. In order words, index trees have the same architecture as table trees. 
+- Index tree could only support dropping and inserting along with the table tree but not deleting due to complicity (implemented in `DatabaseController`).
+- The `key` field of the table cells is implemented with type `DBRecord`, not `int`.
+
+Learn more from:
+
+- with graph - <http://chi.cs.uchicago.edu/chidb/fileformat.html>
+- official - <https://www.sqlite.org/fileformat.html>
 
 ### 数据类型
 
