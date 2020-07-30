@@ -212,7 +212,7 @@ namespace MiniSQL.CatalogManager.Controllers
                 else if (x.Condition.AttributeName == "")
                 {
 
-                    if (x.Condition.Ands.Count == 0)
+                    if (x.Condition.SimpleMinterms.Count == 0)
                     {
                         //if the ands is empty and attribute name is emply, the statement means select * from a table
                         return;
@@ -221,7 +221,7 @@ namespace MiniSQL.CatalogManager.Controllers
                     {
                         //for each attribute in the egression list(named 'ands')
                         //check whether the attribute is in the attribute list of this table
-                        foreach (KeyValuePair<string, Expression> expression_piece in x.Condition.Ands)
+                        foreach (KeyValuePair<string, Expression> expression_piece in x.Condition.SimpleMinterms)
                         {
                             if (!a.return_table(x.FromTable).Has_attribute(expression_piece.Key))
                             {
@@ -257,7 +257,7 @@ namespace MiniSQL.CatalogManager.Controllers
                 else if (x.Condition.AttributeName == "")
                 {
 
-                    if (x.Condition.Ands.Count == 0)
+                    if (x.Condition.SimpleMinterms.Count == 0)
                     {
                         //if the ands is empty and attribute name is emply, the statement means select * from a table
                         return;
@@ -266,7 +266,7 @@ namespace MiniSQL.CatalogManager.Controllers
                     {
                         //for each attribute in the epression list(named 'ands')
                         //check whether the attribute is in the attribute list of this table
-                        foreach (KeyValuePair<string, Expression> expression_piece in x.Condition.Ands)
+                        foreach (KeyValuePair<string, Expression> expression_piece in x.Condition.SimpleMinterms)
                         {
                             if (!a.return_table(x.TableName).Has_attribute(expression_piece.Key))
                             {

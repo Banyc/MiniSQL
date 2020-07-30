@@ -39,7 +39,7 @@ namespace MiniSQL.IndexManager.Controllers
             {
                 return LinearSearch(root, expression, attributeDeclarations);
             }
-            else if (expression.Ands.ContainsKey(keyName))
+            else if (expression.SimpleMinterms.ContainsKey(keyName))
             {
                 List<BTreeCell> result = new List<BTreeCell>();
                 List<AtomValue> values = new List<AtomValue>();
@@ -49,11 +49,11 @@ namespace MiniSQL.IndexManager.Controllers
                 UInt16 offset;
                 int begin_Index;
 
-                AtomValue bound = expression.Ands[keyName].RightOperand.ConcreteValue;
+                AtomValue bound = expression.SimpleMinterms[keyName].RightOperand.ConcreteValue;
 
                 values.Add(bound);
                 DBRecord keyFind = new DBRecord(values);
-                switch (expression.Ands[keyName].Operator)
+                switch (expression.SimpleMinterms[keyName].Operator)
                 {
                     case Operator.NotEqual:
                         return LinearSearch(root, expression, attributeDeclarations);

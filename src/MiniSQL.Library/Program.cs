@@ -105,7 +105,7 @@ namespace MiniSQL.Library
         private static void TestAndList()
         {
             Expression andsExpression = GetAndsExpression();
-            var andList = andsExpression.Ands;
+            var andList = andsExpression.SimpleMinterms;
             // "not equal" operator is ignored
             Debug.Assert(andList.ContainsKey("a") == false);
             Debug.Assert(andList["b"].Operator == Operator.LessThanOrEqualTo);

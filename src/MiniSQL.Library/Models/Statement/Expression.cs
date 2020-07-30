@@ -37,23 +37,22 @@ namespace MiniSQL.Library.Models
         public AtomValue ConcreteValue { get; set; } = null;
         // use if this Expression is only an attribute (variable)
         public string AttributeName { get; set; } = "";
-
-        // {attribute name: expression with only the variable/attribute}
-        private Dictionary<string, Expression> ands = null;
+        private Dictionary<string, Expression> simpleMinterms = null;
         // to help B-Tree's single key searching
         // NOTICE: never try to modify it by yourself
-        public Dictionary<string, Expression> Ands
+        // only contains simple expressions, with left child being variable, right child being concrete value, and root being non-and operator.
+        public Dictionary<string, Expression> SimpleMinterms
         {
             get
             {
-                if (this.ands == null)
+                if (this.simpleMinterms == null)
                 {
-                    this.ands = new Dictionary<string, Expression>();
+                    this.simpleMinterms = new Dictionary<string, Expression>();
                     this.BuildAndList();
-                    return this.ands;
+                    return this.simpleMinterms;
                 }
                 else
-                    return this.ands;
+                    return this.simpleMinterms;
             }
         }
 
@@ -99,23 +98,23 @@ namespace MiniSQL.Library.Models
                             break;
                     }
                     // add to the "and" list
-                    this.Ands[this.LeftOperand.AttributeName] = this;
+                    this.SimpleMinterms[this.LeftOperand.AttributeName] = this;
                 }
                 else if (this.LeftOperand.Operator == Operator.AtomVariable
                     && this.RightOperand.Operator == Operator.AtomConcreteValue)
-                    this.Ands[this.LeftOperand.AttributeName] = this;
+                    this.SimpleMinterms[this.LeftOperand.AttributeName] = this;
             }
-            // only operator `and` could take `Ands` in its children
+            // only operator `and` could take `SimpleMinterms` in its children
             else if (this.Operator == Operator.And)
             {
-                foreach (var andExpresion in this.LeftOperand.Ands.ToList())
+                foreach (var andExpresion in this.LeftOperand.SimpleMinterms.ToList())
                 {
-                    this.Ands[andExpresion.Key] = andExpresion.Value;
+                    this.SimpleMinterms[andExpresion.Key] = andExpresion.Value;
                 }
                 // duplicate key will be overwritten
-                foreach (var andExpresion in this.RightOperand.Ands.ToList())
+                foreach (var andExpresion in this.RightOperand.SimpleMinterms.ToList())
                 {
-                    this.Ands[andExpresion.Key] = andExpresion.Value;
+                    this.SimpleMinterms[andExpresion.Key] = andExpresion.Value;
                 }
             }
         }
@@ -123,9 +122,9 @@ namespace MiniSQL.Library.Models
         // check if a value could satisfy part of the expression
         public bool CheckKey(string attributeName, AtomValue valueToCheck)
         {
-            if (this.Ands.ContainsKey(attributeName))
+            if (this.SimpleMinterms.ContainsKey(attributeName))
             {
-                AtomValue result = this.Ands[attributeName].Calculate(new List<AttributeValue>
+                AtomValue result = this.SimpleMinterms[attributeName].Calculate(new List<AttributeValue>
                 {
                     new AttributeValue(attributeName, new AtomValue()
                     {
@@ -173,7 +172,7 @@ namespace MiniSQL.Library.Models
             // // make sure the types of children are the same
             // if (leftValue?.Type != rightValue?.Type)
             // {
-            //     throw new System.Exception("Operands type not matched!");
+            //     throw new System.Exception("OpersimpleMinterms type not matched!");
             // }
 
             // calculate the two children into a value

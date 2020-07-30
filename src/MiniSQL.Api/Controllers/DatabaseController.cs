@@ -174,12 +174,12 @@ namespace MiniSQL.Api.Controllers
                 foreach (SchemaRecord indexSchema in indexSchemas)
                 {
                     // if there has a condition `=` on indexed column
-                    if (statement.Condition.Ands.ContainsKey(indexSchema.SQL.AttributeName)
-                        && statement.Condition.Ands[indexSchema.SQL.AttributeName].Operator == Operator.Equal)
+                    if (statement.Condition.SimpleMinterms.ContainsKey(indexSchema.SQL.AttributeName)
+                        && statement.Condition.SimpleMinterms[indexSchema.SQL.AttributeName].Operator == Operator.Equal)
                     {
                         isIndexTreeAvailable = true;
                         // find out the primary key
-                        List<AtomValue> wrappedPrimaryKey = _recordManager.SelectRecord(statement.Condition.Ands[indexSchema.SQL.AttributeName].RightOperand.ConcreteValue, indexSchema.RootPage);
+                        List<AtomValue> wrappedPrimaryKey = _recordManager.SelectRecord(statement.Condition.SimpleMinterms[indexSchema.SQL.AttributeName].RightOperand.ConcreteValue, indexSchema.RootPage);
                         primaryKey = wrappedPrimaryKey?[0];
                         break;
                     }
