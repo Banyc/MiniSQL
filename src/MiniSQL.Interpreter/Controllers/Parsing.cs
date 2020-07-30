@@ -5,7 +5,7 @@ using Antlr4.Runtime.Tree;
 using MiniSQL.Library.Interfaces;
 using MiniSQL.Library.Models;
 
-namespace MiniSQL.Interpreter
+namespace MiniSQL.Interpreter.Controllers
 {
     public class Parsing : IInterpreter
     {

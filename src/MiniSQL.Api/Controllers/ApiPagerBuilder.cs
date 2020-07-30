@@ -4,8 +4,10 @@ using MiniSQL.CatalogManager.Controllers;
 using MiniSQL.IndexManager.Controllers;
 using MiniSQL.IndexManager.Interfaces;
 using MiniSQL.Interpreter;
+using MiniSQL.Interpreter.Controllers;
 using MiniSQL.Library.Interfaces;
 using MiniSQL.RecordManager;
+using MiniSQL.RecordManager.Controllers;
 
 namespace MiniSQL.Api.Controllers
 {

@@ -7,7 +7,7 @@ using MiniSQL.IndexManager.Utilities;
 using MiniSQL.Library.Interfaces;
 using MiniSQL.Library.Models;
 
-namespace MiniSQL.RecordManager
+namespace MiniSQL.RecordManager.Controllers
 {
     // TODO: review + test
     public class RecordContext : IRecordManager
