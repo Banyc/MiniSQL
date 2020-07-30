@@ -41,6 +41,7 @@ namespace MiniSQL.Library.Models
         // to help B-Tree's single key searching
         // NOTICE: never try to modify it by yourself
         // only contains simple expressions, with left child being variable, right child being concrete value, and root being non-and operator.
+        // might include false negative
         public Dictionary<string, Expression> SimpleMinterms
         {
             get
@@ -48,7 +49,7 @@ namespace MiniSQL.Library.Models
                 if (this.simpleMinterms == null)
                 {
                     this.simpleMinterms = new Dictionary<string, Expression>();
-                    this.BuildAndList();
+                    this.BuildSimpleMinterms();
                     return this.simpleMinterms;
                 }
                 else
@@ -56,14 +57,14 @@ namespace MiniSQL.Library.Models
             }
         }
 
-        private void BuildAndList()
+        private void BuildSimpleMinterms()
         {
             if (this.Operator == Operator.AtomConcreteValue || this.Operator == Operator.AtomVariable)
             {
                 return;
             }
-            this.LeftOperand.BuildAndList();
-            this.RightOperand.BuildAndList();
+            this.LeftOperand.BuildSimpleMinterms();
+            this.RightOperand.BuildSimpleMinterms();
 
             if (this.Operator == Operator.Equal
                     || this.Operator == Operator.LessThan
