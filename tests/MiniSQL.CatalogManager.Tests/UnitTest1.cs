@@ -49,10 +49,10 @@ namespace MiniSQL.BufferManager.Tests
             bool test2 = func.IsValid(select_only_table_true);
             // Console.WriteLine(" Wrong select statement that select only 1 table, expecting false:");
             // Console.WriteLine(test1);
-            Assert.Equal(test1, false);
+            Assert.False(test1);
             // Console.WriteLine(" Right select statement that select only 1 table, expecting true:");
             // Console.WriteLine(test2);
-            Assert.Equal(test2, true);
+            Assert.True(test2);
 
             //select from table with 1 attribute
             SelectStatement select_with_1_attribute_true = new SelectStatement();
@@ -72,10 +72,10 @@ namespace MiniSQL.BufferManager.Tests
             bool test4 = icatalog.IsValid(select_with_1_attribute_false);
             // Console.WriteLine("Right select statement that select with 1 attribute, expecting true:");
             // Console.WriteLine(test3);
-            Assert.Equal(test3, true);
+            Assert.True(test3);
             // Console.WriteLine("Wrong select statement that select with 1 attribute, expecting false:");
             // Console.WriteLine(test4);
-            Assert.Equal(test4, false);
+            Assert.False(test4);
 
             // select from table with condition having 3 attribute
             SelectStatement select_with_3_attribute_true = new SelectStatement();
@@ -90,10 +90,10 @@ namespace MiniSQL.BufferManager.Tests
             bool test6 = icatalog.IsValid(select_with_3_attribute_false);
             // Console.WriteLine("Right select statement that select with 3 attributes, expecting true:");
             // Console.WriteLine(test5);
-            Assert.Equal(test5, true);
+            Assert.True(test5);
             // Console.WriteLine("Wrong select statement that select with 3 attribute, expecting false:");
             // Console.WriteLine(test6);
-            Assert.Equal(test6, false);
+            Assert.False(test6);
 
             //delete statement
             //3 kinds, each with a true and a false version
@@ -110,10 +110,10 @@ namespace MiniSQL.BufferManager.Tests
             bool tst2 = func.IsValid(delete_only_table_true);
             // Console.WriteLine("Wrong delete statement that delete only table, expecting false:");
             // Console.WriteLine(tst1);
-            Assert.Equal(tst1, false);
+            Assert.False(tst1);
             // Console.WriteLine("Right delete statement that delete only table, expecting true:");
             // Console.WriteLine(tst2);
-            Assert.Equal(tst2, true);
+            Assert.True(tst2);
 
             //delete from table with 1 attribute
             DeleteStatement delete_with_1_attribute_true = new DeleteStatement();
@@ -130,10 +130,10 @@ namespace MiniSQL.BufferManager.Tests
             bool tst4 = icatalog.IsValid(delete_with_1_attribute_false);
             // Console.WriteLine("Right delete statement that delete with 1 attribute, expecting true:");
             // Console.WriteLine(tst3);
-            Assert.Equal(tst3, true);
+            Assert.True(tst3);
             // Console.WriteLine("Wrong delete statement that delete with 1 attribute, expecting false:");
             // Console.WriteLine(tst4);
-            Assert.Equal(tst4, false);
+            Assert.False(tst4);
 
             //delete from table with 3 attribute
             DeleteStatement delete_with_3_attribute_true = new DeleteStatement();
@@ -148,10 +148,10 @@ namespace MiniSQL.BufferManager.Tests
             bool tst6 = icatalog.IsValid(delete_with_3_attribute_false);
             // Console.WriteLine("Right delete statement that delete with 3 attribute, expecting true:");
             // Console.WriteLine(tst5);
-            Assert.Equal(tst5, true);
+            Assert.True(tst5);
             // Console.WriteLine("Wrong delete statement that delete with 3 attribute, expecting false:");
             // Console.WriteLine(tst6);
-            Assert.Equal(tst6, false);
+            Assert.False(tst6);
 
             //insert statement
             //3 kinds, only the first is true, others are false
@@ -188,7 +188,7 @@ namespace MiniSQL.BufferManager.Tests
             bool insert_test1 = icatalog.IsValid(insert_all_suit);
             // Console.WriteLine("Right insert statement, expecting true:");
             // Console.WriteLine(insert_test1);
-            Assert.Equal(insert_test1, true);
+            Assert.True(insert_test1);
 
 
             //doesn't match the number of attributes
@@ -201,7 +201,7 @@ namespace MiniSQL.BufferManager.Tests
             bool insert_test2 = icatalog.IsValid(insert_wrong_number);
             // Console.WriteLine("Wrong insert statement for wrong number of attributes, expecting false:");
             // Console.WriteLine(insert_test2);
-            Assert.Equal(insert_test2, false);
+            Assert.False(insert_test2);
 
             //doesn't match the type of attributes
             InsertStatement insert_wrong_type = new InsertStatement();
@@ -216,7 +216,7 @@ namespace MiniSQL.BufferManager.Tests
             bool insert_test3 = icatalog.IsValid(insert_wrong_type);
             // Console.WriteLine("Wrong insert statement for wrong type of attributes, expecting false:");
             // Console.WriteLine(insert_test3);
-            Assert.Equal(insert_test3, false);
+            Assert.False(insert_test3);
 
 
 
@@ -230,7 +230,7 @@ namespace MiniSQL.BufferManager.Tests
             bool drop_test1 = icatalog.IsValid(drop_table_true);
             // Console.WriteLine("Right drop table statement, expecting true:");
             // Console.WriteLine(drop_test1);
-            Assert.Equal(drop_test1, true);
+            Assert.True(drop_test1);
 
             //drop a table that doesn't exist, false
             DropStatement drop_table_false = new DropStatement();
@@ -239,7 +239,7 @@ namespace MiniSQL.BufferManager.Tests
             bool drop_test2 = icatalog.IsValid(drop_table_false);
             // Console.WriteLine("Wrong drop table statement, expecting false:");
             // Console.WriteLine(drop_test2);
-            Assert.Equal(drop_test2, false);
+            Assert.False(drop_test2);
 
             //drop an existing index from the table that doesn't exist, false
             DropStatement drop_index_false1 = new DropStatement();
@@ -249,7 +249,7 @@ namespace MiniSQL.BufferManager.Tests
             bool drop_test3 = icatalog.IsValid(drop_index_false1);
             // Console.WriteLine("Wrong drop index statement that drop from the table that doesn't exist, expecting false:");
             // Console.WriteLine(drop_test3);
-            Assert.Equal(drop_test3, false);
+            Assert.False(drop_test3);
 
             //drop an index that doesn't exist, false
             DropStatement drop_index_false2 = new DropStatement();
@@ -259,7 +259,7 @@ namespace MiniSQL.BufferManager.Tests
             bool drop_test4 = icatalog.IsValid(drop_index_false2);
             // Console.WriteLine("Wrong drop index statement that drop an unknown index, expecting false:");
             // Console.WriteLine(drop_test4);
-            Assert.Equal(drop_test4, false);
+            Assert.False(drop_test4);
 
             //drop an index that exits, true
             DropStatement drop_index_true = new DropStatement();
@@ -269,7 +269,7 @@ namespace MiniSQL.BufferManager.Tests
             bool drop_test5 = icatalog.IsValid(drop_index_true);
             // Console.WriteLine("Right drop index statement, expecting true:");
             // Console.WriteLine(drop_test5);
-            Assert.Equal(drop_test5, true);
+            Assert.True(drop_test5);
 
             //create statement 
             //2 kinds, for index and for table, each with both true and wrong version
@@ -286,7 +286,7 @@ namespace MiniSQL.BufferManager.Tests
             bool create_test1 = icatalog.IsValid(create_table_true);
             // Console.WriteLine("Right create table statement, expecting true:");
             // Console.WriteLine(create_test1);
-            Assert.Equal(create_test1, true);
+            Assert.True(create_test1);
 
             //create an index, true
             CreateStatement create_index_true = new CreateStatement();
@@ -297,7 +297,7 @@ namespace MiniSQL.BufferManager.Tests
             bool create_test2 = icatalog.IsValid(create_index_true);
             // Console.WriteLine("Right create index statement, expecting true:");
             // Console.WriteLine(create_test2);
-            Assert.Equal(create_test2, true);
+            Assert.True(create_test2);
 
             //create an index that already exists, false
             CreateStatement create_index_false1 = new CreateStatement();
@@ -308,7 +308,7 @@ namespace MiniSQL.BufferManager.Tests
             bool create_test3 = icatalog.IsValid(create_index_false1);
             // Console.WriteLine("Wrong create index statement, expecting false:");
             // Console.WriteLine(create_test3);
-            Assert.Equal(create_test3, false);
+            Assert.False(create_test3);
 
             //create an index for an attribute that doesn't eixst
             CreateStatement create_index_false2 = new CreateStatement();
@@ -319,7 +319,7 @@ namespace MiniSQL.BufferManager.Tests
             bool create_test4 = icatalog.IsValid(create_index_false2);
             // Console.WriteLine("Wrong create index statement that is created on an attribute that does not exist, expecting false:");
             // Console.WriteLine(create_test4);
-            Assert.Equal(create_test4, false);
+            Assert.False(create_test4);
 
             //create an index for a table that doesn't eixst
             CreateStatement create_index_false3 = new CreateStatement();
@@ -330,7 +330,7 @@ namespace MiniSQL.BufferManager.Tests
             bool create_test5 = icatalog.IsValid(create_index_false3);
             // Console.WriteLine("Wrong create index statement that is created on a table that doesn't exist, expecting false:");
             // Console.WriteLine(create_test5);
-            Assert.Equal(create_test5, false);
+            Assert.False(create_test5);
 
             return true;
         }
@@ -375,7 +375,7 @@ namespace MiniSQL.BufferManager.Tests
             bool test1 = icatalog.TryCreateStatement(test_create_table, 0);
             // Console.WriteLine("Create table, expecting true:");
             // Console.WriteLine(test1);
-            Assert.Equal(test1, true);
+            Assert.True(test1);
 
             //make a create statement for index
             CreateStatement test_create_index = new CreateStatement();
@@ -390,7 +390,7 @@ namespace MiniSQL.BufferManager.Tests
             bool test2 = icatalog.TryCreateStatement(test_create_index, 1);
             // Console.WriteLine("Create index1, expecting true:");
             // Console.WriteLine(test2);
-            Assert.Equal(test2, true);
+            Assert.True(test2);
 
             CreateStatement test_create_index2 = new CreateStatement();
             test_create_index2.CreateType = CreateType.Index;
@@ -404,7 +404,7 @@ namespace MiniSQL.BufferManager.Tests
             bool test3 = icatalog.TryCreateStatement(test_create_index2, 7);
             // Console.WriteLine("Create index2, expecting true:");
             // Console.WriteLine(test3);
-            Assert.Equal(test3, true);
+            Assert.True(test3);
 
             return true;
         }
@@ -419,7 +419,7 @@ namespace MiniSQL.BufferManager.Tests
             bool test4 = icatalog.TryDropStatement(test_drop_index);
             // Console.WriteLine("Delete Index1, expecting true:");
             // Console.WriteLine(test4);
-            Assert.Equal(test4, true);
+            Assert.True(test4);
 
             //make a drop statement for a table
             //delete this table and its assotiated indices, return true
@@ -429,7 +429,7 @@ namespace MiniSQL.BufferManager.Tests
             bool test3 = icatalog.TryDropStatement(test_drop_table);
             // Console.WriteLine("Delete table, expecting true:");
             // Console.WriteLine(test3);
-            Assert.Equal(test3, true);
+            Assert.True(test3);
 
             //make a drop statement for a index
             //delete this 
@@ -439,7 +439,7 @@ namespace MiniSQL.BufferManager.Tests
             bool test5 = icatalog.TryDropStatement(test_drop_index2);
             // Console.WriteLine("Delete index2 after deleting table, expecting false:");
             // Console.WriteLine(test5);
-            Assert.Equal(test5, false);
+            Assert.False(test5);
 
             return true;
         }
@@ -490,7 +490,7 @@ namespace MiniSQL.BufferManager.Tests
             icatalog.TryUpdateSchemaRecord("Student", 2);
             SchemaRecord table_after = icatalog.GetTableSchemaRecord("Student");
             Console.WriteLine(table_after.RootPage);
-            Assert.Equal(table_after.RootPage, 2);
+            Assert.Equal(2, table_after.RootPage);
 
             //update the rootpage of an index
             SchemaRecord index_before = icatalog.GetIndexSchemaRecord("index_for_student_id");
@@ -498,7 +498,7 @@ namespace MiniSQL.BufferManager.Tests
             icatalog.TryUpdateSchemaRecord("index_for_student_id", 3);
             SchemaRecord index_after = icatalog.GetIndexSchemaRecord("index_for_student_id");
             Console.WriteLine(index_after.RootPage);
-            Assert.Equal(index_after.RootPage, 3);
+            Assert.Equal(3, index_after.RootPage);
 
             //try to update the table or index that does not exist
             //will print false
@@ -506,8 +506,8 @@ namespace MiniSQL.BufferManager.Tests
             bool test2 = icatalog.TryUpdateSchemaRecord("hhh", 6);
             Console.WriteLine(test1);
             Console.WriteLine(test2);
-            Assert.Equal(test1, false);
-            Assert.Equal(test2, false);
+            Assert.False(test1);
+            Assert.False(test2);
 
             return true;
         }

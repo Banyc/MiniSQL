@@ -63,9 +63,9 @@ namespace MiniSQL.IndexManager.Tests
             // keyRecord = GetTestBRecord(1109110087);
             keyRecord = GetTestBRecord(4);
             result = (LeafTableCell)controller.FindCell(keyRecord, root);
-            Assert.NotEqual(result, null);
-            // Assert.Equal(result.Key.GetValues()[0].IntegerValue == 1109110087);
-            Assert.Equal(result.Key.GetValues()[0].IntegerValue, 4);
+            Assert.NotNull(result);
+            // Assert.Equal(==, result.Key.GetValues()[0].IntegerValue 1109110087);
+            Assert.Equal(4, result.Key.GetValues()[0].IntegerValue);
 
             // 6
             // record = GetTestBRecord(1163206015);
@@ -133,8 +133,8 @@ namespace MiniSQL.IndexManager.Tests
 
             keyRecord = GetTestBRecord(724803552);
             result = (LeafTableCell)controller.FindCell(keyRecord, root);
-            Assert.NotEqual(result, null);
-            Assert.Equal(result.Key.GetValues()[0].IntegerValue, 724803552);
+            Assert.NotNull(result);
+            Assert.Equal(724803552, result.Key.GetValues()[0].IntegerValue);
 
 
             BTreeNodeHelper.VisualizeIntegerTree(pager, root);
@@ -195,8 +195,8 @@ namespace MiniSQL.IndexManager.Tests
 
             keyRecord = GetTestBRecord(660132168);
             result = (LeafTableCell)controller.FindCell(keyRecord, root);
-            Assert.NotEqual(result, null);
-            Assert.Equal(result.Key.GetValues()[0].IntegerValue, 660132168);
+            Assert.NotNull(result);
+            Assert.Equal(660132168, result.Key.GetValues()[0].IntegerValue);
 
 
             BTreeNodeHelper.VisualizeIntegerTree(pager, root);
@@ -477,57 +477,57 @@ namespace MiniSQL.IndexManager.Tests
             //6
             root = controller.Delete(keyRecord_6, root);
             result = (LeafTableCell)controller.FindCell(keyRecord_6, root);
-            Assert.Equal(result, null);
+            Assert.Null(result);
 
             //5
             root = controller.Delete(keyRecord_5, root);
             result = (LeafTableCell)controller.FindCell(keyRecord_5, root);
-            Assert.Equal(result, null);
+            Assert.Null(result);
 
             //4
             root = controller.Delete(keyRecord_4, root);
             result = (LeafTableCell)controller.FindCell(keyRecord_4, root);
-            Assert.Equal(result, null);
+            Assert.Null(result);
 
 
             //3
             root = controller.Delete(keyRecord_3, root);
             result = (LeafTableCell)controller.FindCell(keyRecord_3, root);
-            Assert.Equal(result, null);
+            Assert.Null(result);
 
             //2
             root = controller.Delete(keyRecord_2, root);
             result = (LeafTableCell)controller.FindCell(keyRecord_2, root);
-            Assert.Equal(result, null);
+            Assert.Null(result);
 
             //1
             root = controller.Delete(keyRecord_1, root);
             result = (LeafTableCell)controller.FindCell(keyRecord_1, root);
-            Assert.Equal(result, null);
+            Assert.Null(result);
 
 
             //0
             root = controller.Delete(keyRecord_0, root);
             result = (LeafTableCell)controller.FindCell(keyRecord_0, root);
-            Assert.Equal(result, null);
+            Assert.Null(result);
 
 
             //insert after delete
             root = controller.InsertCell(root, keyRecord_0, record_0);
             result = (LeafTableCell)controller.FindCell(keyRecord_0, root);
-            Assert.NotEqual(result, null);
-            Assert.Equal(result.Key.GetValues()[0].IntegerValue, 1);
+            Assert.NotNull(result);
+            Assert.Equal(1, result.Key.GetValues()[0].IntegerValue);
 
             root = controller.InsertCell(root, keyRecord_7, record_7);
             result = (LeafTableCell)controller.FindCell(keyRecord_7, root);
-            Assert.NotEqual(result, null);
-            Assert.Equal(result.Key.GetValues()[0].IntegerValue, 8);
+            Assert.NotNull(result);
+            Assert.Equal(8, result.Key.GetValues()[0].IntegerValue);
 
 
             root = controller.InsertCell(root, keyRecord_6, record_6);
             result = (LeafTableCell)controller.FindCell(keyRecord_6, root);
-            Assert.NotEqual(result, null);
-            Assert.Equal(result.Key.GetValues()[0].IntegerValue, 7);
+            Assert.NotNull(result);
+            Assert.Equal(7, result.Key.GetValues()[0].IntegerValue);
 
             pager.Close();
         }
@@ -551,8 +551,8 @@ namespace MiniSQL.IndexManager.Tests
                 root = controller.InsertCell(root, keyRecord, record);
 
                 result = (LeafTableCell)controller.FindCell(keyRecord, root);
-                Assert.NotEqual(result, null);
-                Assert.Equal(result.Key.GetValues()[0].IntegerValue, i);
+                Assert.NotNull(result);
+                Assert.Equal(i, result.Key.GetValues()[0].IntegerValue);
 
             }
             // test inserting records with repeated primary keys
@@ -567,7 +567,7 @@ namespace MiniSQL.IndexManager.Tests
             {
                 isError = true;
             }
-            Assert.Equal(isError, true);
+            Assert.True(isError);
 
             isError = false;
             record_D = GetTestBRecord(105);
@@ -589,8 +589,8 @@ namespace MiniSQL.IndexManager.Tests
                 DBRecord keyRecord = GetTestBRecord(i);
 
                 result = (LeafTableCell)controller.FindCell(keyRecord, root);
-                Assert.NotEqual(result, null);
-                Assert.Equal(result.Key.GetValues()[0].IntegerValue, i);
+                Assert.NotNull(result);
+                Assert.Equal(i, result.Key.GetValues()[0].IntegerValue);
 
             }
 
@@ -601,15 +601,15 @@ namespace MiniSQL.IndexManager.Tests
                 root = controller.Delete(keyRecord, root);
 
                 result = (LeafTableCell)controller.FindCell(keyRecord, root);
-                Assert.Equal(result, null);
+                Assert.Null(result);
 
                 for (int m = 1; m < 10; m++)
                 {
                     DBRecord keyRecord_check = GetTestBRecord(m);
 
                     result = (LeafTableCell)controller.FindCell(keyRecord_check, root);
-                    Assert.NotEqual(result, null);
-                    Assert.Equal(result.Key.GetValues()[0].IntegerValue, m);
+                    Assert.NotNull(result);
+                    Assert.Equal(m, result.Key.GetValues()[0].IntegerValue);
 
                 }
             }
@@ -621,8 +621,8 @@ namespace MiniSQL.IndexManager.Tests
                 DBRecord keyRecord = GetTestBRecord(i);
 
                 result = (LeafTableCell)controller.FindCell(keyRecord, root);
-                Assert.NotEqual(result, null);
-                Assert.Equal(result.Key.GetValues()[0].IntegerValue, i);
+                Assert.NotNull(result);
+                Assert.Equal(i, result.Key.GetValues()[0].IntegerValue);
 
             }
 
@@ -635,8 +635,8 @@ namespace MiniSQL.IndexManager.Tests
                 root = controller.InsertCell(root, keyRecord, record);
 
                 result = (LeafTableCell)controller.FindCell(keyRecord, root);
-                Assert.NotEqual(result, null);
-                Assert.Equal(result.Key.GetValues()[0].IntegerValue, i);
+                Assert.NotNull(result);
+                Assert.Equal(i, result.Key.GetValues()[0].IntegerValue);
 
             }
 
@@ -646,8 +646,8 @@ namespace MiniSQL.IndexManager.Tests
                 DBRecord keyRecord = GetTestBRecord(i);
 
                 result = (LeafTableCell)controller.FindCell(keyRecord, root);
-                Assert.NotEqual(result, null);
-                Assert.Equal(result.Key.GetValues()[0].IntegerValue, i);
+                Assert.NotNull(result);
+                Assert.Equal(i, result.Key.GetValues()[0].IntegerValue);
 
             }
 
@@ -687,68 +687,68 @@ namespace MiniSQL.IndexManager.Tests
             BTreeNode root = null;
             root = controller.InsertCell(root, keyRecord_0, record_0);
             result = (LeafTableCell)controller.FindCell(keyRecord_0, root);
-            Assert.NotEqual(result, null);
-            Assert.Equal(result.Key.GetValues()[0].IntegerValue, 1);
+            Assert.NotNull(result);
+            Assert.Equal(1, result.Key.GetValues()[0].IntegerValue);
             //1
             root = controller.InsertCell(root, keyRecord_1, record_1);
             result = (LeafTableCell)controller.FindCell(keyRecord_1, root);
-            Assert.NotEqual(result, null);
-            Assert.Equal(result.Key.GetValues()[0].IntegerValue, 2);
+            Assert.NotNull(result);
+            Assert.Equal(2, result.Key.GetValues()[0].IntegerValue);
             //2
             root = controller.InsertCell(root, keyRecord_2, record_2);
             result = (LeafTableCell)controller.FindCell(keyRecord_2, root);
-            Assert.NotEqual(result, null);
-            Assert.Equal(result.Key.GetValues()[0].IntegerValue, 3);
+            Assert.NotNull(result);
+            Assert.Equal(3, result.Key.GetValues()[0].IntegerValue);
             //3
             root = controller.InsertCell(root, keyRecord_3, record_3);
             result = (LeafTableCell)controller.FindCell(keyRecord_3, root);
-            Assert.NotEqual(result, null);
-            Assert.Equal(result.Key.GetValues()[0].IntegerValue, 4);
+            Assert.NotNull(result);
+            Assert.Equal(4, result.Key.GetValues()[0].IntegerValue);
             //4
             root = controller.InsertCell(root, keyRecord_4, record_4);
             result = (LeafTableCell)controller.FindCell(keyRecord_4, root);
-            Assert.NotEqual(result, null);
-            Assert.Equal(result.Key.GetValues()[0].IntegerValue, 5);
+            Assert.NotNull(result);
+            Assert.Equal(5, result.Key.GetValues()[0].IntegerValue);
             //5
             root = controller.InsertCell(root, keyRecord_5, record_5);
             result = (LeafTableCell)controller.FindCell(keyRecord_5, root);
-            Assert.NotEqual(result, null);
-            Assert.Equal(result.Key.GetValues()[0].IntegerValue, 6);
+            Assert.NotNull(result);
+            Assert.Equal(6, result.Key.GetValues()[0].IntegerValue);
 
             //6
             root = controller.InsertCell(root, keyRecord_6, record_6);
             result = (LeafTableCell)controller.FindCell(keyRecord_6, root);
-            Assert.NotEqual(result, null);
-            Assert.Equal(result.Key.GetValues()[0].IntegerValue, 7);
+            Assert.NotNull(result);
+            Assert.Equal(7, result.Key.GetValues()[0].IntegerValue);
             //Find
 
             result = (LeafTableCell)controller.FindCell(keyRecord_0, root);
-            Assert.NotEqual(result, null);
-            Assert.Equal(result.Key.GetValues()[0].IntegerValue, 1);
+            Assert.NotNull(result);
+            Assert.Equal(1, result.Key.GetValues()[0].IntegerValue);
 
             result = (LeafTableCell)controller.FindCell(keyRecord_1, root);
-            Assert.NotEqual(result, null);
-            Assert.Equal(result.Key.GetValues()[0].IntegerValue, 2);
+            Assert.NotNull(result);
+            Assert.Equal(2, result.Key.GetValues()[0].IntegerValue);
 
             result = (LeafTableCell)controller.FindCell(keyRecord_2, root);
-            Assert.NotEqual(result, null);
-            Assert.Equal(result.Key.GetValues()[0].IntegerValue, 3);
+            Assert.NotNull(result);
+            Assert.Equal(3, result.Key.GetValues()[0].IntegerValue);
 
             result = (LeafTableCell)controller.FindCell(keyRecord_3, root);
-            Assert.NotEqual(result, null);
-            Assert.Equal(result.Key.GetValues()[0].IntegerValue, 4);
+            Assert.NotNull(result);
+            Assert.Equal(4, result.Key.GetValues()[0].IntegerValue);
 
             result = (LeafTableCell)controller.FindCell(keyRecord_4, root);
-            Assert.NotEqual(result, null);
-            Assert.Equal(result.Key.GetValues()[0].IntegerValue, 5);
+            Assert.NotNull(result);
+            Assert.Equal(5, result.Key.GetValues()[0].IntegerValue);
 
             result = (LeafTableCell)controller.FindCell(keyRecord_5, root);
-            Assert.NotEqual(result, null);
-            Assert.Equal(result.Key.GetValues()[0].IntegerValue, 6);
+            Assert.NotNull(result);
+            Assert.Equal(6, result.Key.GetValues()[0].IntegerValue);
 
             result = (LeafTableCell)controller.FindCell(keyRecord_6, root);
-            Assert.NotEqual(result, null);
-            Assert.Equal(result.Key.GetValues()[0].IntegerValue, 7);
+            Assert.NotNull(result);
+            Assert.Equal(7, result.Key.GetValues()[0].IntegerValue);
 
             pager.Close();
         }
@@ -773,7 +773,7 @@ namespace MiniSQL.IndexManager.Tests
             // test initialization
             MemoryPage newPage = null;
             newPage = freeList.AllocatePage();  // freeList is now empty
-            Assert.Equal(newPage, null);
+            Assert.Null(newPage);
 
             // recycle pages
             // MemoryPage tempPage = pager.ReadPage(3);
@@ -783,20 +783,20 @@ namespace MiniSQL.IndexManager.Tests
 
             // fetch page from free list
             newPage = freeList.AllocatePage();  // freeList->3->4
-            Assert.Equal(newPage.PageNumber, 5);
+            Assert.Equal(5, newPage.PageNumber);
             newPage = freeList.AllocatePage();  // freeList->4
-            Assert.Equal(newPage.PageNumber, 3);
+            Assert.Equal(3, newPage.PageNumber);
 
             // recycle a page
             freeList.RecyclePage(pageList[3]);  // freeList->5->4
 
             // fetch remaining pages
             newPage = freeList.AllocatePage();  // freeList->4
-            Assert.Equal(newPage.PageNumber, 5);
+            Assert.Equal(5, newPage.PageNumber);
             newPage = freeList.AllocatePage();  // freeList->null
-            Assert.Equal(newPage.PageNumber, 4);
+            Assert.Equal(4, newPage.PageNumber);
             newPage = freeList.AllocatePage();  // freeList->null
-            Assert.Equal(newPage, null);
+            Assert.Null(newPage);
 
             pager.Close();
         }
@@ -860,12 +860,12 @@ namespace MiniSQL.IndexManager.Tests
             // they are all pointing to page #114
 
             // check if the keys are stored in ascending order
-            Assert.Equal(node.GetBTreeCell(offsets[0]).Key.GetValues()[0].IntegerValue, 1);
-            Assert.Equal(node.GetBTreeCell(offsets[1]).Key.GetValues()[0].IntegerValue, 2);
-            Assert.Equal(node.GetBTreeCell(offsets[2]).Key.GetValues()[0].IntegerValue, 3);
-            Assert.Equal(node.GetBTreeCell(offsets[3]).Key.GetValues()[0].IntegerValue, 4);
-            Assert.Equal(node.GetBTreeCell(offsets[4]).Key.GetValues()[0].IntegerValue, 5);
-            Assert.Equal(node.GetBTreeCell(offsets[5]).Key.GetValues()[0].IntegerValue, 6);
+            Assert.Equal(1, node.GetBTreeCell(offsets[0]).Key.GetValues()[0].IntegerValue);
+            Assert.Equal(2, node.GetBTreeCell(offsets[1]).Key.GetValues()[0].IntegerValue);
+            Assert.Equal(3, node.GetBTreeCell(offsets[2]).Key.GetValues()[0].IntegerValue);
+            Assert.Equal(4, node.GetBTreeCell(offsets[3]).Key.GetValues()[0].IntegerValue);
+            Assert.Equal(5, node.GetBTreeCell(offsets[4]).Key.GetValues()[0].IntegerValue);
+            Assert.Equal(6, node.GetBTreeCell(offsets[5]).Key.GetValues()[0].IntegerValue);
 
             List<AtomValue> tmpAtomList = null;
 
@@ -890,21 +890,21 @@ namespace MiniSQL.IndexManager.Tests
             // key 6: value 1
             (cell, offset, indexInOffsetArray) = node.FindBTreeCell(keys[1]);
             tmpAtomList = ((InternalIndexCell)cell).Key.GetValues();
-            Assert.Equal(tmpAtomList[0].IntegerValue, 6);
+            Assert.Equal(6, tmpAtomList[0].IntegerValue);
             tmpAtomList = ((InternalIndexCell)cell).PrimaryKey.GetValues();
-            Assert.Equal(tmpAtomList[0].IntegerValue, 1);
+            Assert.Equal(1, tmpAtomList[0].IntegerValue);
             // key 5: value 3
             (cell, offset, indexInOffsetArray) = node.FindBTreeCell(keys[3]);
             tmpAtomList = ((InternalIndexCell)cell).Key.GetValues();
-            Assert.Equal(tmpAtomList[0].IntegerValue, 5);
+            Assert.Equal(5, tmpAtomList[0].IntegerValue);
             tmpAtomList = ((InternalIndexCell)cell).PrimaryKey.GetValues();
-            Assert.Equal(tmpAtomList[0].IntegerValue, 3);
+            Assert.Equal(3, tmpAtomList[0].IntegerValue);
             // key 2: value 2
             (cell, offset, indexInOffsetArray) = node.FindBTreeCell(keys[2]);
             tmpAtomList = cell.Key.GetValues();
-            Assert.Equal(tmpAtomList[0].IntegerValue, 2);
+            Assert.Equal(2, tmpAtomList[0].IntegerValue);
             tmpAtomList = ((InternalIndexCell)cell).PrimaryKey.GetValues();
-            Assert.Equal(tmpAtomList[0].IntegerValue, 2);
+            Assert.Equal(2, tmpAtomList[0].IntegerValue);
 
             // delete cell with key == 2
             node.DeleteBTreeCell(offset);
@@ -912,15 +912,15 @@ namespace MiniSQL.IndexManager.Tests
             // check deletion
             offsets = node.CellOffsetArray;
             tmpAtomList = node.GetBTreeCell(offsets[0]).Key.GetValues();
-            Assert.Equal(tmpAtomList[0].IntegerValue, 1);
+            Assert.Equal(1, tmpAtomList[0].IntegerValue);
             tmpAtomList = node.GetBTreeCell(offsets[1]).Key.GetValues();
-            Assert.Equal(tmpAtomList[0].IntegerValue, 3);
+            Assert.Equal(3, tmpAtomList[0].IntegerValue);
             tmpAtomList = node.GetBTreeCell(offsets[2]).Key.GetValues();
-            Assert.Equal(tmpAtomList[0].IntegerValue, 4);
+            Assert.Equal(4, tmpAtomList[0].IntegerValue);
             tmpAtomList = node.GetBTreeCell(offsets[3]).Key.GetValues();
-            Assert.Equal(tmpAtomList[0].IntegerValue, 5);
+            Assert.Equal(5, tmpAtomList[0].IntegerValue);
             tmpAtomList = node.GetBTreeCell(offsets[4]).Key.GetValues();
-            Assert.Equal(tmpAtomList[0].IntegerValue, 6);
+            Assert.Equal(6, tmpAtomList[0].IntegerValue);
 
             // delete cell with key == 4
             node.DeleteBTreeCell(offsets[2]);
@@ -928,22 +928,22 @@ namespace MiniSQL.IndexManager.Tests
             // check deletion
             offsets = node.CellOffsetArray;
             tmpAtomList = node.GetBTreeCell(offsets[0]).Key.GetValues();
-            Assert.Equal(tmpAtomList[0].IntegerValue, 1);
+            Assert.Equal(1, tmpAtomList[0].IntegerValue);
             tmpAtomList = node.GetBTreeCell(offsets[1]).Key.GetValues();
-            Assert.Equal(tmpAtomList[0].IntegerValue, 3);
+            Assert.Equal(3, tmpAtomList[0].IntegerValue);
             tmpAtomList = node.GetBTreeCell(offsets[2]).Key.GetValues();
-            Assert.Equal(tmpAtomList[0].IntegerValue, 5);
+            Assert.Equal(5, tmpAtomList[0].IntegerValue);
             tmpAtomList = node.GetBTreeCell(offsets[3]).Key.GetValues();
-            Assert.Equal(tmpAtomList[0].IntegerValue, 6);
+            Assert.Equal(6, tmpAtomList[0].IntegerValue);
 
             // delete by index 0 (cell with key == 1)
             node.DeleteBTreeCell(node[0]);
             tmpAtomList = node[0].Key.GetValues();
-            Assert.Equal(tmpAtomList[0].IntegerValue, 3);
+            Assert.Equal(3, tmpAtomList[0].IntegerValue);
             tmpAtomList = node[1].Key.GetValues();
-            Assert.Equal(tmpAtomList[0].IntegerValue, 5);
+            Assert.Equal(5, tmpAtomList[0].IntegerValue);
             tmpAtomList = node[2].Key.GetValues();
-            Assert.Equal(tmpAtomList[0].IntegerValue, 6);
+            Assert.Equal(6, tmpAtomList[0].IntegerValue);
 
             // delete remaining cells
             node.DeleteBTreeCell(offsets[0]);
@@ -979,28 +979,28 @@ namespace MiniSQL.IndexManager.Tests
             MemoryPage page3 = pager.ReadPage(3);
             MemoryPage page4 = pager.ReadPage(4);
             MemoryPage page5 = pager.ReadPage(5);
-            Assert.Equal(page1.IsSwappedOut, false);
-            Assert.Equal(page2.IsSwappedOut, true);
-            Assert.Equal(page3.IsSwappedOut, false);
-            Assert.Equal(page4.IsSwappedOut, false);
-            Assert.Equal(page5.IsSwappedOut, false);
+            Assert.False(page1.IsSwappedOut);
+            Assert.True(page2.IsSwappedOut);
+            Assert.False(page3.IsSwappedOut);
+            Assert.False(page4.IsSwappedOut);
+            Assert.False(page5.IsSwappedOut);
             MemoryPage page6 = pager.ReadPage(6);
-            Assert.Equal(page1.IsSwappedOut, false);
-            Assert.Equal(page2.IsSwappedOut, true);
-            Assert.Equal(page3.IsSwappedOut, true);
-            Assert.Equal(page4.IsSwappedOut, false);
-            Assert.Equal(page5.IsSwappedOut, false);
-            Assert.Equal(page6.IsSwappedOut, false);
+            Assert.False(page1.IsSwappedOut);
+            Assert.True(page2.IsSwappedOut);
+            Assert.True(page3.IsSwappedOut);
+            Assert.False(page4.IsSwappedOut);
+            Assert.False(page5.IsSwappedOut);
+            Assert.False(page6.IsSwappedOut);
             page4.Data[0] = 4;
             page4[1] = 44;
             MemoryPage page7 = pager.ReadPage(7);
-            Assert.Equal(page1.IsSwappedOut, false);
-            Assert.Equal(page2.IsSwappedOut, true);
-            Assert.Equal(page3.IsSwappedOut, true);
-            Assert.Equal(page4.IsSwappedOut, false);
-            Assert.Equal(page5.IsSwappedOut, true);
-            Assert.Equal(page6.IsSwappedOut, false);
-            Assert.Equal(page7.IsSwappedOut, false);
+            Assert.False(page1.IsSwappedOut);
+            Assert.True(page2.IsSwappedOut);
+            Assert.True(page3.IsSwappedOut);
+            Assert.False(page4.IsSwappedOut);
+            Assert.True(page5.IsSwappedOut);
+            Assert.False(page6.IsSwappedOut);
+            Assert.False(page7.IsSwappedOut);
 
             // not enough pages
             bool error = false;
@@ -1012,9 +1012,9 @@ namespace MiniSQL.IndexManager.Tests
             {
                 error = true;
             }
-            Assert.Equal(error, true);
+            Assert.True(error);
 
-            Assert.Equal(page1.IsSwappedOut, false);
+            Assert.False(page1.IsSwappedOut);
             Assert.Equal(page2.Data[0], 2);
             Assert.Equal(page4.Data[0], 4);
             Assert.Equal(page4[1], 44);

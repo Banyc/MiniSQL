@@ -42,6 +42,7 @@ namespace MiniSQL.Library.Models
         // NOTICE: never try to modify it by yourself
         // only contains simple expressions, with left child being variable, right child being concrete value, and root being non-and operator.
         // might include false negative
+        // tolerate false negative
         public Dictionary<string, Expression> SimpleMinterms
         {
             get
