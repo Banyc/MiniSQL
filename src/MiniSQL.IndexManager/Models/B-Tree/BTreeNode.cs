@@ -17,8 +17,12 @@ namespace MiniSQL.IndexManager.Models
             get { return (PageTypes)_page.Data[0 + _page.AvaliableOffset]; }
             private set { _page.Data[0 + _page.AvaliableOffset] = (byte)value; }
         }
-        // The byte offset at which the free space starts. 
-        // Note that this must be updated every time the cell offset array grows.
+        /// <summary>
+        /// The byte offset at which the free space starts. 
+        /// 
+        /// Note that this must be updated every time the cell offset array grows.
+        /// </summary>
+        /// <value></value>
         private UInt16 FreeOffset
         {
             get { return BitConverter.ToUInt16(_page.Data, 1 + _page.AvaliableOffset); }
@@ -30,17 +34,27 @@ namespace MiniSQL.IndexManager.Models
             get { return BitConverter.ToUInt16(_page.Data, 3 + _page.AvaliableOffset); }
             private set { Array.Copy(BitConverter.GetBytes(value), 0, _page.Data, 3 + _page.AvaliableOffset, 2); }
         }
-        // The byte offset at which the cells start.
-        // If the page contains no cells, this field contains the value PageSize. 
-        // This value must be updated every time a cell is added.
+        /// <summary>
+        /// The byte offset at which the cells start.
+        /// 
+        /// If the page contains no cells, this field contains the value PageSize. 
+        /// 
+        /// This value must be updated every time a cell is added.
+        /// </summary>
+        /// <value></value>
         private UInt16 CellsOffset
         {
             get { return BitConverter.ToUInt16(_page.Data, 5 + _page.AvaliableOffset); }
             set { Array.Copy(BitConverter.GetBytes(value), 0, _page.Data, 5 + _page.AvaliableOffset, 2); }
         }
-        // deprecated: internal node only
-        // WORKAROUND: all types of node have the `RightPage` pointer
-        // RightPage pointer is, essentially, the “rightmost pointer” in a B-Tree node
+        /// <summary>
+        /// deprecated: internal node only
+        /// 
+        /// WORKAROUND: all types of node have the `RightPage` pointer
+        /// 
+        /// RightPage pointer is, essentially, the “rightmost pointer” in a B-Tree node
+        /// </summary>
+        /// <value></value>
         public UInt32 RightPage
         {
             get { return BitConverter.ToUInt32(_page.Data, 8 + _page.AvaliableOffset); }
@@ -53,15 +67,26 @@ namespace MiniSQL.IndexManager.Models
             set { Array.Copy(BitConverter.GetBytes(value), 0, _page.Data, 12 + _page.AvaliableOffset, 4); }
         }
 
-        // if tree node is freed/disabled
+        /// <summary>
+        /// If tree node is freed/disabled
+        /// </summary>
+        /// <value></value>
         public bool IsDisabled { get; set; } = false;
 
-        // alias for the number of cells
+        /// <summary>
+        /// Alias for the number of cells
+        /// </summary>
+        /// <value></value>
         public int Count { get => this.NumCells; }
 
-        // the offset array at the low address of the page
-        // the array indicates the offset (address) of each cell at the high address space
-        // the order of the array is carefully set in ascending order. It is based on the first value of `Key` of each cell.
+        /// <summary>
+        /// the offset array at the low address of the page
+        /// 
+        /// the array indicates the offset (address) of each cell at the high address space
+        /// 
+        /// the order of the array is carefully set in ascending order. It is based on the first value of `Key` of each cell.
+        /// </summary>
+        /// <value></value>
         public List<UInt16> CellOffsetArray
         {
             get
@@ -103,17 +128,20 @@ namespace MiniSQL.IndexManager.Models
             this._page = assembledPage;
         }
 
+        // constructor
         public BTreeNode(MemoryPage emptyPage, PageTypes pageType)
         {
             this._page = emptyPage;
             InitializeEmptyFormat(pageType);
         }
 
-        // use it when freeing this node
-        public MemoryPage GetRawPage()
-        {
-            return _page;
-        }
+        /// <summary>
+        /// The memory page behind this node.
+        /// 
+        /// Use it when freeing this node, but no necessarily.
+        /// </summary>
+        /// <value>The memory page behind this node</value>
+        public MemoryPage RawPage { get => _page; }
 
         // formatting an empty page with initialized B-Tree node (page) header
         public void InitializeEmptyFormat(PageTypes pageType)
@@ -152,14 +180,20 @@ namespace MiniSQL.IndexManager.Models
             this.NumCells = 0;
         }
 
-        // delete a tree cell
+        /// <summary>
+        /// Delete a tree cell
+        /// </summary>
+        /// <param name="cell">cell to be removed</param>
         public void DeleteBTreeCell(BTreeCell cell)
         {
             (BTreeCell cellFound, UInt16 offset, int indexInOffsetArray) = FindBTreeCell(cell, false);
             DeleteBTreeCell(offset);
         }
 
-        // NOTICE: remember to re-get the `CellOffsetArray` after deletion
+        /// <summary>
+        /// NOTICE: remember to re-get the `CellOffsetArray` after deletion
+        /// </summary>
+        /// <param name="address">the address/offset of the cell in this node</param>
         public void DeleteBTreeCell(UInt16 address)
         {
             List<UInt16> offsetsSorted = this.CellOffsetArray;
@@ -197,8 +231,13 @@ namespace MiniSQL.IndexManager.Models
             this.CellsOffset += (ushort)sizeOfDeletingBTreeCell;
         }
 
-        // get a cell given an offset (address)
-        // NOTICE: you are only getting a COPY, any modification on the cell will NOT affect the node
+        /// <summary>
+        /// get a cell given an offset (address)
+        /// 
+        /// NOTICE: you are only getting a COPY, any modification on the cell will NOT affect the node
+        /// </summary>
+        /// <param name="address">the address/offset of the cell in this node</param>
+        /// <returns>a COPY of the matched cell</returns>
         public BTreeCell GetBTreeCell(UInt32 address)
         {
             BTreeCell cell = null;
@@ -222,7 +261,10 @@ namespace MiniSQL.IndexManager.Models
             return cell;
         }
 
-        // insert a cell. It will place the new cell in ascending order
+        /// <summary>
+        /// Insert a cell. It will place the new cell in ascending order
+        /// </summary>
+        /// <param name="cell">new cell to insert</param>
         public void InsertBTreeCell(BTreeCell cell)
         {
             byte[] raw = cell.Pack();
@@ -251,29 +293,56 @@ namespace MiniSQL.IndexManager.Models
             this.CellOffsetArray = offsets;
         }
 
-        // NOTICE: if `isFuzzySearch`, this function will return the first cell that with key equal or larger than that of `cell`'s
-        // if no cell matches, the output `cell` field will be `null` and `offset` will be set to 0
+        /// <summary>
+        /// NOTICE: if `isFuzzySearch`, this function will return the first cell that with key equal or larger than that of `cell`'s
+        /// 
+        /// if no cell matches, the output `cell` field will be `null` and `offset` will be set to 0
+        /// </summary>
+        /// <param name="cell">cell to be found</param>
+        /// <param name="isFuzzySearch">if `isFuzzySearch`, this function will return the first cell that with key equal or larger than that of `cell`'s</param>
+        /// <returns>found cells; offset/address in the node, index in the `CellOffsetArray`</returns>
         public (BTreeCell cell, UInt16 offset, int indexInOffsetArray) FindBTreeCell(BTreeCell cell, bool isFuzzySearch = true)
         {
             return FindBTreeCell(cell.Key, isFuzzySearch);
         }
 
-        // NOTICE: if `isFuzzySearch`, this function will return the first cell that with key equal or larger than that of `cell`'s
-        // if no cell matches, the output `cell` field will be `null` and `offset` will be set to 0
+        /// <summary>
+        /// NOTICE: if `isFuzzySearch`, this function will return the first cell that with key equal or larger than that of `cell`'s
+        /// 
+        /// if no cell matches, the output `cell` field will be `null` and `offset` will be set to 0
+        /// </summary>
+        /// <param name="key">primary key in table tree; indexed value in index tree</param>
+        /// <param name="isFuzzySearch">if `isFuzzySearch`, this function will return the first cell that with key equal or larger than that of `cell`'s</param>
+        /// <returns>found cells; offset/address in the node, index in the `CellOffsetArray`</returns>
         public (BTreeCell cell, UInt16 offset, int indexInOffsetArray) FindBTreeCell(DBRecord key, bool isFuzzySearch = true)
         {
             List<AtomValue> keyValues = key.GetValues();
             return FindBTreeCell(keyValues, isFuzzySearch);
         }
 
-        // NOTICE: if `isFuzzySearch`, this function will return the first cell that with key equal or larger than that of `cell`'s
-        // if no cell matches, the output `cell` field will be `null` and `offset` will be set to 0
-        // WORKAROUND: only the first key is used. The remaining keys will be ignored
+        /// <summary>
+        /// NOTICE: if `isFuzzySearch`, this function will return the first cell that with key equal or larger than that of `cell`'s
+        /// 
+        /// if no cell matches, the output `cell` field will be `null` and `offset` will be set to 0
+        /// 
+        /// WORKAROUND: only the first key is used. The remaining keys will be ignored
+        /// </summary>
+        /// <param name="keys">primary keys in table tree; indexed values in index tree</param>
+        /// <param name="isFuzzySearch">if `isFuzzySearch`, this function will return the first cell that with key equal or larger than that of `cell`'s</param>
+        /// <returns>found cells; offset/address in the node, index in the `CellOffsetArray`</returns>
         public (BTreeCell cell, UInt16 offset, int indexInOffsetArray) FindBTreeCell(List<AtomValue> keys, bool isFuzzySearch = true)
         {
             return FindBTreeCell(keys[0], isFuzzySearch);
         }
 
+        /// <summary>
+        /// NOTICE: if `isFuzzySearch`, this function will return the first cell that with key equal or larger than that of `cell`'s
+        /// 
+        /// if no cell matches, the output `cell` field will be `null` and `offset` will be set to 0
+        /// </summary>
+        /// <param name="key">primary key in table tree; indexed value in index tree</param>
+        /// <param name="isFuzzySearch">if `isFuzzySearch`, this function will return the first cell that with key equal or larger than that of `cell`'s</param>
+        /// <returns>found cells; offset/address in the node, index in the `CellOffsetArray`</returns>
         public (BTreeCell cell, UInt16 offset, int indexInOffsetArray) FindBTreeCell(AtomValue key, bool isFuzzySearch = true)
         {
             // get the list of existing peers to visit
@@ -347,18 +416,6 @@ namespace MiniSQL.IndexManager.Models
             return (peer, offset, i);
         }
 
-        // TODO
-        // modify field `ChildPage` on internal index cells or internal table cells
-        public void ChangeChildPage(int indexInOffsetArray, UInt32 newChildPage)
-        {
-            if (this.PageType == PageTypes.LeafIndexPage
-                || this.PageType == PageTypes.LeafTablePage)
-            {
-                throw new Exception("Leaf Cells do not have field `ChildPage`");
-            }
-
-        } 
-
         // make this object to be iterable
         public IEnumerator<BTreeCell> GetEnumerator()
         {
@@ -376,6 +433,10 @@ namespace MiniSQL.IndexManager.Models
         }
 
         // overrides "object[index]" operator
+        /// <summary>
+        /// NOTICE: you are only getting a COPY, any modification on the cell will NOT affect the node
+        /// </summary>
+        /// <value></value>
         public BTreeCell this[int index]
         {
             get

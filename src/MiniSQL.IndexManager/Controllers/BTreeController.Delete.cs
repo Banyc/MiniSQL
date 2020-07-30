@@ -56,7 +56,7 @@ namespace MiniSQL.IndexManager.Controllers
                     InternalTableCell leftNodeCell = (InternalTableCell)parentNode.GetBTreeCell(parentNode.CellOffsetArray[indexInOffsetArray - 1]);
                     MemoryPage leftPage = _pager.ReadPage((int)leftNodeCell.ChildPage);
                     BTreeNode leftNode = new BTreeNode(leftPage);
-                    leftNode.RightPage = (uint)brotherNode.GetRawPage().PageNumber;
+                    leftNode.RightPage = (uint)brotherNode.RawPage.PageNumber;
                 }
 
                 if (brotherNode.NumCells + NodetobeDeleted.NumCells <= MaxCell)  //merge
@@ -84,7 +84,7 @@ namespace MiniSQL.IndexManager.Controllers
                     int parent_indexInOffsetArray;
                     (parent_Cell, parent_offset, parent_indexInOffsetArray) = parentNode.FindBTreeCell(key);
 
-                    InternalTableCell newCell = new InternalTableCell(newKey, (uint)NodetobeDeleted.GetRawPage().PageNumber);
+                    InternalTableCell newCell = new InternalTableCell(newKey, (uint)NodetobeDeleted.RawPage.PageNumber);
                     parentNode.DeleteBTreeCell(parent_Cell);
                     parentNode.InsertBTreeCell(newCell);
 
@@ -111,7 +111,7 @@ namespace MiniSQL.IndexManager.Controllers
                         brotherNode.InsertBTreeCell(NodetobeDeleted.GetBTreeCell(NodetobeDeleted.CellOffsetArray[i]));
                     }
                     DeleteNode(NodetobeDeleted);
-                    parentNode.RightPage = (uint)brotherNode.GetRawPage().PageNumber;
+                    parentNode.RightPage = (uint)brotherNode.RawPage.PageNumber;
 
                 }
                 else    //redistribute
@@ -127,7 +127,7 @@ namespace MiniSQL.IndexManager.Controllers
                     int parent_indexInOffsetArray;
                     (parent_Cell, parent_offset, parent_indexInOffsetArray) = parentNode.FindBTreeCell(key);
 
-                    InternalTableCell newCell = new InternalTableCell(newKey, (uint)NodetobeDeleted.GetRawPage().PageNumber);
+                    InternalTableCell newCell = new InternalTableCell(newKey, (uint)NodetobeDeleted.RawPage.PageNumber);
                     parentNode.DeleteBTreeCell(parent_Cell);
                     parentNode.InsertBTreeCell(newCell);
 
@@ -203,14 +203,14 @@ namespace MiniSQL.IndexManager.Controllers
 
                                 tmpPage = _pager.ReadPage((int)tmpCell.ChildPage);
                                 tmpNode = new BTreeNode(tmpPage);
-                                tmpNode.ParentPage = (uint)brotherNode.GetRawPage().PageNumber;
+                                tmpNode.ParentPage = (uint)brotherNode.RawPage.PageNumber;
                             }
                             //move the cell in parentNode to brotherNode
                             InternalTableCell insertCell = new InternalTableCell(cell.Key, (uint)NodetobeDeleted.RightPage);
                             brotherNode.InsertBTreeCell(insertCell);
                             tmpPage = _pager.ReadPage((int)insertCell.ChildPage);
                             tmpNode = new BTreeNode(tmpPage);
-                            tmpNode.ParentPage = (uint)brotherNode.GetRawPage().PageNumber;
+                            tmpNode.ParentPage = (uint)brotherNode.RawPage.PageNumber;
 
                             DeleteNode(NodetobeDeleted);
                             parentNode.DeleteBTreeCell(cell);
@@ -228,9 +228,9 @@ namespace MiniSQL.IndexManager.Controllers
 
                             tmpPage = _pager.ReadPage((int)movedCell.ChildPage);
                             tmpNode = new BTreeNode(tmpPage);
-                            tmpNode.ParentPage = (uint)NodetobeDeleted.GetRawPage().PageNumber;
+                            tmpNode.ParentPage = (uint)NodetobeDeleted.RawPage.PageNumber;
 
-                            InternalTableCell insertParentCell = new InternalTableCell(upperKey, (uint)NodetobeDeleted.GetRawPage().PageNumber);
+                            InternalTableCell insertParentCell = new InternalTableCell(upperKey, (uint)NodetobeDeleted.RawPage.PageNumber);
                             parentNode.DeleteBTreeCell(cell);
                             parentNode.InsertBTreeCell(insertParentCell);
                             brotherNode.DeleteBTreeCell(movedCell);
@@ -259,14 +259,14 @@ namespace MiniSQL.IndexManager.Controllers
 
                                 tmpPage = _pager.ReadPage((int)tmpCell.ChildPage);
                                 tmpNode = new BTreeNode(tmpPage);
-                                tmpNode.ParentPage = (uint)NodetobeDeleted.GetRawPage().PageNumber;
+                                tmpNode.ParentPage = (uint)NodetobeDeleted.RawPage.PageNumber;
                             }
                             //move the cell in parentNode to brotherNode
                             InternalTableCell insertCell = new InternalTableCell(brotherCell.Key, (uint)brotherNode.RightPage);
                             NodetobeDeleted.InsertBTreeCell(insertCell);
                             tmpPage = _pager.ReadPage((int)insertCell.ChildPage);
                             tmpNode = new BTreeNode(tmpPage);
-                            tmpNode.ParentPage = (uint)NodetobeDeleted.GetRawPage().PageNumber;
+                            tmpNode.ParentPage = (uint)NodetobeDeleted.RawPage.PageNumber;
 
                             DeleteNode(brotherNode);
                             parentNode.DeleteBTreeCell(parentNode.GetBTreeCell(parentNode.CellOffsetArray[parentNode.NumCells - 1]));
@@ -282,13 +282,13 @@ namespace MiniSQL.IndexManager.Controllers
                             InternalTableCell movedCell = (InternalTableCell)brotherNode.GetBTreeCell(brotherNode.CellOffsetArray[brotherNode.NumCells - 1]);
                             brotherNode.RightPage = movedCell.ChildPage;
                             DBRecord upperKey = movedCell.Key;
-                            InternalTableCell insertParentCell = new InternalTableCell(upperKey, (uint)brotherNode.GetRawPage().PageNumber);
+                            InternalTableCell insertParentCell = new InternalTableCell(upperKey, (uint)brotherNode.RawPage.PageNumber);
                             parentNode.InsertBTreeCell(insertParentCell);
                             brotherNode.DeleteBTreeCell(movedCell);
 
                             tmpPage = _pager.ReadPage((int)brotherNode.RightPage);
                             tmpNode = new BTreeNode(tmpPage);
-                            tmpNode.ParentPage = (uint)brotherNode.GetRawPage().PageNumber;
+                            tmpNode.ParentPage = (uint)brotherNode.RawPage.PageNumber;
                         }
                     }
                 }

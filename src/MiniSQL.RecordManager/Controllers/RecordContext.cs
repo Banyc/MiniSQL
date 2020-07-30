@@ -23,7 +23,7 @@ namespace MiniSQL.RecordManager.Controllers
 
         public int CreateTable()
         {
-            return _bTree.OccupyNewTableNode().GetRawPage().PageNumber;
+            return _bTree.OccupyNewTableNode().RawPage.PageNumber;
         }
 
         public int CreateIndex(int tableRootPage, string indexedColumnName, List<AttributeDeclaration> attributeDeclarations)
@@ -45,14 +45,14 @@ namespace MiniSQL.RecordManager.Controllers
                 indexRoot = _bTree.InsertCell(indexRoot, wrappedKey, wrappedValues);
             }
 
-            return indexRoot.GetRawPage().PageNumber;
+            return indexRoot.RawPage.PageNumber;
         }
 
         public int DeleteRecords(Expression condition, string primaryKeyName, List<AttributeDeclaration> attributeDeclarations, int rootPage)
         {
             BTreeNode node = BTreeNodeHelper.GetBTreeNode(_pager, rootPage);
             BTreeNode newRoot = _bTree.DeleteCells(node, condition, primaryKeyName, attributeDeclarations);
-            return newRoot.GetRawPage().PageNumber;
+            return newRoot.RawPage.PageNumber;
         }
 
         public int DeleteRecords(List<AtomValue> primaryKeys, int rootPage)
@@ -74,7 +74,7 @@ namespace MiniSQL.RecordManager.Controllers
             DBRecord wrappedKey = new DBRecord(new List<AtomValue>() { key });
             DBRecord wrappedValues = new DBRecord(values);
             BTreeNode newRoot = _bTree.InsertCell(node, wrappedKey, wrappedValues);
-            return newRoot.GetRawPage().PageNumber;
+            return newRoot.RawPage.PageNumber;
         }
 
         public List<List<AtomValue>> SelectRecords(SelectStatement selectStatement, string primaryKeyName, List<AttributeDeclaration> attributeDeclarations, int rootPage)

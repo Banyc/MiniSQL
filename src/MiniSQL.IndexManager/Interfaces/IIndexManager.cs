@@ -7,17 +7,17 @@ namespace MiniSQL.IndexManager.Interfaces
     public interface IIndexManager
     {
         /// <summary>
-        /// use when creating table
+        /// Use when creating table
         /// </summary>
         /// <returns>The root node of the new B+ tree</returns>
         BTreeNode OccupyNewTableNode();
         /// <summary>
-        /// use when dropping table
+        /// Use when dropping table
         /// </summary>
         /// <param name="root">root node of the B+ Tree</param>
         void RemoveTree(BTreeNode root);
         /// <summary>
-        /// insert a row/record/cell
+        /// Insert a row/record/cell
         /// </summary>
         /// <param name="root">the root of the B+ tree</param>
         /// <param name="key">primary key in table tree and indexed column in index tree</param>
@@ -25,7 +25,7 @@ namespace MiniSQL.IndexManager.Interfaces
         /// <returns>new root node of the B+ tree</returns>
         BTreeNode InsertCell(BTreeNode root, DBRecord key, DBRecord dBRecord);
         /// <summary>
-        /// delete cell(s) that satisfy `condition`
+        /// Delete cell(s) that satisfy `conDition`
         /// </summary>
         /// <param name="root">the root of the B+ tree</param>
         /// <param name="condition">condition to satisfy</param>
@@ -34,7 +34,7 @@ namespace MiniSQL.IndexManager.Interfaces
         /// <returns>new root node of the B+ tree</returns>
         BTreeNode DeleteCells(BTreeNode root, Expression condition, string keyName, List<AttributeDeclaration> attributeDeclarations);
         /// <summary>
-        /// return matches that satisfy `condition`
+        /// Return matches that satisfy `condition`
         /// </summary>
         /// <param name="root">the root of the B+ tree</param>
         /// <param name="condition">condition to satisfy</param>
@@ -43,14 +43,14 @@ namespace MiniSQL.IndexManager.Interfaces
         /// <returns>matches that satisfy `condition`</returns>
         List<BTreeCell> FindCells(BTreeNode root, Expression condition, string keyName, List<AttributeDeclaration> attributeDeclarations);
         /// <summary>
-        /// find a row/record/cell by the key value
+        /// Find a row/record/cell by the key value
         /// </summary>
         /// <param name="key">primary key in table tree; indexed value in index tree</param>
         /// <param name="root">the root of the B+ tree</param>
         /// <returns>the matched cell</returns>
         BTreeCell FindCell(DBRecord key, BTreeNode root);
         /// <summary>
-        /// enumerate all leaf nodes of the B+ tree
+        /// Enumerate all leaf nodes of the B+ tree
         /// </summary>
         /// <param name="root">the root of the B+ tree</param>
         /// <returns>each leaf node</returns>

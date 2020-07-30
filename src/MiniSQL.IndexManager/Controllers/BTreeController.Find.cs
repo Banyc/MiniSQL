@@ -9,7 +9,7 @@ namespace MiniSQL.IndexManager.Controllers
 {
     public partial class BTreeController
     {
-        public System.Collections.Generic.IEnumerable<BTreeCell> LinearSearch(BTreeNode root)
+        public IEnumerable<BTreeCell> LinearSearch(BTreeNode root)
         {
             BTreeNode startNode = FindMin(root);
             List<BTreeCell> result = new List<BTreeCell>();

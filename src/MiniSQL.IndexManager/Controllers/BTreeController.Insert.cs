@@ -7,27 +7,34 @@ namespace MiniSQL.IndexManager.Controllers
 {
     public partial class BTreeController
     {
-        public BTreeNode InsertCell(BTreeNode Root, DBRecord key, DBRecord dBRecord)
+        /// <summary>
+        /// Insert a row/record/cell
+        /// </summary>
+        /// <param name="root">the root of the B+ tree</param>
+        /// <param name="key">primary key in table tree and indexed column in index tree</param>
+        /// <param name="dBRecord">new row of values to insert</param>
+        /// <returns>new root node of the B+ tree</returns>
+        public BTreeNode InsertCell(BTreeNode root, DBRecord key, DBRecord dBRecord)
         {
-            //create a new root
-            if (Root == null)
+            // create a new tree
+            if (root == null)
             {
-                BTreeNode root = GetNewNode(PageTypes.LeafTablePage);
+                BTreeNode newRootFromNull = GetNewNode(PageTypes.LeafTablePage);
                 LeafTableCell NewCell = new LeafTableCell(key, dBRecord);
-                root.InsertBTreeCell(NewCell);
+                newRootFromNull.InsertBTreeCell(NewCell);
+                return newRootFromNull;
+            }
+            // no need to split
+            if (root.NumCells < MaxCell)
+            {
+                InsertNonFull(root, key, dBRecord);
                 return root;
             }
-            //no need to split
-            if (Root.NumCells < MaxCell)
-            {
-                InsertNonFull(Root, key, dBRecord);
-                return Root;
-            }
 
-            //need to split,and return with a new root
+            // need to split, and return with a new root
             BTreeNode newRoot = GetNewNode(PageTypes.InternalTablePage);
-            Root.ParentPage = (uint)newRoot.GetRawPage().PageNumber;
-            SplitChild(Root, newRoot, key);
+            root.ParentPage = (uint)newRoot.RawPage.PageNumber;
+            SplitChild(root, newRoot, key);
             InsertNonFull(newRoot, key, dBRecord);
             return newRoot;
         }
@@ -59,7 +66,7 @@ namespace MiniSQL.IndexManager.Controllers
                     tmpCell = (InternalTableCell)nodeTobeSplit.GetBTreeCell(DeleteOffSet);
                     tmpPage = _pager.ReadPage((int)tmpCell.ChildPage);
                     tmpNode = new BTreeNode(tmpPage);
-                    tmpNode.ParentPage = (uint)splitNode.GetRawPage().PageNumber;
+                    tmpNode.ParentPage = (uint)splitNode.RawPage.PageNumber;
                 }
 
                 splitNode.InsertBTreeCell(nodeTobeSplit.GetBTreeCell(DeleteOffSet));
@@ -67,13 +74,13 @@ namespace MiniSQL.IndexManager.Controllers
 
             }
             //If the parentNode need to spilt,this will be wrong
-            InternalTableCell newCell = new InternalTableCell(key, (uint)nodeTobeSplit.GetRawPage().PageNumber);
+            InternalTableCell newCell = new InternalTableCell(key, (uint)nodeTobeSplit.RawPage.PageNumber);
 
             //connnect two child node by rightpage
             splitNode.RightPage = nodeTobeSplit.RightPage;
             if (nodeTobeSplit.PageType == PageTypes.LeafTablePage)
             {
-                nodeTobeSplit.RightPage = (uint)splitNode.GetRawPage().PageNumber;
+                nodeTobeSplit.RightPage = (uint)splitNode.RawPage.PageNumber;
             }
             //for a internal node,a cell in nodeTobeSplit has to be deleted
             else if (nodeTobeSplit.PageType == PageTypes.InternalTablePage)
@@ -81,7 +88,7 @@ namespace MiniSQL.IndexManager.Controllers
                 //for internal node,the parent Page of child page need to be changed
                 tmpPage = _pager.ReadPage((int)nodeTobeSplit.RightPage);
                 tmpNode = new BTreeNode(tmpPage);
-                tmpNode.ParentPage = (uint)splitNode.GetRawPage().PageNumber;
+                tmpNode.ParentPage = (uint)splitNode.RawPage.PageNumber;
 
 
                 InternalTableCell tmp_cell = (InternalTableCell)nodeTobeSplit.GetBTreeCell(nodeTobeSplit.CellOffsetArray[DeleteIndex - 1]);
@@ -90,16 +97,16 @@ namespace MiniSQL.IndexManager.Controllers
 
                 tmpPage = _pager.ReadPage((int)tmp_cell.ChildPage);
                 tmpNode = new BTreeNode(tmpPage);
-                tmpNode.ParentPage = (uint)nodeTobeSplit.GetRawPage().PageNumber;
+                tmpNode.ParentPage = (uint)nodeTobeSplit.RawPage.PageNumber;
             }
 
-            splitNode.ParentPage = (uint)parantNode.GetRawPage().PageNumber;
+            splitNode.ParentPage = (uint)parantNode.RawPage.PageNumber;
 
             //reconnect the particular cell(or right) in the parent node because of the change of the child node
             //This is a new empty root
             if (parantNode.NumCells == 0)
             {
-                parantNode.RightPage = (uint)splitNode.GetRawPage().PageNumber;
+                parantNode.RightPage = (uint)splitNode.RawPage.PageNumber;
             }
             //There are some cell in the parents node
             else
@@ -111,12 +118,12 @@ namespace MiniSQL.IndexManager.Controllers
                 //The case when the node to be inserted into parent node is in the rightest position
                 if (cell == null)
                 {
-                    parantNode.RightPage = (uint)splitNode.GetRawPage().PageNumber;
+                    parantNode.RightPage = (uint)splitNode.RawPage.PageNumber;
                 }
                 //The normal case
                 else
                 {
-                    InternalTableCell tmp_cell = new InternalTableCell(cell.Key, (uint)splitNode.GetRawPage().PageNumber);
+                    InternalTableCell tmp_cell = new InternalTableCell(cell.Key, (uint)splitNode.RawPage.PageNumber);
                     parantNode.DeleteBTreeCell(cell);
                     parantNode.InsertBTreeCell(tmp_cell);
                 }

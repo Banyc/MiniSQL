@@ -25,7 +25,7 @@ namespace MiniSQL.IndexManager.Controllers
         // recycle page to free list
         private void DeleteNode(BTreeNode node)
         {
-            MemoryPage page = node.GetRawPage();
+            MemoryPage page = node.RawPage;
             node.IsDisabled = true;
             _freeList.RecyclePage(page);
         }
