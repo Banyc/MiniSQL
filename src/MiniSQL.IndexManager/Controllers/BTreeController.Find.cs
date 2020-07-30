@@ -11,52 +11,78 @@ namespace MiniSQL.IndexManager.Controllers
     {
         public System.Collections.Generic.IEnumerable<BTreeCell> LinearSearch(BTreeNode root)
         {
-            BTreeNode beginNode = FindMin(root);
+            BTreeNode startNode = FindMin(root);
             List<BTreeCell> result = new List<BTreeCell>();
 
             while (true)
             {
-                foreach (var cell in beginNode)
+                foreach (var cell in startNode)
                 {
                     yield return cell;
                 }
-                if (beginNode.RightPage == 0)
+                if (startNode.RightPage == 0)
                 {
                     break;
                 }
-                beginNode = BTreeNodeHelper.GetBTreeNode(_pager, (int)beginNode.RightPage);
+                startNode = BTreeNodeHelper.GetBTreeNode(_pager, (int)startNode.RightPage);
             }
         }
                 
         public BTreeCell FindCell(DBRecord key, BTreeNode root)
         {
-            return InternalFind(key, root);
+            BTreeNode child;
+            MemoryPage nextpage = null;
+            BTreeCell cell;
+            UInt16 offset;
+            int indexInOffsetArray;
+
+            if (root.PageType == PageTypes.LeafTablePage)
+            {
+                (cell, offset, indexInOffsetArray) = root.FindBTreeCell(key, false);
+                return cell;
+            }
+
+            // If it's internal node
+            (cell, offset, indexInOffsetArray) = root.FindBTreeCell(key);
+            if (offset == 0)      //rightpage
+            {
+                nextpage = _pager.ReadPage((int)root.RightPage);
+                child = new BTreeNode(nextpage);
+            }
+            else
+            {
+                InternalTableCell internalTableCell = (InternalTableCell)cell;
+                nextpage = _pager.ReadPage((int)internalTableCell.ChildPage);
+                child = new BTreeNode(nextpage);
+            }
+            return FindCell(key, child);
         }
 
-        public List<BTreeCell> FindCells(BTreeNode root, Expression expression, string keyName, List<AttributeDeclaration> attributeDeclarations)
+        // `keyName` := primary key in table tree; indexed value in index tree
+        public List<BTreeCell> FindCells(BTreeNode root, Expression condition, string keyName, List<AttributeDeclaration> attributeDeclarations)
         {
-            if (expression == null)
+            if (condition == null)
             {
-                return LinearSearch(root, expression, attributeDeclarations);
+                return LinearSearch(root, condition, attributeDeclarations);
             }
-            else if (expression.SimpleMinterms.ContainsKey(keyName))
+            else if (condition.SimpleMinterms.ContainsKey(keyName))
             {
                 List<BTreeCell> result = new List<BTreeCell>();
                 List<AtomValue> values = new List<AtomValue>();
-                BTreeNode beginNode;
+                BTreeNode startNode;
 
                 BTreeCell cell;
                 UInt16 offset;
-                int begin_Index;
+                int startIndexOfCellInStartNode;
 
-                AtomValue bound = expression.SimpleMinterms[keyName].RightOperand.ConcreteValue;
+                AtomValue bound = condition.SimpleMinterms[keyName].RightOperand.ConcreteValue;
 
                 values.Add(bound);
                 DBRecord keyFind = new DBRecord(values);
-                switch (expression.SimpleMinterms[keyName].Operator)
+                switch (condition.SimpleMinterms[keyName].Operator)
                 {
                     case Operator.NotEqual:
-                        return LinearSearch(root, expression, attributeDeclarations);
+                        return LinearSearch(root, condition, attributeDeclarations);
 
                     case Operator.Equal:
                         LeafTableCell tmpCell = (LeafTableCell)FindCell(keyFind, root);
@@ -64,67 +90,65 @@ namespace MiniSQL.IndexManager.Controllers
                         {
                             break;
                         }
-                        else if (expression.Calculate(attributeDeclarations, tmpCell.DBRecord.GetValues()).BooleanValue == true)
+                        else if (condition.Calculate(attributeDeclarations, tmpCell.DBRecord.GetValues()).BooleanValue == true)
                         {
                             result.Add(tmpCell);
                         }
                         break;
 
                     case Operator.LessThan:
-                        beginNode = FindMin(root);
-                        return LessFind(beginNode, expression, attributeDeclarations, bound, false);
+                        startNode = FindMin(root);
+                        return FindCells(startNode, condition, attributeDeclarations, bound, false);
                     case Operator.LessThanOrEqualTo:
-                        beginNode = FindMin(root);
-                        return LessFind(beginNode, expression, attributeDeclarations, bound, true);
+                        startNode = FindMin(root);
+                        return FindCells(startNode, condition, attributeDeclarations, bound, true);
                     case Operator.MoreThan:
-                        beginNode = FindNode(keyFind, root, true);
-                        // WORK AROUND
-                        if (beginNode == null)
+                        startNode = FindNode(keyFind, root, true);
+                        // nothing is equal or more than the value of `keyFind` in the tree
+                        if (startNode == null)
                         {
-                            // variable > <overlimited number>
                             return result;
                         }
-                        (cell, offset, begin_Index) = beginNode.FindBTreeCell(keyFind);
-                        //2 possible sitiutions for cell==null:
-                        //1:The keyFind is bigger than all the key
-                        //2:The keyFind is just between the bigest one in this node and the smallest one in next node
+                        (cell, offset, startIndexOfCellInStartNode) = startNode.FindBTreeCell(keyFind);
+                        // 2 possible situations for `cell == null`:
+                        // 1: The `keyFind` is bigger than all the key in `startNode`
+                        // 2: The `keyFind` is just between the bigest one in `startNode` and the smallest one in next node
                         if (cell == null)
                         {
-                            if (beginNode.RightPage == 0)
+                            if (startNode.RightPage == 0)
                             {
                                 return result;
                             }
                             else
                             {
-                                begin_Index = 0;
-                                MemoryPage Nextpage = _pager.ReadPage((int)beginNode.RightPage);
-                                beginNode = new BTreeNode(Nextpage);
+                                startIndexOfCellInStartNode = 0;
+                                MemoryPage nextpage = _pager.ReadPage((int)startNode.RightPage);
+                                startNode = new BTreeNode(nextpage);
                             }
                         }
-                        return MoreFind(beginNode, begin_Index, expression, attributeDeclarations, false);
+                        return FindCells(startNode, startIndexOfCellInStartNode, condition, attributeDeclarations, false);
                     case Operator.MoreThanOrEqualTo:
-                        beginNode = FindNode(keyFind, root, true);
-                        // WORK AROUND
-                        if (beginNode == null)
+                        startNode = FindNode(keyFind, root, true);
+                        // nothing is equal or more than the value of `keyFind` in the tree
+                        if (startNode == null)
                         {
-                            // variable > <overlimited number>
                             return result;
                         }
-                        (cell, offset, begin_Index) = beginNode.FindBTreeCell(keyFind);
+                        (cell, offset, startIndexOfCellInStartNode) = startNode.FindBTreeCell(keyFind);
                         if (cell == null)
                         {
-                            if (beginNode.RightPage == 0)
+                            if (startNode.RightPage == 0)
                             {
                                 return result;
                             }
                             else
                             {
-                                begin_Index = 0;
-                                MemoryPage Nextpage = _pager.ReadPage((int)beginNode.RightPage);
-                                beginNode = new BTreeNode(Nextpage);
+                                startIndexOfCellInStartNode = 0;
+                                MemoryPage nextpage = _pager.ReadPage((int)startNode.RightPage);
+                                startNode = new BTreeNode(nextpage);
                             }
                         }
-                        return MoreFind(beginNode, begin_Index, expression, attributeDeclarations, true);
+                        return FindCells(startNode, startIndexOfCellInStartNode, condition, attributeDeclarations, true);
                     default:
                         throw new Exception("The Operand is not supported!");
                 }
@@ -134,90 +158,106 @@ namespace MiniSQL.IndexManager.Controllers
             }
             else
             {
-                return LinearSearch(root, expression, attributeDeclarations);
+                return LinearSearch(root, condition, attributeDeclarations);
             }
         }
         
+        // find the minimal node (leftest leaf node) from the given tree of root node `root`
         private BTreeNode FindMin(BTreeNode root)
         {
             BTreeNode child;
-            MemoryPage Nextpage = null;
+            MemoryPage nextpage = null;
             InternalTableCell childCell;
 
             if (root.PageType == PageTypes.LeafTablePage)
             {
                 return root;
             }
-            childCell = (InternalTableCell)root.GetBTreeCell(root.CellOffsetArray[0]);
-            Nextpage = _pager.ReadPage((int)childCell.ChildPage);
-            child = new BTreeNode(Nextpage);
+            // childCell = (InternalTableCell)root.GetBTreeCell(root.CellOffsetArray[0]);
+            childCell = (InternalTableCell)root[0];
+            nextpage = _pager.ReadPage((int)childCell.ChildPage);
+            child = new BTreeNode(nextpage);
 
             return FindMin(child);
         }
 
-        private List<BTreeCell> LessFind(BTreeNode begin, Expression expression, List<AttributeDeclaration> attributeDeclarations, AtomValue UpperBound, bool isEqual)
+        // to find cells that satisfy:
+        //  - starting from `startNode`
+        //  - ends in `upperBound`
+        //      - might be inclusive depending on `isIncludeUpperBound`
+        //  - satisfying `condition`
+        // `attributeDeclarations` := the names of the columns
+        private List<BTreeCell> FindCells(BTreeNode startNode, Expression condition, List<AttributeDeclaration> attributeDeclarations, AtomValue upperBound, bool isIncludeUpperBound)
         {
-            MemoryPage Nextpage = null;
+            MemoryPage nextpage = null;
             List<BTreeCell> result = new List<BTreeCell>();
             LeafTableCell leafCell;
 
             while (true)
             {
-                foreach (var cell in begin)
+                foreach (var cell in startNode)
                 {
-                    if (((cell.Key.GetValues()[0] > UpperBound).BooleanValue && isEqual) ||
-                        ((cell.Key.GetValues()[0] >= UpperBound).BooleanValue) && !isEqual)
+                    if (((cell.Key.GetValues()[0] > upperBound).BooleanValue && isIncludeUpperBound) ||
+                        ((cell.Key.GetValues()[0] >= upperBound).BooleanValue) && !isIncludeUpperBound)
                     {
                         return result;
                     }
                     leafCell = (LeafTableCell)cell;
 
-                    if (expression.Calculate(attributeDeclarations, leafCell.DBRecord.GetValues()).BooleanValue == true)
+                    if (condition.Calculate(attributeDeclarations, leafCell.DBRecord.GetValues()).BooleanValue == true)
                     {
                         result.Add(cell);
                     }
                 }
-                if (begin.RightPage == 0)
+                if (startNode.RightPage == 0)
                 {
                     return result;
                 }
-                Nextpage = _pager.ReadPage((int)begin.RightPage);
-                begin = new BTreeNode(Nextpage);
+                nextpage = _pager.ReadPage((int)startNode.RightPage);
+                startNode = new BTreeNode(nextpage);
             }
         }
 
-        private List<BTreeCell> MoreFind(BTreeNode begin_Node, int begin_Index, Expression expression, List<AttributeDeclaration> attributeDeclarations, bool isEqual)
+        // to find cells that satisfy:
+        //  - starting from `startIndexOfCell` in `startNode`
+        //      - `startIndexOfCell` might be inclusive depending on `isIncludeStartCell`
+        //  - till to the end of the leaf nodes
+        //  - satisfying `condition`
+        // `attributeDeclarations` := the names of the columns
+        private List<BTreeCell> FindCells(BTreeNode startNode, int startIndexOfCell, Expression condition, List<AttributeDeclaration> attributeDeclarations, bool isIncludeStartCell)
         {
-            MemoryPage Nextpage = null;
+            MemoryPage nextpage = null;
             List<BTreeCell> result = new List<BTreeCell>();
             LeafTableCell leafCell;
 
-            if (isEqual)
+            if (isIncludeStartCell)
             {
-                leafCell = (LeafTableCell)begin_Node.GetBTreeCell(begin_Node.CellOffsetArray[begin_Index]);
-                if (expression.Calculate(attributeDeclarations, leafCell.DBRecord.GetValues()).BooleanValue == true)
+                // leafCell = (LeafTableCell)startNode.GetBTreeCell(startNode.CellOffsetArray[startIndexOfCell]);
+                leafCell = (LeafTableCell)startNode[startIndexOfCell];
+                if (condition.Calculate(attributeDeclarations, leafCell.DBRecord.GetValues()).BooleanValue == true)
                 {
                     result.Add(leafCell);
                 }
 
             }
-            for (int i = begin_Index + 1; i < begin_Node.NumCells; i++)
+            for (int i = startIndexOfCell + 1; i < startNode.NumCells; i++)
             {
-                leafCell = (LeafTableCell)begin_Node.GetBTreeCell(begin_Node.CellOffsetArray[i]);
-                if (expression.Calculate(attributeDeclarations, leafCell.DBRecord.GetValues()).BooleanValue == true)
+                // leafCell = (LeafTableCell)startNode.GetBTreeCell(startNode.CellOffsetArray[i]);
+                leafCell = (LeafTableCell)startNode[i];
+                if (condition.Calculate(attributeDeclarations, leafCell.DBRecord.GetValues()).BooleanValue == true)
                 {
                     result.Add(leafCell);
                 }
             }
-            while (begin_Node.RightPage != 0)
+            while (startNode.RightPage != 0)
             {
-                Nextpage = _pager.ReadPage((int)begin_Node.RightPage);
-                begin_Node = new BTreeNode(Nextpage);
+                nextpage = _pager.ReadPage((int)startNode.RightPage);
+                startNode = new BTreeNode(nextpage);
 
-                foreach (var cell in begin_Node)
+                foreach (var cell in startNode)
                 {
                     leafCell = (LeafTableCell)cell;
-                    if (expression.Calculate(attributeDeclarations, leafCell.DBRecord.GetValues()).BooleanValue == true)
+                    if (condition.Calculate(attributeDeclarations, leafCell.DBRecord.GetValues()).BooleanValue == true)
                     {
                         result.Add(cell);
                     }
@@ -227,11 +267,11 @@ namespace MiniSQL.IndexManager.Controllers
             return result;
         }
 
-        
+        // if `isFuzzySearch`, this function will return the first cell that with key equal or larger than that of `cell`'s
         private BTreeNode FindNode(DBRecord key, BTreeNode root, bool isFuzzySearch = false)
         {
             BTreeNode child;
-            MemoryPage Nextpage = null;
+            MemoryPage nextpage = null;
             BTreeCell cell;
             UInt16 offset;
             int indexInOffsetArray;
@@ -249,60 +289,29 @@ namespace MiniSQL.IndexManager.Controllers
             (cell, offset, indexInOffsetArray) = root.FindBTreeCell(key);
             if (offset == 0)      //rightpage
             {
-                Nextpage = _pager.ReadPage((int)root.RightPage);
-                child = new BTreeNode(Nextpage);
+                nextpage = _pager.ReadPage((int)root.RightPage);
+                child = new BTreeNode(nextpage);
             }
             else
             {
                 InternalTableCell internalTableCell = (InternalTableCell)cell;
-                Nextpage = _pager.ReadPage((int)internalTableCell.ChildPage);
-                child = new BTreeNode(Nextpage);
+                nextpage = _pager.ReadPage((int)internalTableCell.ChildPage);
+                child = new BTreeNode(nextpage);
             }
             return FindNode(key, child);
         }
-   
-        private BTreeCell InternalFind(DBRecord key, BTreeNode root)
-        {
-            BTreeNode child;
-            MemoryPage Nextpage = null;
-            BTreeCell cell;
-            UInt16 offset;
-            int indexInOffsetArray;
-
-            if (root.PageType == PageTypes.LeafTablePage)
-            {
-                (cell, offset, indexInOffsetArray) = root.FindBTreeCell(key, false);
-                return cell;
-            }
-
-            //If it's internal node
-            (cell, offset, indexInOffsetArray) = root.FindBTreeCell(key);
-            if (offset == 0)      //rightpage
-            {
-                Nextpage = _pager.ReadPage((int)root.RightPage);
-                child = new BTreeNode(Nextpage);
-            }
-            else
-            {
-                InternalTableCell internalTableCell = (InternalTableCell)cell;
-                Nextpage = _pager.ReadPage((int)internalTableCell.ChildPage);
-                child = new BTreeNode(Nextpage);
-            }
-            return InternalFind(key, child);
-        }
-
 
         private List<BTreeCell> LinearSearch(BTreeNode root, Expression expression, List<AttributeDeclaration> attributeDeclarations)
         {
-            BTreeNode beginNode = FindMin(root);
+            BTreeNode startNode = FindMin(root);
 
-            MemoryPage Nextpage = null;
+            MemoryPage nextpage = null;
             List<BTreeCell> result = new List<BTreeCell>();
             LeafTableCell leafCell;
 
             while (true)
             {
-                foreach (var cell in beginNode)
+                foreach (var cell in startNode)
                 {
                     leafCell = (LeafTableCell)cell;
                     if (expression == null)
@@ -314,12 +323,12 @@ namespace MiniSQL.IndexManager.Controllers
                         result.Add(cell);
                     }
                 }
-                if (beginNode.RightPage == 0)
+                if (startNode.RightPage == 0)
                 {
                     return result;
                 }
-                Nextpage = _pager.ReadPage((int)beginNode.RightPage);
-                beginNode = new BTreeNode(Nextpage);
+                nextpage = _pager.ReadPage((int)startNode.RightPage);
+                startNode = new BTreeNode(nextpage);
             }
         }
     }

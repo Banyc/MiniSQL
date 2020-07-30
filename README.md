@@ -82,6 +82,8 @@ Differences:
 - Index tree utilizes `InternalTableCell` and `LeafTableCell` rather than `InternalIndexCell` and `LeafIndexCell`. In order words, index trees have the same architecture as table trees. 
 - Index tree could only support dropping and inserting along with the table tree but not deleting due to complicity (implemented in `DatabaseController`).
 - The `key` field of the table cells is implemented with type `DBRecord`, not `int`.
+- The nodes of B+ Tree each has a pointer pointing to its parent.
+- Leaf nodes of B+ Tree each has a pointer pointing to next leaf node on the right.
 
 Learn more from:
 

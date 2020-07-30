@@ -19,7 +19,7 @@ namespace MiniSQL.IndexManager.Models
         }
         // The byte offset at which the free space starts. 
         // Note that this must be updated every time the cell offset array grows.
-        public UInt16 FreeOffset
+        private UInt16 FreeOffset
         {
             get { return BitConverter.ToUInt16(_page.Data, 1 + _page.AvaliableOffset); }
             set { Array.Copy(BitConverter.GetBytes(value), 0, _page.Data, 1 + _page.AvaliableOffset, 2); }
@@ -28,12 +28,12 @@ namespace MiniSQL.IndexManager.Models
         public UInt16 NumCells
         {
             get { return BitConverter.ToUInt16(_page.Data, 3 + _page.AvaliableOffset); }
-            set { Array.Copy(BitConverter.GetBytes(value), 0, _page.Data, 3 + _page.AvaliableOffset, 2); }
+            private set { Array.Copy(BitConverter.GetBytes(value), 0, _page.Data, 3 + _page.AvaliableOffset, 2); }
         }
         // The byte offset at which the cells start.
         // If the page contains no cells, this field contains the value PageSize. 
         // This value must be updated every time a cell is added.
-        public UInt16 CellsOffset
+        private UInt16 CellsOffset
         {
             get { return BitConverter.ToUInt16(_page.Data, 5 + _page.AvaliableOffset); }
             set { Array.Copy(BitConverter.GetBytes(value), 0, _page.Data, 5 + _page.AvaliableOffset, 2); }
@@ -55,6 +55,9 @@ namespace MiniSQL.IndexManager.Models
 
         // if tree node is freed/disabled
         public bool IsDisabled { get; set; } = false;
+
+        // alias for the number of cells
+        public int Count { get => this.NumCells; }
 
         // the offset array at the low address of the page
         // the array indicates the offset (address) of each cell at the high address space

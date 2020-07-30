@@ -13,10 +13,12 @@ namespace MiniSQL.IndexManager.Interfaces
         void RemoveTree(BTreeNode root);
         // insert cell
         BTreeNode InsertCell(BTreeNode Root, DBRecord key, DBRecord dBRecord);
-        // delete cell(s) that satisfy `expression`
-        BTreeNode DeleteCells(BTreeNode root, Expression expression, string keyName, List<AttributeDeclaration> attributeDeclarations);
-        // return matches that satisfy `expression`
-        List<BTreeCell> FindCells(BTreeNode root, Expression expression, string keyName, List<AttributeDeclaration> attributeDeclarations);
+        // delete cell(s) that satisfy `condition`
+        // `keyName` := primary key in table tree; indexed value in index tree
+        BTreeNode DeleteCells(BTreeNode root, Expression condition, string keyName, List<AttributeDeclaration> attributeDeclarations);
+        // return matches that satisfy `condition`
+        // `keyName` := primary key in table tree; indexed value in index tree
+        List<BTreeCell> FindCells(BTreeNode root, Expression condition, string keyName, List<AttributeDeclaration> attributeDeclarations);
         BTreeCell FindCell(DBRecord key, BTreeNode root);
         System.Collections.Generic.IEnumerable<BTreeCell> LinearSearch(BTreeNode root);
     }
