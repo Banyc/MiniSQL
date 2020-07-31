@@ -10,9 +10,9 @@ namespace MiniSQL.IndexManager.Utilities
 {
     public static class BTreeNodeHelper
     {
-        public static BTreeNode GetBTreeNode(Pager pager, int rootPage)
+        public static BTreeNode GetBTreeNode(Pager pager, int pageNumber)
         {
-            MemoryPage page = pager.ReadPage(rootPage);
+            MemoryPage page = pager.ReadPage(pageNumber);
             BTreeNode node = new BTreeNode(page);
             return node;
         }
