@@ -18,9 +18,8 @@ namespace MiniSQL.IndexManager.Models
             private set { _page.Data[0 + _page.AvaliableOffset] = (byte)value; }
         }
         /// <summary>
-        /// The byte offset at which the free space starts. 
-        /// 
-        /// Note that this must be updated every time the cell offset array grows.
+        /// <para>The byte offset at which the free space starts. </para>
+        /// <para>Note that this must be updated every time the cell offset array grows.</para>
         /// </summary>
         /// <value></value>
         private UInt16 FreeOffset
@@ -35,11 +34,9 @@ namespace MiniSQL.IndexManager.Models
             private set { Array.Copy(BitConverter.GetBytes(value), 0, _page.Data, 3 + _page.AvaliableOffset, 2); }
         }
         /// <summary>
-        /// The byte offset at which the cells start.
-        /// 
-        /// If the page contains no cells, this field contains the value PageSize. 
-        /// 
-        /// This value must be updated every time a cell is added.
+        /// <para>The byte offset at which the cells start.</para>
+        /// <para>If the page contains no cells, this field contains the value PageSize. </para>
+        /// <para>This value must be updated every time a cell is added.</para>
         /// </summary>
         /// <value></value>
         private UInt16 CellsOffset
@@ -48,11 +45,9 @@ namespace MiniSQL.IndexManager.Models
             set { Array.Copy(BitConverter.GetBytes(value), 0, _page.Data, 5 + _page.AvaliableOffset, 2); }
         }
         /// <summary>
-        /// deprecated: internal node only
-        /// 
-        /// WORKAROUND: all types of node have the `RightPage` pointer
-        /// 
-        /// RightPage pointer is, essentially, the “rightmost pointer” in a B-Tree node
+        /// <para>deprecated: internal node only</para>
+        /// <para>WORKAROUND: all types of node have the `RightPage` pointer</para>
+        /// <para>RightPage pointer is, essentially, the “rightmost pointer” in a B-Tree node</para>
         /// </summary>
         /// <value></value>
         public UInt32 RightPage
@@ -80,11 +75,9 @@ namespace MiniSQL.IndexManager.Models
         public int Count { get => this.NumCells; }
 
         /// <summary>
-        /// the offset array at the low address of the page
-        /// 
-        /// the array indicates the offset (address) of each cell at the high address space
-        /// 
-        /// the order of the array is carefully set in ascending order. It is based on the first value of `Key` of each cell.
+        /// <para>the offset array at the low address of the page</para>
+        /// <para>the array indicates the offset (address) of each cell at the high address space</para>
+        /// <para>the order of the array is carefully set in ascending order. It is based on the first value of `Key` of each cell.</para>
         /// </summary>
         /// <value></value>
         public List<UInt16> CellOffsetArray
@@ -95,7 +88,7 @@ namespace MiniSQL.IndexManager.Models
                 List<UInt16> offsets = new List<ushort>();
                 int i;
                 // locates the first item in the offset array
-                int startAddress = this.FreeOffset - this.NumCells * 2;
+                int startAddress = this.FreeOffset - (this.NumCells * 2);
                 // visits those items one-by-one and load them to the container
                 for (i = 0; i < this.NumCells; i++)
                 {
@@ -109,7 +102,7 @@ namespace MiniSQL.IndexManager.Models
             private set
             {
                 // locates the first item in the offset array
-                int startAddress = this.FreeOffset - this.NumCells * 2;
+                int startAddress = this.FreeOffset - (this.NumCells * 2);
                 // visits those items one-by-one and copy them to page
                 foreach (UInt16 offset in value)
                 {
@@ -136,9 +129,8 @@ namespace MiniSQL.IndexManager.Models
         }
 
         /// <summary>
-        /// The memory page behind this node.
-        /// 
-        /// Use it when freeing this node, but no necessarily.
+        /// <para>The memory page behind this node.</para>
+        /// <para>Use it when freeing this node, but no necessarily.</para>
         /// </summary>
         /// <value>The memory page behind this node</value>
         public MemoryPage RawPage { get => _page; }
@@ -232,9 +224,8 @@ namespace MiniSQL.IndexManager.Models
         }
 
         /// <summary>
-        /// get a cell given an offset (address)
-        /// 
-        /// NOTICE: you are only getting a COPY, any modification on the cell will NOT affect the node
+        /// <para>get a cell given an offset (address)</para>
+        /// <para>NOTICE: you are only getting a COPY, any modification on the cell will NOT affect the node</para>
         /// </summary>
         /// <param name="address">the address/offset of the cell in this node</param>
         /// <returns>a COPY of the matched cell</returns>
@@ -244,21 +235,16 @@ namespace MiniSQL.IndexManager.Models
             switch (this.PageType)
             {
                 case PageTypes.InternalIndexPage:
-                    cell = new InternalIndexCell(_page.Data, (int)address);
-                    break;
+                    return new InternalIndexCell(_page.Data, (int)address);
                 case PageTypes.InternalTablePage:
-                    cell = new InternalTableCell(_page.Data, (int)address);
-                    break;
+                    return new InternalTableCell(_page.Data, (int)address);
                 case PageTypes.LeafIndexPage:
-                    cell = new LeafIndexCell(_page.Data, (int)address);
-                    break;
+                    return new LeafIndexCell(_page.Data, (int)address);
                 case PageTypes.LeafTablePage:
-                    cell = new LeafTableCell(_page.Data, (int)address);
-                    break;
+                    return new LeafTableCell(_page.Data, (int)address);
                 default:
                     throw new Exception($"Page type {this.PageType} does not exist");
             }
-            return cell;
         }
 
         /// <summary>
@@ -294,9 +280,8 @@ namespace MiniSQL.IndexManager.Models
         }
 
         /// <summary>
-        /// NOTICE: if `isFuzzySearch`, this function will return the first cell that with key equal or larger than that of `cell`'s
-        /// 
-        /// if no cell matches, the output `cell` field will be `null` and `offset` will be set to 0
+        /// <para>NOTICE: if `isFuzzySearch`, this function will return the first cell that with key equal or larger than that of `cell`'s</para>
+        /// <para>if no cell matches, the output `cell` field will be `null` and `offset` will be set to 0</para>
         /// </summary>
         /// <param name="cell">cell to be found</param>
         /// <param name="isFuzzySearch">if `isFuzzySearch`, this function will return the first cell that with key equal or larger than that of `cell`'s</param>
@@ -307,9 +292,8 @@ namespace MiniSQL.IndexManager.Models
         }
 
         /// <summary>
-        /// NOTICE: if `isFuzzySearch`, this function will return the first cell that with key equal or larger than that of `cell`'s
-        /// 
-        /// if no cell matches, the output `cell` field will be `null` and `offset` will be set to 0
+        /// <para>NOTICE: if `isFuzzySearch`, this function will return the first cell that with key equal or larger than that of `cell`'s</para>
+        /// <para>if no cell matches, the output `cell` field will be `null` and `offset` will be set to 0</para>
         /// </summary>
         /// <param name="key">primary key in table tree; indexed value in index tree</param>
         /// <param name="isFuzzySearch">if `isFuzzySearch`, this function will return the first cell that with key equal or larger than that of `cell`'s</param>
@@ -321,11 +305,9 @@ namespace MiniSQL.IndexManager.Models
         }
 
         /// <summary>
-        /// NOTICE: if `isFuzzySearch`, this function will return the first cell that with key equal or larger than that of `cell`'s
-        /// 
-        /// if no cell matches, the output `cell` field will be `null` and `offset` will be set to 0
-        /// 
-        /// WORKAROUND: only the first key is used. The remaining keys will be ignored
+        /// <para>NOTICE: if `isFuzzySearch`, this function will return the first cell that with key equal or larger than that of `cell`'s</para>
+        /// <para>if no cell matches, the output `cell` field will be `null` and `offset` will be set to 0</para>
+        /// <para>WORKAROUND: only the first key is used. The remaining keys will be ignored</para>
         /// </summary>
         /// <param name="keys">primary keys in table tree; indexed values in index tree</param>
         /// <param name="isFuzzySearch">if `isFuzzySearch`, this function will return the first cell that with key equal or larger than that of `cell`'s</param>
@@ -336,9 +318,8 @@ namespace MiniSQL.IndexManager.Models
         }
 
         /// <summary>
-        /// NOTICE: if `isFuzzySearch`, this function will return the first cell that with key equal or larger than that of `cell`'s
-        /// 
-        /// if no cell matches, the output `cell` field will be `null` and `offset` will be set to 0
+        /// <para>NOTICE: if `isFuzzySearch`, this function will return the first cell that with key equal or larger than that of `cell`'s</para>
+        /// <para>if no cell matches, the output `cell` field will be `null` and `offset` will be set to 0</para>
         /// </summary>
         /// <param name="key">primary key in table tree; indexed value in index tree</param>
         /// <param name="isFuzzySearch">if `isFuzzySearch`, this function will return the first cell that with key equal or larger than that of `cell`'s</param>

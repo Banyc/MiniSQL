@@ -494,5 +494,17 @@ namespace MiniSQL.Library.Models
                     return 0;
             }
         }
+
+        public override string ToString()
+        {
+            return this.Type switch
+            {
+                AttributeTypes.Null => "null",
+                AttributeTypes.Int => this.IntegerValue.ToString(),
+                AttributeTypes.Char => this.StringValue,
+                AttributeTypes.Float => this.FloatValue.ToString(),
+                _ => null,
+            };
+        }
     }
 }

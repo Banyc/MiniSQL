@@ -6,6 +6,7 @@
   </ItemGroup>
 
   <PropertyGroup>
+    <GenerateDocumentationFile>true</GenerateDocumentationFile>
     <!-- <OutputType>Exe</OutputType> -->
     <TargetFramework>netcoreapp3.1</TargetFramework>
   </PropertyGroup>

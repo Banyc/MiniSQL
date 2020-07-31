@@ -41,7 +41,7 @@ namespace MiniSQL.IndexManager.Models
         // the list of the types of each field at the head of the record
         public List<uint> HeaderList { get; private set; } = new List<uint>();
         // the list of offsets to each field
-        private List<int> FieldOffsets = new List<int>();
+        private readonly List<int> FieldOffsets = new List<int>();
 
         // constructor
         public DBRecord(byte[] data, int startIndex)
@@ -84,8 +84,9 @@ namespace MiniSQL.IndexManager.Models
                     value.FloatValue = BitConverter.ToDouble(this.FieldData, this.FieldOffsets[i]);
                 }
                 else if (headerValue == (int)HeaderValue.NULL)
+                {
                     value.Type = AttributeTypes.Null;
-
+                }
                 else if ((headerValue - (int)HeaderValue.TEXT) % 2 == 0)
                 {
                     value.Type = AttributeTypes.Char;
@@ -94,7 +95,9 @@ namespace MiniSQL.IndexManager.Models
                     value.StringValue = Encoding.UTF8.GetString(this.FieldData, this.FieldOffsets[i], stringLength).TrimEnd('\0');
                 }
                 else
+                {
                     throw new Exception($"Header value {headerValue} does not exists");
+                }
 
                 values.Add(value);
             }

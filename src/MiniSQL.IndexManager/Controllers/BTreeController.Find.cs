@@ -9,11 +9,14 @@ namespace MiniSQL.IndexManager.Controllers
 {
     public partial class BTreeController
     {
+        /// <summary>
+        /// Search the leaf nodes linearly.
+        /// </summary>
+        /// <param name="root">the root node of the B+ tree</param>
+        /// <returns></returns>
         public IEnumerable<BTreeCell> LinearSearch(BTreeNode root)
         {
             BTreeNode startNode = FindMin(root);
-            List<BTreeCell> result = new List<BTreeCell>();
-
             while (true)
             {
                 foreach (var cell in startNode)
@@ -27,23 +30,21 @@ namespace MiniSQL.IndexManager.Controllers
                 startNode = BTreeNodeHelper.GetBTreeNode(_pager, (int)startNode.RightPage);
             }
         }
-                
+
         public BTreeCell FindCell(DBRecord key, BTreeNode root)
         {
             BTreeNode child;
-            MemoryPage nextpage = null;
             BTreeCell cell;
             UInt16 offset;
-            int indexInOffsetArray;
-
             if (root.PageType == PageTypes.LeafTablePage)
             {
-                (cell, offset, indexInOffsetArray) = root.FindBTreeCell(key, false);
+                (cell, _, _) = root.FindBTreeCell(key, false);
                 return cell;
             }
 
             // If it's internal node
-            (cell, offset, indexInOffsetArray) = root.FindBTreeCell(key);
+            (cell, offset, _) = root.FindBTreeCell(key);
+            MemoryPage nextpage;
             if (offset == 0)      //rightpage
             {
                 nextpage = _pager.ReadPage((int)root.RightPage);
@@ -72,7 +73,6 @@ namespace MiniSQL.IndexManager.Controllers
                 BTreeNode startNode;
 
                 BTreeCell cell;
-                UInt16 offset;
                 int startIndexOfCellInStartNode;
 
                 AtomValue bound = condition.SimpleMinterms[keyName].RightOperand.ConcreteValue;
@@ -109,7 +109,7 @@ namespace MiniSQL.IndexManager.Controllers
                         {
                             return result;
                         }
-                        (cell, offset, startIndexOfCellInStartNode) = startNode.FindBTreeCell(keyFind);
+                        (cell, _, startIndexOfCellInStartNode) = startNode.FindBTreeCell(keyFind);
                         // 2 possible situations for `cell == null`:
                         // 1: The `keyFind` is bigger than all the key in `startNode`
                         // 2: The `keyFind` is just between the bigest one in `startNode` and the smallest one in next node
@@ -134,7 +134,7 @@ namespace MiniSQL.IndexManager.Controllers
                         {
                             return result;
                         }
-                        (cell, offset, startIndexOfCellInStartNode) = startNode.FindBTreeCell(keyFind);
+                        (cell, _, startIndexOfCellInStartNode) = startNode.FindBTreeCell(keyFind);
                         if (cell == null)
                         {
                             if (startNode.RightPage == 0)
@@ -154,19 +154,17 @@ namespace MiniSQL.IndexManager.Controllers
                 }
                 //This step may not need?
                 return result;
-
             }
             else
             {
                 return LinearSearch(root, condition, attributeDeclarations);
             }
         }
-        
+
         // find the minimal node (leftest leaf node) from the given tree of root node `root`
         private BTreeNode FindMin(BTreeNode root)
         {
             BTreeNode child;
-            MemoryPage nextpage = null;
             InternalTableCell childCell;
 
             if (root.PageType == PageTypes.LeafTablePage)
@@ -175,21 +173,30 @@ namespace MiniSQL.IndexManager.Controllers
             }
             // childCell = (InternalTableCell)root.GetBTreeCell(root.CellOffsetArray[0]);
             childCell = (InternalTableCell)root[0];
-            nextpage = _pager.ReadPage((int)childCell.ChildPage);
+            MemoryPage nextpage = _pager.ReadPage((int)childCell.ChildPage);
             child = new BTreeNode(nextpage);
 
             return FindMin(child);
         }
 
-        // to find cells that satisfy:
-        //  - starting from `startNode`
-        //  - ends in `upperBound`
-        //      - might be inclusive depending on `isIncludeUpperBound`
-        //  - satisfying `condition`
-        // `attributeDeclarations` := the names of the columns
+        /// <summary>
+        /// <para>
+        /// to find cells that satisfy:
+        ///  - starting from `startNode`
+        ///  - ends in `upperBound`
+        ///      - might be inclusive depending on `isIncludeUpperBound`
+        ///  - satisfying `condition`
+        /// </para>
+        /// <para>`attributeDeclarations` := the names of the columns</para>
+        /// </summary>
+        /// <param name="startNode"></param>
+        /// <param name="condition"></param>
+        /// <param name="attributeDeclarations">the names of the columns</param>
+        /// <param name="upperBound"></param>
+        /// <param name="isIncludeUpperBound"></param>
+        /// <returns></returns>
         private List<BTreeCell> FindCells(BTreeNode startNode, Expression condition, List<AttributeDeclaration> attributeDeclarations, AtomValue upperBound, bool isIncludeUpperBound)
         {
-            MemoryPage nextpage = null;
             List<BTreeCell> result = new List<BTreeCell>();
             LeafTableCell leafCell;
 
@@ -198,7 +205,7 @@ namespace MiniSQL.IndexManager.Controllers
                 foreach (var cell in startNode)
                 {
                     if (((cell.Key.GetValues()[0] > upperBound).BooleanValue && isIncludeUpperBound) ||
-                        ((cell.Key.GetValues()[0] >= upperBound).BooleanValue) && !isIncludeUpperBound)
+                        ((cell.Key.GetValues()[0] >= upperBound).BooleanValue && !isIncludeUpperBound))
                     {
                         return result;
                     }
@@ -213,20 +220,29 @@ namespace MiniSQL.IndexManager.Controllers
                 {
                     return result;
                 }
-                nextpage = _pager.ReadPage((int)startNode.RightPage);
+                MemoryPage nextpage = _pager.ReadPage((int)startNode.RightPage);
                 startNode = new BTreeNode(nextpage);
             }
         }
 
-        // to find cells that satisfy:
-        //  - starting from `startIndexOfCell` in `startNode`
-        //      - `startIndexOfCell` might be inclusive depending on `isIncludeStartCell`
-        //  - till to the end of the leaf nodes
-        //  - satisfying `condition`
-        // `attributeDeclarations` := the names of the columns
+        /// <summary>
+        /// <para>
+        /// to find cells that satisfy:
+        ///  - starting from `startIndexOfCell` in `startNode`
+        ///      - `startIndexOfCell` might be inclusive depending on `isIncludeStartCell`
+        ///  - till to the end of the leaf nodes
+        ///  - satisfying `condition`
+        /// </para>
+        /// <para>`attributeDeclarations` := the names of the columns</para>
+        /// </summary>
+        /// <param name="startNode"></param>
+        /// <param name="startIndexOfCell"></param>
+        /// <param name="condition"></param>
+        /// <param name="attributeDeclarations">the names of the columns</param>
+        /// <param name="isIncludeStartCell"></param>
+        /// <returns></returns>
         private List<BTreeCell> FindCells(BTreeNode startNode, int startIndexOfCell, Expression condition, List<AttributeDeclaration> attributeDeclarations, bool isIncludeStartCell)
         {
-            MemoryPage nextpage = null;
             List<BTreeCell> result = new List<BTreeCell>();
             LeafTableCell leafCell;
 
@@ -238,7 +254,6 @@ namespace MiniSQL.IndexManager.Controllers
                 {
                     result.Add(leafCell);
                 }
-
             }
             for (int i = startIndexOfCell + 1; i < startNode.NumCells; i++)
             {
@@ -251,7 +266,7 @@ namespace MiniSQL.IndexManager.Controllers
             }
             while (startNode.RightPage != 0)
             {
-                nextpage = _pager.ReadPage((int)startNode.RightPage);
+                MemoryPage nextpage = _pager.ReadPage((int)startNode.RightPage);
                 startNode = new BTreeNode(nextpage);
 
                 foreach (var cell in startNode)
@@ -262,7 +277,6 @@ namespace MiniSQL.IndexManager.Controllers
                         result.Add(cell);
                     }
                 }
-
             }
             return result;
         }
@@ -271,14 +285,11 @@ namespace MiniSQL.IndexManager.Controllers
         private BTreeNode FindNode(DBRecord key, BTreeNode root, bool isFuzzySearch = false)
         {
             BTreeNode child;
-            MemoryPage nextpage = null;
             BTreeCell cell;
             UInt16 offset;
-            int indexInOffsetArray;
-
             if (root.PageType == PageTypes.LeafTablePage)
             {
-                (cell, offset, indexInOffsetArray) = root.FindBTreeCell(key, isFuzzySearch);
+                (cell, _, _) = root.FindBTreeCell(key, isFuzzySearch);
                 if (cell != null)
                     return root;
                 else
@@ -286,7 +297,8 @@ namespace MiniSQL.IndexManager.Controllers
             }
 
             //If it's internal node
-            (cell, offset, indexInOffsetArray) = root.FindBTreeCell(key);
+            (cell, offset, _) = root.FindBTreeCell(key);
+            MemoryPage nextpage;
             if (offset == 0)      //rightpage
             {
                 nextpage = _pager.ReadPage((int)root.RightPage);
@@ -304,8 +316,6 @@ namespace MiniSQL.IndexManager.Controllers
         private List<BTreeCell> LinearSearch(BTreeNode root, Expression expression, List<AttributeDeclaration> attributeDeclarations)
         {
             BTreeNode startNode = FindMin(root);
-
-            MemoryPage nextpage = null;
             List<BTreeCell> result = new List<BTreeCell>();
             LeafTableCell leafCell;
 
@@ -327,7 +337,7 @@ namespace MiniSQL.IndexManager.Controllers
                 {
                     return result;
                 }
-                nextpage = _pager.ReadPage((int)startNode.RightPage);
+                MemoryPage nextpage = _pager.ReadPage((int)startNode.RightPage);
                 startNode = new BTreeNode(nextpage);
             }
         }
