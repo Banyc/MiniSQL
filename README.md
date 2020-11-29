@@ -18,7 +18,7 @@ A functioning database supporting a subset of SQL. Cross-platform.
 
 You will need .NET Core SDK to build and run this code.
 
-Download link: <https://dotnet.microsoft.com/download/dotnet-core>.
+Download link: <https://dotnet.microsoft.com/download/dotnet/5.0>.
 
 ## Supported Grammar
 
@@ -48,7 +48,7 @@ insert into student values (‘12345678’,’wy’,22,’M’);
 delete from student;
 delete from student where sno = ‘88888888’;
 
-execfile "PATH_TO_SQL_FILE" ;
+execfile "PATH/TO/SQL_FILE" ;
 
 -- ensure writing back all dirty pages
 exit
