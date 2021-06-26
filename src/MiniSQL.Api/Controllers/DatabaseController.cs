@@ -180,7 +180,7 @@ namespace MiniSQL.Api.Controllers
                         isIndexTreeAvailable = true;
                         // find out the primary key
                         List<AtomValue> wrappedPrimaryKey = _recordManager.SelectRecord(statement.Condition.SimpleMinterms[indexSchema.SQL.AttributeName].RightOperand.ConcreteValue, indexSchema.RootPage);
-                        primaryKey = wrappedPrimaryKey?[0];
+                        primaryKey = wrappedPrimaryKey?[1];
                         break;
                     }
                 }
