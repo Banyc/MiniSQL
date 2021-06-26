@@ -38,15 +38,15 @@ create index stunameidx on student ( sname );
 drop index stunameidx;
 
 select * from student;
-select * from student where sno = ‘88888888’;
-select * from student where sage > 20 and sgender = ‘F’;
-select * from student where sno = ‘88888888’ or sage > 20 and sgender = ‘F’;
+select * from student where sno = '88888888';
+select * from student where sage > 20 and sgender = 'F';
+select * from student where sno = '88888888' or sage > 20 and sgender = 'F';
 select * from student where sage > (20 + 2) / 3;
 
-insert into student values (‘12345678’,’wy’,22,’M’);
+insert into student values ('12345678','wy',22,'M');
 
 delete from student;
-delete from student where sno = ‘88888888’;
+delete from student where sno = '88888888';
 
 execfile "PATH/TO/SQL_FILE" ;
 
