@@ -16,7 +16,7 @@ namespace MiniSQL.Interpreter.Controllers
         
         public static Query StaticGetQuery(string input)
         {
-            ICharStream stream = CharStreams.fromstring(input);
+            ICharStream stream = CharStreams.fromString(input);
             ITokenSource lexer = new MiniSQLLexer(stream);
             ITokenStream tokens = new CommonTokenStream(lexer);
             MiniSQLParser parser = new MiniSQLParser(tokens);
